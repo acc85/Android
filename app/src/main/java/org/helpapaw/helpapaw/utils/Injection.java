@@ -1,9 +1,11 @@
 package org.helpapaw.helpapaw.utils;
 
 import org.helpapaw.helpapaw.data.repositories.BackendlessCommentRepository;
+import org.helpapaw.helpapaw.data.repositories.BackendlessFacebookLogin;
 import org.helpapaw.helpapaw.data.repositories.BackendlessPhotoRepository;
 import org.helpapaw.helpapaw.data.repositories.BackendlessSignalRepository;
 import org.helpapaw.helpapaw.data.repositories.CommentRepository;
+import org.helpapaw.helpapaw.data.repositories.FacebookLogin;
 import org.helpapaw.helpapaw.data.repositories.PhotoRepository;
 import org.helpapaw.helpapaw.data.repositories.SignalRepository;
 import org.helpapaw.helpapaw.data.user.BackendlessUserManager;
@@ -20,6 +22,7 @@ public class Injection {
     private static SignalRepository signalRepositoryInstance;
     private static PhotoRepository photoRepository;
     private static CommentRepository commentRepository;
+    private static FacebookLogin facebookLogin;
 
     public synchronized static ImageLoader getImageLoader() {
         if (imageLoader == null) {
@@ -54,5 +57,12 @@ public class Injection {
             commentRepository = new BackendlessCommentRepository();
         }
         return commentRepository;
+    }
+
+    public synchronized static FacebookLogin getFacebookLogin() {
+        if (facebookLogin == null) {
+            facebookLogin = new BackendlessFacebookLogin();
+        }
+        return facebookLogin;
     }
 }

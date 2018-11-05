@@ -59,7 +59,7 @@ public class AlertDialogFragment extends DialogFragment {
             alertBuilder.setNeutralButton("Contact support", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
-                    SharingUtils.contactSupport(activity);
+                    SharingUtils.Companion.contactSupport(activity);
                 }
             });
         }
