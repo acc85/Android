@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/grp_status_container"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -17,7 +18,7 @@
             android:layout_height="60dp"
             android:layout_gravity="center_vertical"
             android:contentDescription="@string/txt_help_needed"
-            android:src="@drawable/pin_red" />
+            app:srcCompat="@drawable/pin_red" />
 
         <TextView
             android:layout_width="0dp"
@@ -28,7 +29,7 @@
             android:text="@string/txt_help_needed"
             android:textSize="18sp" />
 
-        <android.support.v7.widget.AppCompatImageView
+        <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/img_signal_need_help_selected"
             android:layout_width="40dp"
             android:layout_height="80dp"
@@ -49,7 +50,7 @@
             android:layout_height="60dp"
             android:layout_gravity="center_vertical"
             android:contentDescription="@string/txt_somebody_on_the_way"
-            android:src="@drawable/pin_orange" />
+            app:srcCompat="@drawable/pin_orange" />
 
         <TextView
             android:layout_width="0dp"
@@ -60,7 +61,7 @@
             android:text="@string/txt_somebody_on_the_way"
             android:textSize="18sp" />
 
-        <android.support.v7.widget.AppCompatImageView
+        <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/img_signal_on_way_selected"
             android:layout_width="40dp"
             android:layout_height="80dp"
@@ -81,7 +82,7 @@
             android:layout_height="60dp"
             android:layout_gravity="center_vertical"
             android:contentDescription="@string/txt_solved"
-            android:src="@drawable/pin_green" />
+            app:srcCompat="@drawable/pin_green" />
 
         <TextView
             android:layout_width="0dp"
@@ -92,7 +93,7 @@
             android:text="@string/txt_solved"
             android:textSize="18sp" />
 
-        <android.support.v7.widget.AppCompatImageView
+        <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/img_signal_solved_selected"
             android:layout_width="40dp"
             android:layout_height="80dp"

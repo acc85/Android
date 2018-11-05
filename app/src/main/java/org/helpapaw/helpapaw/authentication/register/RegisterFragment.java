@@ -1,8 +1,6 @@
 package org.helpapaw.helpapaw.authentication.register;
 
 
-import android.app.DialogFragment;
-import androidx.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,6 +12,9 @@ import org.helpapaw.helpapaw.base.Presenter;
 import org.helpapaw.helpapaw.base.PresenterManager;
 import org.helpapaw.helpapaw.databinding.FragmentRegisterBinding;
 import org.helpapaw.helpapaw.reusable.AlertDialogFragment;
+
+import androidx.databinding.DataBindingUtil;
+import androidx.fragment.app.DialogFragment;
 
 public class RegisterFragment extends BaseFragment implements RegisterContract.View {
 
@@ -81,7 +82,7 @@ public class RegisterFragment extends BaseFragment implements RegisterContract.V
     @Override
     public void showWhyPhoneDialog() {
         DialogFragment whyPhoneDialogFragment = WhyPhoneDialogFragment.newInstance();
-        whyPhoneDialogFragment.show(getActivity().getFragmentManager(), whyPhoneDialogFragment.getTag());
+        whyPhoneDialogFragment.show(getActivity().getSupportFragmentManager(), whyPhoneDialogFragment.getTag());
     }
 
     @Override

@@ -1,12 +1,6 @@
 package org.helpapaw.helpapaw.signalphoto;
 
-import android.app.ActionBar;
-import androidx.databinding.DataBindingUtil;
 import android.os.Bundle;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
-import androidx.appcompat.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 
@@ -15,6 +9,13 @@ import org.helpapaw.helpapaw.data.models.Signal;
 import org.helpapaw.helpapaw.databinding.ActivitySignalPhotoBinding;
 
 import java.util.List;
+
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.databinding.DataBindingUtil;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
 /**
  * Created by milen on 05/03/18.
@@ -64,7 +65,7 @@ public class SignalPhotoActivity extends AppCompatActivity {
         // Remember that you should never show the action bar if the
         // status bar is hidden, so hide that too if necessary.
         try {
-            ActionBar actionBar = getActionBar();
+            ActionBar actionBar = getSupportActionBar();
             actionBar.hide();
         }
         catch (Exception ex) {

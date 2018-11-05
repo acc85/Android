@@ -98,7 +98,7 @@
                         android:layout_toStartOf="@id/btn_call"
                         android:layout_alignTop="@id/btn_call"
                         android:layout_marginTop="16dp"
-                        android:src="@drawable/ic_call"
+                        app:srcCompat="@drawable/ic_call"
                         android:tint="@color/comments_gray"
                         android:visibility="visible" />
 
@@ -190,7 +190,7 @@
                 android:hint="@string/txt_comment_hint"
                 android:inputType="textEmailAddress" />
 
-            <android.support.v7.widget.AppCompatButton
+            <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/btn_add_comment"
                 style="@style/Widget.AppCompat.Button.Colored"
                 android:layout_width="80dp"

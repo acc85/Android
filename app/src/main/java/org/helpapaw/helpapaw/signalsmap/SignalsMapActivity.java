@@ -2,11 +2,12 @@ package org.helpapaw.helpapaw.signalsmap;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
+
+import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.core.view.GravityCompat;
-import androidx.appcompat.widget.Toolbar;
 
 import com.firebase.jobdispatcher.Constraint;
 import com.firebase.jobdispatcher.FirebaseJobDispatcher;
