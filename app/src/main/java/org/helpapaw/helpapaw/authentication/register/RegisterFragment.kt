@@ -88,7 +88,8 @@ class RegisterFragment:BaseFragment (), RegisterContract.View{
     }
 
     override fun setProgressIndicator(active: Boolean) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        binding.progressRegister.visibility = if (active) View.VISIBLE else View.GONE
+        binding.grpRegister.visibility = if (active) View.GONE else View.VISIBLE
     }
 
     override fun closeRegistrationScreen() {

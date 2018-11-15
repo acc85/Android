@@ -69,11 +69,11 @@ class LoginPresenter(override var view: LoginContract.View?): Presenter<LoginCon
         if (Utils.getInstance().hasNetworkConnection()) {
             userManager.login(email, password, object : UserManager.LoginCallback {
                 override fun onLoginSuccess() {
-                    this.onLoginSuccess()
+                    this@LoginPresenter.onLoginSuccess()
                 }
 
                 override fun onLoginFailure(message:String) {
-                    this.onLoginFailure(message)
+                    this@LoginPresenter.onLoginFailure(message)
                 }
             })
         } else {

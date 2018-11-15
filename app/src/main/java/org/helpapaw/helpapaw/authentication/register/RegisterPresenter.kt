@@ -79,7 +79,7 @@ class RegisterPresenter(override var view: RegisterContract.View?): Presenter<Re
 
     private fun setProgressIndicator(active: Boolean) {
         view?.setProgressIndicator(active)
-        this.showProgressBar = active
+        showProgressBar = active
     }
 
 

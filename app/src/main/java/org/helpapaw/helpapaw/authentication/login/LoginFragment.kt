@@ -16,6 +16,34 @@ import org.helpapaw.helpapaw.reusable.AlertDialogFragment
 
 
 class LoginFragment : BaseFragment(), LoginContract.View {
+
+    var loginPresenter: LoginPresenter? = null
+    lateinit var actionsListener: LoginContract.UserActionsListener
+    lateinit var binding: FragmentLoginBinding
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        binding = DataBindingUtil.inflate(layoutInflater, R.layout.fragment_login, container, false)
+        if (savedInstanceState == null || PresenterManager.instance.getPresenter<LoginPresenter>(screenId) == null) {
+            loginPresenter = LoginPresenter (this)
+        } else {
+            loginPresenter = PresenterManager.instance.getPresenter(screenId)
+            loginPresenter?.view = this
+        }
+
+        actionsListener = loginPresenter!!;
+
+        binding.btnLogin.setOnClickListener(getBtnLoginClickListener());
+        binding.btnShowRegister.setOnClickListener(getBtnShowRegisterClickListener());
+        binding.btnLoginFb.setOnClickListener(getBtnLoginFbClickListener());
+        binding.btnLoginFb.setReadPermissions("email");
+        binding.btnLoginFb.setFragment(this);
+
+        actionsListener.onInitLoginScreen();
+
+        return binding.root
+
+    }
+
     override fun showMessage(message: String) {
         AlertDialogFragment.showAlert("Error", message, true, fragmentManager)
     }
@@ -63,28 +91,11 @@ class LoginFragment : BaseFragment(), LoginContract.View {
         return loginPresenter
     }
 
-    var loginPresenter: LoginPresenter? = null
-    lateinit var actionsListener: LoginContract.UserActionsListener
-    lateinit var binding: FragmentLoginBinding
-
 
     companion object {
         fun newInstance(): LoginFragment {
             return LoginFragment()
         }
-    }
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        binding = DataBindingUtil.inflate(layoutInflater, R.layout.fragment_login, container, false)
-        if (savedInstanceState == null || PresenterManager.instance?.getPresenter<LoginPresenter>(screenId) == null) {
-            loginPresenter = LoginPresenter (this)
-        } else {
-            loginPresenter = PresenterManager.instance?.getPresenter(screenId)
-            loginPresenter?.view = this
-        }
-
-        return super.onCreateView(inflater, container, savedInstanceState)
-
     }
 
 

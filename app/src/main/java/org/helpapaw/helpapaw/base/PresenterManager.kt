@@ -1,6 +1,5 @@
 package org.helpapaw.helpapaw.base
 
-import io.fabric.sdk.android.services.concurrency.AsyncTask.init
 import java.util.HashMap
 
 class PresenterManager(val presenterMap: MutableMap<String, Presenter<*>> = HashMap()) {
