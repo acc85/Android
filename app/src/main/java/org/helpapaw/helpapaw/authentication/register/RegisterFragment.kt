@@ -12,10 +12,34 @@ import org.helpapaw.helpapaw.base.PresenterManager
 import org.helpapaw.helpapaw.databinding.FragmentRegisterBinding
 import org.helpapaw.helpapaw.reusable.AlertDialogFragment
 
-class RegisterFragment:BaseFragment(), RegisterContract.View{
+class RegisterFragment:BaseFragment (), RegisterContract.View{
 
-    internal lateinit var registerPresenter: RegisterPresenter
-    internal lateinit var actionsListener: RegisterContract.UserActionsListener
+    override fun hideKeyboard() {
+        super.hideKeyboard()
+    }
+
+    override fun showMessage(message: String) {
+        AlertDialogFragment.showAlert("Error", message, true, this.fragmentManager)
+    }
+
+    override fun showEmailErrorMessage() {
+        binding.editEmail.error = getString(R.string.txt_invalid_email)
+    }
+
+    override fun showPasswordErrorMessage() {
+        binding.editPassword.error = getString(R.string.txt_invalid_password)
+    }
+
+    override fun isActive(): Boolean {
+        return isAdded
+    }
+
+    override fun getPresenter(): Presenter<*>? {
+        return registerPresenter
+    }
+
+    private var registerPresenter: RegisterPresenter? = null
+    private var actionsListener: RegisterContract.UserActionsListener? = null
 
     internal lateinit var binding: FragmentRegisterBinding
 
@@ -28,11 +52,11 @@ class RegisterFragment:BaseFragment(), RegisterContract.View{
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_register, container, false)
 
-        if (savedInstanceState == null || PresenterManager.getInstance().getPresenter<RegisterPresenter>(screenId) == null) {
+        if (savedInstanceState == null || PresenterManager.instance.getPresenter<RegisterPresenter>(screenId) == null) {
             registerPresenter = RegisterPresenter(this)
         } else {
-            registerPresenter = PresenterManager.getInstance().getPresenter(screenId)
-            registerPresenter.view = this
+            registerPresenter = PresenterManager.instance.getPresenter(screenId)
+            registerPresenter?.view = this
         }
 
         actionsListener = registerPresenter
@@ -41,32 +65,8 @@ class RegisterFragment:BaseFragment(), RegisterContract.View{
         binding.btnShowLogin.setOnClickListener(getBtnShowLoginClickListener())
         binding.txtWhyPhone.setOnClickListener(getTxtWhyPhoneClickListener())
 
-        actionsListener.onInitRegisterScreen()
-
+        actionsListener?.onInitRegisterScreen()
         return binding.root
-    }
-
-    override fun hideKeyboard() {
-        super.hideKeyboard()
-    }
-
-    override fun getPresenter(): Presenter<RegisterContract.View>? {
-        return registerPresenter
-    }
-
-    override val isActive: Boolean
-        get() = isAdded
-
-    override fun showMessage(message: String) {
-        AlertDialogFragment.showAlert("Error", message, true, this.fragmentManager)
-    }
-
-    override fun showEmailErrorMessage() {
-        binding.editEmail.error = getString(R.string.txt_invalid_email)
-    }
-
-    override fun showPasswordErrorMessage() {
-        binding.editPassword.error = getString(R.string.txt_invalid_password)
     }
 
     override fun showPasswordConfirmationErrorMessage() {
@@ -99,11 +99,11 @@ class RegisterFragment:BaseFragment(), RegisterContract.View{
         showMessage(getString(R.string.txt_no_internet))
     }
 
-    fun getBtnShowLoginClickListener(): View.OnClickListener {
-        return View.OnClickListener { actionsListener.onLoginButtonClicked() }
+    private fun getBtnShowLoginClickListener(): View.OnClickListener {
+        return View.OnClickListener { actionsListener?.onLoginButtonClicked() }
     }
 
-    fun getBtnSignUpListener(): View.OnClickListener {
+    private fun getBtnSignUpListener(): View.OnClickListener {
         return View.OnClickListener {
             val email = binding.editEmail.text?.toString()?.trim()?:""
             val password = binding.editPassword.text?.toString()?:""
@@ -111,12 +111,12 @@ class RegisterFragment:BaseFragment(), RegisterContract.View{
             val name = binding.editName.text?.toString()?:""
             val phoneNumber = binding.editPhone.text?.toString()?:""
 
-            actionsListener.onRegisterButtonClicked(email, password, passwordConfirmation, name, phoneNumber)
+            actionsListener?.onRegisterButtonClicked(email, password, passwordConfirmation, name, phoneNumber)
         }
     }
 
-    fun getTxtWhyPhoneClickListener(): View.OnClickListener {
-        return View.OnClickListener { actionsListener.onWhyPhoneButtonClicked() }
+    private fun getTxtWhyPhoneClickListener(): View.OnClickListener {
+        return View.OnClickListener { actionsListener?.onWhyPhoneButtonClicked() }
     }
 
 }

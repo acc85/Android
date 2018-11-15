@@ -10,7 +10,7 @@ import org.helpapaw.helpapaw.data.user.UserManager
 import org.helpapaw.helpapaw.utils.Injection
 import org.helpapaw.helpapaw.utils.Utils
 
-class LoginPresenter(val view: LoginContract.View): Presenter<LoginContract.View>(view), LoginContract.UserActionsListener{
+class LoginPresenter(override var view: LoginContract.View?): Presenter<LoginContract.View>(view), LoginContract.UserActionsListener{
 
     companion object {
         private const val MIN_PASS_LENGTH:Int = 6
@@ -26,26 +26,26 @@ class LoginPresenter(val view: LoginContract.View): Presenter<LoginContract.View
     }
 
     override fun onLoginButtonClicked(email: String, password: String) {
-        getView().clearErrorMessages()
+        view?.clearErrorMessages()
 
         if (email.isBlank() || !Utils.getInstance().isEmailValid(email)) {
-            getView().showEmailErrorMessage()
+            view?.showEmailErrorMessage()
             return
         }
 
         if (password.isEmpty() || password.length < MIN_PASS_LENGTH) {
-            getView().showPasswordErrorMessage()
+            view?.showPasswordErrorMessage()
             return
         }
 
-        getView().hideKeyboard()
+        view?.hideKeyboard()
         setProgressIndicator(true)
         attemptToLogin(email, password)
 
     }
 
     override fun onRegisterButtonClicked() {
-        getView().openRegisterScreen()
+        view?.openRegisterScreen()
     }
 
     override fun onLoginFbButtonClicked(activity: AppCompatActivity, callbackManager: CallbackManager) {
@@ -72,34 +72,34 @@ class LoginPresenter(val view: LoginContract.View): Presenter<LoginContract.View
                     this.onLoginSuccess()
                 }
 
-                override fun onLoginFailure(message:String ) {
+                override fun onLoginFailure(message:String) {
                     this.onLoginFailure(message)
                 }
             })
         } else {
-            getView().showNoInternetMessage()
+            view?.showNoInternetMessage()
             setProgressIndicator(false)
         }
     }
 
     private fun onLoginSuccess() {
-        if (!isViewAvailable()) return
-        getView().closeLoginScreen()
+        if (!isViewAvailable()!!) return
+        view?.closeLoginScreen()
     }
 
     private fun onLoginFailure(message:String) {
-        if (!isViewAvailable()) return
+        if (!isViewAvailable()!!) return
         setProgressIndicator(false)
-        getView().showMessage(message)
+        view?.showMessage(message)
     }
 
     private fun setProgressIndicator(active:Boolean) {
-        getView().setProgressIndicator(active)
+        view?.setProgressIndicator(active)
         showProgressBar = active
     }
 
-    private fun isViewAvailable():Boolean {
-        return getView() != null && getView().isActive()
+    private fun isViewAvailable():Boolean? {
+        return view?.isActive()
     }
 
 }

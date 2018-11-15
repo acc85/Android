@@ -70,7 +70,7 @@ abstract class BaseActivity : AppCompatActivity() {
                     startActivity(intent)
                 }
                 R.id.nav_item_sign_in_out -> {
-                    if (userManager.isLoggedIn) {
+                    if (userManager.isLoggedIn()) {
                         logOut()
                     } else {
                         logIn()
@@ -97,7 +97,7 @@ abstract class BaseActivity : AppCompatActivity() {
                     binding.navView.menu.findItem(R.id.nav_item_sign_in_out).setTitle(R.string.txt_log_in)
                 }
 
-                override fun onLogoutFailure(message: String?) {
+                override fun onLogoutFailure(message: String) {
                     AlertDialogFragment.showAlert(getString(R.string.txt_logout_failed), message, true, supportFragmentManager)
                 }
             }))
@@ -139,7 +139,7 @@ abstract class BaseActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         binding.navView.menu.findItem(R.id.nav_item_sign_in_out).isChecked = false
-        if (userManager.isLoggedIn) {
+        if (userManager.isLoggedIn()) {
             binding.navView.menu.findItem(R.id.nav_item_sign_in_out).setTitle(R.string.txt_log_out)
         } else {
             binding.navView.menu.findItem(R.id.nav_item_sign_in_out).setTitle(R.string.txt_log_in)

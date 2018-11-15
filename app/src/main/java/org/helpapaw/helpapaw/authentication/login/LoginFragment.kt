@@ -59,11 +59,11 @@ class LoginFragment : BaseFragment(), LoginContract.View {
         return isAdded
     }
 
-    override fun getPresenter(): Presenter<*> {
+    override fun getPresenter(): Presenter<*>? {
         return loginPresenter
     }
 
-    lateinit var loginPresenter: LoginPresenter
+    var loginPresenter: LoginPresenter? = null
     lateinit var actionsListener: LoginContract.UserActionsListener
     lateinit var binding: FragmentLoginBinding
 
@@ -76,11 +76,11 @@ class LoginFragment : BaseFragment(), LoginContract.View {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = DataBindingUtil.inflate(layoutInflater, R.layout.fragment_login, container, false)
-        if (savedInstanceState == null || PresenterManager.getInstance().getPresenter<LoginPresenter>(screenId) == null) {
+        if (savedInstanceState == null || PresenterManager.instance?.getPresenter<LoginPresenter>(screenId) == null) {
             loginPresenter = LoginPresenter (this)
         } else {
-            loginPresenter = PresenterManager.getInstance().getPresenter(screenId)
-            loginPresenter.setView(this)
+            loginPresenter = PresenterManager.instance?.getPresenter(screenId)
+            loginPresenter?.view = this
         }
 
         return super.onCreateView(inflater, container, savedInstanceState)

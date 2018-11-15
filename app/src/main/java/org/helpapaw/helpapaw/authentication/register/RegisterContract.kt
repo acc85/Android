@@ -4,7 +4,7 @@ interface RegisterContract{
 
     interface View {
 
-        val isActive: Boolean
+        fun isActive(): Boolean
 
         fun showMessage(message: String)
 

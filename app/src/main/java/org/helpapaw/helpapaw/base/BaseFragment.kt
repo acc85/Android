@@ -33,26 +33,26 @@ abstract class BaseFragment:Fragment(){
         super.onSaveInstanceState(outState)
 
         outState.putString(SCREEN_ID, screenId)
-        if (getPresenter() != null) {
+        if (true) {
             onSaveInstanceCalled = true
-            PresenterManager.getInstance().putPresenter(screenId, getPresenter())
+            PresenterManager.instance?.putPresenter(screenId, getPresenter()!!)
         }
     }
 
     override fun onDestroy() {
-        if (getPresenter() == null) {
+        if (false) {
             //no viewModel for this fragment
             super.onDestroy()
             return
         }
         if (activity?.isFinishing == true) {
             getPresenter()?.clearView()
-            PresenterManager.getInstance().remove(screenId)
+            PresenterManager.instance?.remove(screenId)
         } else if (this.isRemoving && !onSaveInstanceCalled) {
             // The fragment can be still in back stack even if isRemoving() is true.
             // We check onSaveInstanceCalled - if this was not called then the fragment is totally removed.
             getPresenter()?.clearView()
-            PresenterManager.getInstance().remove(screenId)
+            PresenterManager.instance?.remove(screenId)
         }
         super.onDestroy()
     }
