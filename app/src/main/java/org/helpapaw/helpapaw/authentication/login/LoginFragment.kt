@@ -17,9 +17,9 @@ import org.helpapaw.helpapaw.reusable.AlertDialogFragment
 
 class LoginFragment : BaseFragment(), LoginContract.View {
 
-    var loginPresenter: LoginPresenter? = null
-    lateinit var actionsListener: LoginContract.UserActionsListener
-    lateinit var binding: FragmentLoginBinding
+    private var loginPresenter: LoginPresenter? = null
+    private lateinit var actionsListener: LoginContract.UserActionsListener
+    private lateinit var binding: FragmentLoginBinding
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = DataBindingUtil.inflate(layoutInflater, R.layout.fragment_login, container, false)
@@ -30,15 +30,15 @@ class LoginFragment : BaseFragment(), LoginContract.View {
             loginPresenter?.view = this
         }
 
-        actionsListener = loginPresenter!!;
+        actionsListener = loginPresenter!!
 
-        binding.btnLogin.setOnClickListener(getBtnLoginClickListener());
-        binding.btnShowRegister.setOnClickListener(getBtnShowRegisterClickListener());
-        binding.btnLoginFb.setOnClickListener(getBtnLoginFbClickListener());
-        binding.btnLoginFb.setReadPermissions("email");
-        binding.btnLoginFb.setFragment(this);
+        binding.btnLogin.setOnClickListener(getBtnLoginClickListener())
+        binding.btnShowRegister.setOnClickListener(getBtnShowRegisterClickListener())
+        binding.btnLoginFb.setOnClickListener(getBtnLoginFbClickListener())
+        binding.btnLoginFb.setReadPermissions("email")
+        binding.btnLoginFb.fragment = this
 
-        actionsListener.onInitLoginScreen();
+        actionsListener.onInitLoginScreen()
 
         return binding.root
 
@@ -99,7 +99,7 @@ class LoginFragment : BaseFragment(), LoginContract.View {
     }
 
 
-    fun getBtnLoginClickListener():View.OnClickListener{
+    private fun getBtnLoginClickListener():View.OnClickListener{
         return View.OnClickListener {
             val email:String  = binding.editEmail.text.toString().trim()
             val password:String  = binding.editPassword.text.toString()
@@ -108,13 +108,13 @@ class LoginFragment : BaseFragment(), LoginContract.View {
     }
 
 
-    fun getBtnShowRegisterClickListener(): View.OnClickListener {
+    private fun getBtnShowRegisterClickListener(): View.OnClickListener {
         return View.OnClickListener {
             actionsListener.onRegisterButtonClicked()
         }
     }
 
-    fun getBtnLoginFbClickListener():View.OnClickListener{
+    private fun getBtnLoginFbClickListener():View.OnClickListener{
         return View.OnClickListener {
             val activity:AuthenticationActivity  = this.activity as AuthenticationActivity
             actionsListener.onLoginFbButtonClicked(activity, activity.callbackManager)
