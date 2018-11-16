@@ -52,7 +52,7 @@ class BackendlessCommentRepository : CommentRepository {
                         Log.d(BackendlessCommentRepository::class.java.name, "Failed to parse comment date.")
                     }
 
-                    val comment = Comment(currentComment.objectId, authorName, dateCreated, currentComment.text, currentComment.type)
+                    val comment = Comment(currentComment.objectId, authorName, dateCreated, currentComment.comment, currentComment.type)
                     comments.add(comment)
                 }
 
@@ -65,7 +65,7 @@ class BackendlessCommentRepository : CommentRepository {
         val dateFormat = SimpleDateFormat(DATE_TIME_FORMAT, Locale.getDefault())
         val currentDate = dateFormat.format(Date())
 
-        val backendlessComment = FINComment(commentText, currentDate, signalId, COMMENT_TYPE_USER_COMMENT, Backendless.UserService.CurrentUser())
+        val backendlessComment = FINComment(comment = commentText, created = currentDate.toString(), signalID = signalId, type = COMMENT_TYPE_USER_COMMENT, author = Backendless.UserService.CurrentUser())
 
         val commentsStore = Backendless.Data.of(FINComment::class.java)
 
@@ -94,7 +94,7 @@ class BackendlessCommentRepository : CommentRepository {
                             Log.d(BackendlessCommentRepository::class.java.name, "Failed to parse comment date.")
                         }
                         val comment = Comment(newComment?.objectId
-                                ?: "", authorName, dateCreated, newComment?.text
+                                ?: "", authorName, dateCreated, newComment?.comment
                                 ?: "", COMMENT_TYPE_USER_COMMENT)
                         callback.onCommentSaved(comment)
                     }

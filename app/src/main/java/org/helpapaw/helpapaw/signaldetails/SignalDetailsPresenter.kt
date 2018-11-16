@@ -1,5 +1,6 @@
 package org.helpapaw.helpapaw.signaldetails
 
+import android.os.Build.VERSION_CODES.M
 import org.helpapaw.helpapaw.base.Presenter
 import org.helpapaw.helpapaw.data.models.Comment
 import org.helpapaw.helpapaw.data.models.Signal
@@ -14,7 +15,7 @@ import org.helpapaw.helpapaw.utils.Utils
 class SignalDetailsPresenter(override var view: SignalDetailsContract.View?) : Presenter<SignalDetailsContract.View>(view), SignalDetailsContract.UserActionsListener {
 
     private var showProgressBar: Boolean = false
-    private var commentList: List<Comment>? = null
+    private var commentList: MutableList<Comment>? = null
     lateinit var signal: Signal
 
     private var statusChanged: Boolean = false
@@ -61,7 +62,7 @@ class SignalDetailsPresenter(override var view: SignalDetailsContract.View?) : P
             commentRepository?.getAllCommentsBySignalId(signalId, object : CommentRepository.LoadCommentsCallback {
                 override fun onCommentsLoaded(comments: List<Comment>) {
                     if (!isViewAvailable()) return
-                    commentList = comments
+                    commentList = comments.toMutableList()
                     setProgressIndicator(false)
 
                     if (commentList?.size == 0) {
@@ -167,7 +168,7 @@ class SignalDetailsPresenter(override var view: SignalDetailsContract.View?) : P
             override fun onCommentSaved(comment: Comment) {
                 if (!isViewAvailable()) return
                 setProgressIndicator(false)
-                commentList?.plus(comment)
+                commentList?.add(comment)
                 view!!.setNoCommentsTextVisibility(false)
                 view!!.displayComments(commentList)
             }

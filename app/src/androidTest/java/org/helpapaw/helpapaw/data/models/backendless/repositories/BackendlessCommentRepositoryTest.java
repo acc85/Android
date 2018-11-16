@@ -110,7 +110,7 @@ public class BackendlessCommentRepositoryTest {
                                     Log.d(BackendlessCommentRepository.class.getName(), "Failed to parse comment date.");
                                 }
 
-                                savedComment = new Comment(newComment.getObjectId(), authorName, dateCreated, newComment.getText(), COMMENT_TYPE_USER_COMMENT);
+                                savedComment = new Comment(newComment.getObjectId(), authorName, dateCreated, newComment.getComment(), COMMENT_TYPE_USER_COMMENT);
                                 countDownLatch.countDown();
                             }
 

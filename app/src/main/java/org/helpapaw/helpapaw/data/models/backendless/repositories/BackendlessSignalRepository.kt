@@ -1,5 +1,6 @@
 package org.helpapaw.helpapaw.data.models.backendless.repositories
 
+import android.util.Log
 import com.backendless.Backendless
 import com.backendless.BackendlessUser
 import com.backendless.async.callback.AsyncCallback
@@ -12,6 +13,8 @@ import org.helpapaw.helpapaw.base.PawApplication
 import org.helpapaw.helpapaw.data.models.Signal
 import org.helpapaw.helpapaw.db.SignalsDatabase
 import java.util.*
+import kotlin.math.sign
+
 class BackendlessSignalRepository:SignalRepository{
 
     private var signalsDatabase: SignalsDatabase = SignalsDatabase.getDatabase(PawApplication.getContext())
@@ -42,8 +45,8 @@ class BackendlessSignalRepository:SignalRepository{
             override fun handleResponse(geoPoint: GeoPoint) {
                 val signalTitle:String = geoPoint.getMetadata(SIGNAL_TITLE) as String
 
-                val dateSubmittedString = geoPoint.getMetadata(SIGNAL_DATE_SUBMITTED)
-                val dateSubmitted = Date(dateSubmittedString as Long)
+                val dateSubmittedString:String = geoPoint.getMetadata(SIGNAL_DATE_SUBMITTED) as String
+                val dateSubmitted = Date(dateSubmittedString.toLong())
                 val signalStatus:String = geoPoint.getMetadata(SIGNAL_STATUS) as String
 
                 lateinit var signalAuthorName: String
@@ -115,8 +118,8 @@ class BackendlessSignalRepository:SignalRepository{
                     }
 
                     override fun handleResponse(geoPoint: GeoPoint?) {
-                        val newSignalStatusString = geoPoint?.getMetadata(SIGNAL_STATUS)
-                        val newSignalStatusInt = newSignalStatusString as Int
+                        val newSignalStatusString:String = geoPoint?.getMetadata(SIGNAL_STATUS) as String
+                        val newSignalStatusInt = newSignalStatusString.toInt()
 
                         // Update signal in database
                         val signalsFromDB = signalsDatabase.signalDao().getSignal(signalId)
@@ -134,12 +137,11 @@ class BackendlessSignalRepository:SignalRepository{
     }
 
     override fun markSignalsAsSeen(signals: List<Signal>) {
-        val signalIds:Array<String> = arrayOf()
+        val signalIds:Array<String> = Array(signals.size){""}
         for (i in signals.indices) {
             val signal = signals[i]
             signalIds[i] = signal.id
         }
-
         val signalsFromDB = signalsDatabase.signalDao().getSignals(signalIds)
         for (signal in signalsFromDB) {
             signal.seen = true
@@ -161,6 +163,59 @@ class BackendlessSignalRepository:SignalRepository{
         if (category != null) {
             query.addCategory(category)
         }
+
+        Backendless.Geo.getPoints(query, object : AsyncCallback<List<GeoPoint>> {
+            override fun handleResponse(response: List<GeoPoint>?) {
+                if (response == null) {
+                    return
+                }
+
+                val signals = ArrayList<Signal>()
+                for (i in response.indices) {
+                    val geoPoint = response[i]
+
+                    val signalTitle:String = geoPoint.getMetadata(SIGNAL_TITLE) as String
+                    val dateSubmittedString:String = geoPoint.getMetadata(SIGNAL_DATE_SUBMITTED) as String
+                    val signalStatus:String = geoPoint.getMetadata(SIGNAL_STATUS) as String
+
+                    var dateSubmitted: Date? = null
+                    try {
+                        dateSubmitted = Date(dateSubmittedString.toLong())
+                    } catch (ex: Exception) {
+                        Log.d(BackendlessSignalRepository::class.java.name, "Failed to parse signal date.")
+                    }
+
+                    var signalAuthorName: String? = null
+                    var signalAuthorPhone: String? = null
+
+                    if (geoPoint.getMetadata(SIGNAL_AUTHOR) != null) {
+                        signalAuthorName = (geoPoint.getMetadata(SIGNAL_AUTHOR) as BackendlessUser).getProperty(NAME_FIELD) as String
+                    }
+
+                    if (geoPoint.getMetadata(SIGNAL_AUTHOR) != null) {
+                        signalAuthorPhone = (geoPoint.getMetadata(SIGNAL_AUTHOR) as BackendlessUser).getProperty(PHONE_FIELD) as String
+                    }
+
+                    val newSignal = Signal(geoPoint.objectId, signalTitle, dateSubmitted!!, Integer.parseInt(signalStatus),
+                            signalAuthorName!!, signalAuthorPhone!!, geoPoint.latitude!!, geoPoint.longitude!!, false)
+
+                    // If signal is already in DB - keep seen status
+                    val signalsFromDB = signalsDatabase.signalDao().getSignal(geoPoint.objectId)
+                    if (signalsFromDB.size > 0) {
+                        val (_, _, _, _, _, _, _, _, _, seen) = signalsFromDB[0]
+                        newSignal.seen = seen
+                    }
+                    signalsDatabase.signalDao().saveSignal(newSignal)
+
+                    signals.add(newSignal)
+                }
+                callback.onSignalsLoaded(signals)
+            }
+
+            override fun handleFault(fault: BackendlessFault) {
+                callback.onSignalsFailure(fault.message)
+            }
+        })
     }
 
     private fun getCategory(): String? {

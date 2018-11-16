@@ -119,7 +119,7 @@ class SignalDetailsFragment : BaseFragment(), SignalDetailsContract.View {
                 commentText = comment?.text ?: ""
             }
 
-            // text and date elements are common for both type of comments so they are set in common code
+            // comment and date elements are common for both type of comments so they are set in common code
             val txtCommentText = inflatedCommentView.findViewById<View>(R.id.txt_comment_text) as TextView
             val txtCommentDate = inflatedCommentView.findViewById<View>(R.id.txt_comment_date) as TextView
 
@@ -133,7 +133,11 @@ class SignalDetailsFragment : BaseFragment(), SignalDetailsContract.View {
     }
 
     override fun onStatusChangeRequestFinished(success: Boolean, newStatus: Int) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        if (success) {
+            actionsListener?.loadCommentsForSignal(mSignal!!.id)
+        }
+
+        binding.viewSignalStatus.onStatusChangeRequestFinished(success, newStatus)
     }
 
 

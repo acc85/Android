@@ -4,9 +4,9 @@ import android.util.Log
 import org.json.JSONObject
 import java.util.*
 
-data class Comment(var objectId: String, var ownerName: String, var dateCreated: Date = Date(0), var text: String, var type: String? = ""){
+data class Comment(var objectId: String?, var ownerName: String, var dateCreated: Date = Date(0), var text: String?, var type: String? = ""){
 
-    constructor():this("","",Date(),"","")
+    constructor():this(null,"",Date(),"","")
 
     companion object {
         private val TAG:String = Comment::class.java.simpleName
