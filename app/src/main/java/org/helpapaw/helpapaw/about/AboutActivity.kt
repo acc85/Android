@@ -1,11 +1,13 @@
 package org.helpapaw.helpapaw.about
 
 import android.os.Bundle
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import org.helpapaw.helpapaw.BuildConfig
 import org.helpapaw.helpapaw.R
 import org.helpapaw.helpapaw.databinding.ActivityAboutBinding
+import org.helpapaw.helpapaw.utils.SharingUtils
 
 class AboutActivity: AppCompatActivity() {
 
@@ -19,6 +21,8 @@ class AboutActivity: AppCompatActivity() {
         supportActionBar?.setDisplayShowTitleEnabled(false)
         binding.toolbarTitle.text = getString(R.string.string_about_title)
         binding.tvAboutVersion.text = BuildConfig.VERSION_NAME
+
+        binding.btnAboutContacts.setOnClickListener { SharingUtils.contactSupport(this) }
     }
 
     override fun onSupportNavigateUp(): Boolean {
