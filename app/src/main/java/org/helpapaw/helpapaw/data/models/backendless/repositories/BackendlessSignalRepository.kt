@@ -13,7 +13,6 @@ import org.helpapaw.helpapaw.base.PawApplication
 import org.helpapaw.helpapaw.data.models.Signal
 import org.helpapaw.helpapaw.db.SignalsDatabase
 import java.util.*
-import kotlin.math.sign
 
 class BackendlessSignalRepository:SignalRepository{
 
@@ -39,7 +38,7 @@ class BackendlessSignalRepository:SignalRepository{
         val categories = mutableListOf<String>()
         val category = getCategory()
         if (category != null) {
-            categories.plus(category)
+            categories.add(category)
         }
         Backendless.Geo.savePoint(signal.latitude, signal.longitude, categories, meta, object : AsyncCallback<GeoPoint> {
             override fun handleResponse(geoPoint: GeoPoint) {
@@ -137,10 +136,8 @@ class BackendlessSignalRepository:SignalRepository{
     }
 
     override fun markSignalsAsSeen(signals: List<Signal>) {
-        val signalIds:Array<String> = Array(signals.size){""}
-        for (i in signals.indices) {
-            val signal = signals[i]
-            signalIds[i] = signal.id
+        val signalIds:Array<String> = Array(signals.size){it->
+            signals[it].id
         }
         val signalsFromDB = signalsDatabase.signalDao().getSignals(signalIds)
         for (signal in signalsFromDB) {
@@ -178,9 +175,9 @@ class BackendlessSignalRepository:SignalRepository{
                     val dateSubmittedString:String = geoPoint.getMetadata(SIGNAL_DATE_SUBMITTED) as String
                     val signalStatus:String = geoPoint.getMetadata(SIGNAL_STATUS) as String
 
-                    var dateSubmitted: Date? = null
+                    lateinit var submittedDate: Date
                     try {
-                        dateSubmitted = Date(dateSubmittedString.toLong())
+                        submittedDate = Date(dateSubmittedString.toLong())
                     } catch (ex: Exception) {
                         Log.d(BackendlessSignalRepository::class.java.name, "Failed to parse signal date.")
                     }
@@ -196,7 +193,7 @@ class BackendlessSignalRepository:SignalRepository{
                         signalAuthorPhone = (geoPoint.getMetadata(SIGNAL_AUTHOR) as BackendlessUser).getProperty(PHONE_FIELD) as String
                     }
 
-                    val newSignal = Signal(geoPoint.objectId, signalTitle, dateSubmitted!!, Integer.parseInt(signalStatus),
+                    val newSignal = Signal(geoPoint.objectId, signalTitle, submittedDate, Integer.parseInt(signalStatus),
                             signalAuthorName!!, signalAuthorPhone!!, geoPoint.latitude!!, geoPoint.longitude!!, false)
 
                     // If signal is already in DB - keep seen status
