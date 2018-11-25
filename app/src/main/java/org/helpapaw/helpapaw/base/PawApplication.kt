@@ -1,13 +1,25 @@
 package org.helpapaw.helpapaw.base
 
-import android.app.Application
+import android.app.Activity
 import android.os.StrictMode
+import androidx.fragment.app.Fragment
 import com.backendless.Backendless
+import dagger.android.DispatchingAndroidInjector
+import dagger.android.support.DaggerApplication
 import org.helpapaw.helpapaw.data.user.UserManager
+import org.helpapaw.helpapaw.di.DaggerMainAppComponent
 import org.helpapaw.helpapaw.utils.Injection
 import org.helpapaw.helpapaw.utils.NotificationUtils
+import javax.inject.Inject
 
-class PawApplication:Application(){
+class PawApplication: DaggerApplication(){
+
+    @Inject
+    lateinit var activityInject: DispatchingAndroidInjector<Activity>
+
+    override fun applicationInjector() =
+        DaggerMainAppComponent.builder().application(this).build()
+
 
     companion object {
         const val BACKENDLESS_APP_ID = "BDCD56B9-351A-E067-FFA4-9EA9CF2F4000"

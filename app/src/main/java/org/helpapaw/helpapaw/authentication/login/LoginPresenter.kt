@@ -9,8 +9,12 @@ import org.helpapaw.helpapaw.base.Presenter
 import org.helpapaw.helpapaw.data.user.UserManager
 import org.helpapaw.helpapaw.utils.Injection
 import org.helpapaw.helpapaw.utils.Utils
+import javax.inject.Inject
 
 class LoginPresenter(override var view: LoginContract.View?): Presenter<LoginContract.View>(view), LoginContract.UserActionsListener{
+
+    @Inject
+    constructor(view: LoginFragment?) : this(view as LoginContract.View)
 
     companion object {
         private const val MIN_PASS_LENGTH:Int = 6

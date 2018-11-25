@@ -1,18 +1,29 @@
 package org.helpapaw.helpapaw.authentication.register
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
+import dagger.android.support.AndroidSupportInjection
 import org.helpapaw.helpapaw.R
+import org.helpapaw.helpapaw.base.BaseDaggerFragment
 import org.helpapaw.helpapaw.base.BaseFragment
 import org.helpapaw.helpapaw.base.Presenter
-import org.helpapaw.helpapaw.base.PresenterManager
 import org.helpapaw.helpapaw.databinding.FragmentRegisterBinding
 import org.helpapaw.helpapaw.reusable.AlertDialogFragment
+import javax.inject.Inject
 
-class RegisterFragment:BaseFragment (), RegisterContract.View{
+class RegisterFragment:BaseDaggerFragment(), RegisterContract.View{
+
+    @Inject
+    lateinit var registerPresenter: RegisterPresenter
+
+    override fun onAttach(context: Context?) {
+        AndroidSupportInjection.inject(this)
+        super.onAttach(context)
+    }
 
     override fun hideKeyboard() {
         super.hideKeyboard()
@@ -38,7 +49,6 @@ class RegisterFragment:BaseFragment (), RegisterContract.View{
         return registerPresenter
     }
 
-    private var registerPresenter: RegisterPresenter? = null
     private var actionsListener: RegisterContract.UserActionsListener? = null
 
     internal lateinit var binding: FragmentRegisterBinding
@@ -51,13 +61,6 @@ class RegisterFragment:BaseFragment (), RegisterContract.View{
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_register, container, false)
-
-        if (savedInstanceState == null || PresenterManager.instance.getPresenter<RegisterPresenter>(screenId) == null) {
-            registerPresenter = RegisterPresenter(this)
-        } else {
-            registerPresenter = PresenterManager.instance.getPresenter(screenId)
-            registerPresenter?.view = this
-        }
 
         actionsListener = registerPresenter
 

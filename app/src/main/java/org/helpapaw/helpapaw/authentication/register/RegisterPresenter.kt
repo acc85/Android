@@ -5,8 +5,12 @@ import org.helpapaw.helpapaw.base.Presenter
 import org.helpapaw.helpapaw.data.user.UserManager
 import org.helpapaw.helpapaw.utils.Injection
 import org.helpapaw.helpapaw.utils.Utils
+import javax.inject.Inject
 
 class RegisterPresenter(override var view: RegisterContract.View?): Presenter<RegisterContract.View>(view),RegisterContract.UserActionsListener {
+
+    @Inject
+    constructor(view:RegisterFragment):this(view as RegisterContract.View)
 
     companion object {
         private const val MIN_PASS_LENGTH = 6
