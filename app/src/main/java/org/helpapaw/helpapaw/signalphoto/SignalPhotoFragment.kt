@@ -8,10 +8,10 @@ import androidx.databinding.DataBindingUtil
 import org.helpapaw.helpapaw.R
 import org.helpapaw.helpapaw.base.BaseFragment
 import org.helpapaw.helpapaw.base.Presenter
-import org.helpapaw.helpapaw.base.PresenterManager
 import org.helpapaw.helpapaw.data.models.Signal
 import org.helpapaw.helpapaw.databinding.FragmentSignalPhotoBinding
 import org.helpapaw.helpapaw.utils.Injection
+import javax.inject.Inject
 
 class SignalPhotoFragment:BaseFragment(),SignalPhotoContract.View {
 
@@ -28,7 +28,8 @@ class SignalPhotoFragment:BaseFragment(),SignalPhotoContract.View {
 
     }
 
-    internal var signalPhotoPresenter: SignalPhotoPresenter?= null
+    @Inject
+    lateinit internal var signalPhotoPresenter: SignalPhotoPresenter
     internal var actionsListener: SignalPhotoContract.UserActionsListener? = null
 
     internal lateinit var binding: FragmentSignalPhotoBinding
@@ -37,14 +38,6 @@ class SignalPhotoFragment:BaseFragment(),SignalPhotoContract.View {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         // Inflate the layout for this fragment
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_signal_photo, container, false)
-
-        if (savedInstanceState == null || PresenterManager.instance.getPresenter<SignalPhotoPresenter>(screenId) == null) {
-            signalPhotoPresenter = SignalPhotoPresenter(this)
-        } else {
-            signalPhotoPresenter = PresenterManager.instance.getPresenter(screenId)
-            signalPhotoPresenter?.view = this
-        }
-
         actionsListener = signalPhotoPresenter
         var mSignal: Signal? = null
         if (arguments != null) {

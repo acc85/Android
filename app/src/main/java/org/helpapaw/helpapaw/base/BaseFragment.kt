@@ -7,11 +7,18 @@ import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentTransaction
+import dagger.android.support.AndroidSupportInjection
 import dagger.android.support.DaggerFragment
 import org.helpapaw.helpapaw.R
 import java.util.*
 
-abstract class BaseFragment:Fragment(){
+abstract class BaseFragment:DaggerFragment(){
+
+    override fun onAttach(context: Context?) {
+        AndroidSupportInjection.inject(this)
+        super.onAttach(context)
+    }
+
 
     companion object {
         const val SCREEN_ID:String = "screenId"
@@ -58,9 +65,9 @@ abstract class BaseFragment:Fragment(){
         super.onDestroy()
     }
 
-    protected fun openFragment(fragmentToOpen:Fragment , addToBackStack:Boolean, shouldAnimate:Boolean , animateBothDirections:Boolean) {
+    protected fun openFragment(fragmentToOpen: Fragment, addToBackStack:Boolean, shouldAnimate:Boolean, animateBothDirections:Boolean) {
         if (activity != null) {
-            val toolbar:Toolbar? = activity?.findViewById<Toolbar>(R.id.toolbar)
+            val toolbar: Toolbar? = activity?.findViewById<Toolbar>(R.id.toolbar)
             toolbar?.menu?.clear()
             val ft: FragmentTransaction? = activity?.supportFragmentManager?.beginTransaction()
             if (shouldAnimate) {
@@ -83,7 +90,7 @@ abstract class BaseFragment:Fragment(){
     open protected fun hideKeyboard() {
         val view: View? = activity?.currentFocus
         if (view != null) {
-            val imm:InputMethodManager  = activity?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            val imm: InputMethodManager = activity?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0)
         }
     }

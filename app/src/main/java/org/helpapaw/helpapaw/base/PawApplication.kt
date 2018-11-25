@@ -26,8 +26,6 @@ class PawApplication: DaggerApplication(){
         const val BACKENDLESS_REST_API_KEY = "FF1687C9-961B-4388-FFF2-0C8BDC5DFB00"
         const val BACKENDLESS_ANDROID_API_KEY = "FF1687C9-961B-4388-FFF2-0C8BDC5DFB00"
 
-        val TEST_VERSION = false
-
         lateinit var pawApplication: PawApplication
 
         fun getContext(): PawApplication {

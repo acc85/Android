@@ -9,7 +9,6 @@ import com.firebase.jobdispatcher.*
 import org.helpapaw.helpapaw.R
 import org.helpapaw.helpapaw.R.layout.activity_base
 import org.helpapaw.helpapaw.base.BaseActivity
-import org.helpapaw.helpapaw.base.PawApplication.Companion.TEST_VERSION
 import org.helpapaw.helpapaw.data.models.Signal
 import org.helpapaw.helpapaw.utils.services.BackgroundCheckJobService
 
@@ -30,9 +29,7 @@ class SignalsMapActivity : BaseActivity() {
     override fun getToolbarTitle(): String {
         var title = getString(R.string.app_name)
 
-        if (TEST_VERSION) {
-            title += " (TEST VERSION)"
-        }
+        title += if (BuildConfig.DEBUG) "(TEST VERSION)" else{}
 
         return title
     }

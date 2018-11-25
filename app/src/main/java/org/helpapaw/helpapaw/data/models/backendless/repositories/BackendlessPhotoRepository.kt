@@ -8,8 +8,9 @@ import com.backendless.files.BackendlessFile
 import org.helpapaw.helpapaw.base.PawApplication
 import org.helpapaw.helpapaw.utils.images.ImageUtils
 import java.io.File
+import javax.inject.Inject
 
-class BackendlessPhotoRepository:PhotoRepository{
+class BackendlessPhotoRepository @Inject constructor():PhotoRepository{
 
     companion object {
         private const val BACKENDLESS_API_DOMAIN = "https://api.backendless.com/"

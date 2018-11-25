@@ -8,7 +8,7 @@ import com.squareup.picasso.Picasso
 class PicassoImageLoader : ImageLoader{
 
     override fun load(context: Context?, url: String, imageView: ImageView, @DrawableRes placeholder: Int) {
-        Picasso.with(context)
+        Picasso.get()
                 .load(url)
                 .error(placeholder)
                 .fit()
@@ -17,7 +17,7 @@ class PicassoImageLoader : ImageLoader{
     }
 
     override fun loadWithRoundedCorners(context: Context?, url: String, imageView: ImageView, @DrawableRes placeholder: Int) {
-        Picasso.with(context)
+        Picasso.get()
                 .load(url)
                 .placeholder(placeholder)
                 .transform(RoundedTransformation(16, 0))

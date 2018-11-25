@@ -1,6 +1,5 @@
 package org.helpapaw.helpapaw.signaldetails
 
-import android.os.Build.VERSION_CODES.M
 import org.helpapaw.helpapaw.base.Presenter
 import org.helpapaw.helpapaw.data.models.Comment
 import org.helpapaw.helpapaw.data.models.Signal
@@ -10,9 +9,14 @@ import org.helpapaw.helpapaw.data.models.backendless.repositories.CommentReposit
 import org.helpapaw.helpapaw.data.user.UserManager
 import org.helpapaw.helpapaw.utils.Injection
 import org.helpapaw.helpapaw.utils.Utils
+import javax.inject.Inject
 
 
 class SignalDetailsPresenter(override var view: SignalDetailsContract.View?) : Presenter<SignalDetailsContract.View>(view), SignalDetailsContract.UserActionsListener {
+
+    @Inject
+    constructor(signalDetailsFragment: SignalDetailsFragment):this(signalDetailsFragment as SignalDetailsContract.View)
+
 
     private var showProgressBar: Boolean = false
     private var commentList: MutableList<Comment>? = null

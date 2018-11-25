@@ -13,6 +13,7 @@ import org.helpapaw.helpapaw.data.models.Signal
 import org.helpapaw.helpapaw.databinding.InfoWindowSignalBinding
 import org.helpapaw.helpapaw.utils.Injection
 import org.helpapaw.helpapaw.utils.images.RoundedTransformation
+import java.lang.Exception
 
 class SignalInfoWindowAdapter(private val signalMarkers:Map<String, Signal>, private val inflater:LayoutInflater, private var lastShownMarker: Marker? = null): GoogleMap.InfoWindowAdapter{
 
@@ -36,7 +37,7 @@ class SignalInfoWindowAdapter(private val signalMarkers:Map<String, Signal>, pri
                 binding.txtSignalTitle.text = signal.title
                 binding.txtSignalStatus.text = getStatusString(signal.status!!)
 
-                Picasso.with(inflater.context).load(photoUrl).resize(200, 200)
+                Picasso.get().load(photoUrl).resize(200, 200)
                         .centerCrop()
                         .noFade()
                         .placeholder(R.drawable.ic_paw)
@@ -50,15 +51,17 @@ class SignalInfoWindowAdapter(private val signalMarkers:Map<String, Signal>, pri
     }
 
     private inner class MarkerCallback internal constructor(marker: Marker) : Callback {
+
+        override fun onError(e: Exception?) {
+            Log.e(javaClass.simpleName, "Error loading thumbnail!:"+e?.message)
+        }
+
         internal var marker: Marker? = null
 
         init {
             this.marker = marker
         }
 
-        override fun onError() {
-            Log.e(javaClass.simpleName, "Error loading thumbnail!")
-        }
 
         override fun onSuccess() {
             if (marker != null && marker!!.isInfoWindowShown) {

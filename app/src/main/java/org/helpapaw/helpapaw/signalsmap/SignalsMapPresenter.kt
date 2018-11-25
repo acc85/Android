@@ -7,12 +7,14 @@ import org.helpapaw.helpapaw.data.models.Signal
 import org.helpapaw.helpapaw.data.models.backendless.repositories.PhotoRepository
 import org.helpapaw.helpapaw.data.models.backendless.repositories.SignalRepository
 import org.helpapaw.helpapaw.data.user.UserManager
+import org.helpapaw.helpapaw.di.FragmentComponent_ContributeSignalMapFragment
 import org.helpapaw.helpapaw.utils.Injection
 import org.helpapaw.helpapaw.utils.Utils
 import java.util.*
+import javax.inject.Inject
 import kotlin.collections.ArrayList
 
-class SignalsMapPresenter(override var view: SignalsMapContract.View?) : Presenter<SignalsMapContract.View>(view),SignalsMapContract.UserActionsListener{
+class SignalsMapPresenter (override var view: SignalsMapContract.View?) : Presenter<SignalsMapContract.View>(view),SignalsMapContract.UserActionsListener{
 
     companion object {
         private const val DEFAULT_MAP_ZOOM = 14.5f
@@ -20,6 +22,9 @@ class SignalsMapPresenter(override var view: SignalsMapContract.View?) : Present
         private const  val DATE_TIME_FORMAT = "MM/dd/yyyy hh:mm:ss"
     }
 
+
+    @Inject
+    constructor(signalMapFragment: SignalsMapFragment):this(signalMapFragment as SignalsMapContract.View)
 
     private val userManager: UserManager
     private val signalRepository: SignalRepository

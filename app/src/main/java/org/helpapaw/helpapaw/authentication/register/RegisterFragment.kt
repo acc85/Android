@@ -8,14 +8,13 @@ import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import dagger.android.support.AndroidSupportInjection
 import org.helpapaw.helpapaw.R
-import org.helpapaw.helpapaw.base.BaseDaggerFragment
 import org.helpapaw.helpapaw.base.BaseFragment
 import org.helpapaw.helpapaw.base.Presenter
 import org.helpapaw.helpapaw.databinding.FragmentRegisterBinding
 import org.helpapaw.helpapaw.reusable.AlertDialogFragment
 import javax.inject.Inject
 
-class RegisterFragment:BaseDaggerFragment(), RegisterContract.View{
+class RegisterFragment:BaseFragment(), RegisterContract.View{
 
     @Inject
     lateinit var registerPresenter: RegisterPresenter

@@ -8,6 +8,7 @@ import com.backendless.exceptions.BackendlessFault
 import com.backendless.geo.BackendlessGeoQuery
 import com.backendless.geo.GeoPoint
 import com.backendless.geo.Units
+import org.helpapaw.helpapaw.BuildConfig
 import org.helpapaw.helpapaw.R
 import org.helpapaw.helpapaw.base.PawApplication
 import org.helpapaw.helpapaw.data.models.Signal
@@ -216,7 +217,7 @@ class BackendlessSignalRepository:SignalRepository{
     }
 
     private fun getCategory(): String? {
-        return if (PawApplication.TEST_VERSION) {
+        return if (BuildConfig.DEBUG) {
             "Debug"
         } else {
             // Category should only be added if it's not Default

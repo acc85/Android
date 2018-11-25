@@ -1,33 +1,21 @@
 package org.helpapaw.helpapaw.authentication.login
 
-import android.app.Activity
-import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.inputmethod.InputMethodManager
-import androidx.appcompat.widget.Toolbar
 import androidx.databinding.DataBindingUtil
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentTransaction
-import dagger.android.AndroidInjection
-import dagger.android.support.AndroidSupportInjection
-import dagger.android.support.DaggerFragment
 import org.helpapaw.helpapaw.R
 import org.helpapaw.helpapaw.authentication.AuthenticationActivity
 import org.helpapaw.helpapaw.authentication.register.RegisterFragment
-import org.helpapaw.helpapaw.base.BaseDaggerFragment
 import org.helpapaw.helpapaw.base.BaseFragment
 import org.helpapaw.helpapaw.base.Presenter
-import org.helpapaw.helpapaw.base.PresenterManager
 import org.helpapaw.helpapaw.databinding.FragmentLoginBinding
 import org.helpapaw.helpapaw.reusable.AlertDialogFragment
-import java.util.*
 import javax.inject.Inject
 
 
-class LoginFragment : BaseDaggerFragment(), LoginContract.View {
+class LoginFragment : BaseFragment(), LoginContract.View {
 
     @Inject
     lateinit var loginPresenter: LoginPresenter

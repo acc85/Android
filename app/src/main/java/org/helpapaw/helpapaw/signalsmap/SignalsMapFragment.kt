@@ -37,7 +37,6 @@ import org.helpapaw.helpapaw.R.id.menu_item_refresh
 import org.helpapaw.helpapaw.authentication.AuthenticationActivity
 import org.helpapaw.helpapaw.base.BaseFragment
 import org.helpapaw.helpapaw.base.Presenter
-import org.helpapaw.helpapaw.base.PresenterManager
 import org.helpapaw.helpapaw.data.models.Signal
 import org.helpapaw.helpapaw.data.user.UserManager
 import org.helpapaw.helpapaw.databinding.FragmentSignalsMapBinding
@@ -50,6 +49,7 @@ import org.helpapaw.helpapaw.utils.images.ImageUtils
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
+import javax.inject.Inject
 
 class SignalsMapFragment : BaseFragment(), SignalsMapContract.View,
         GoogleApiClient.ConnectionCallbacks,
@@ -104,7 +104,9 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View,
     private var mCurrentLat: Double = 0.toDouble()
     private var mCurrentLong: Double = 0.toDouble()
 
-    private var signalsMapPresenter: SignalsMapPresenter? = null
+    @Inject
+    lateinit var signalsMapPresenter: SignalsMapPresenter
+
     private var actionsListener: SignalsMapContract.UserActionsListener? = null
 
     private lateinit var binding: FragmentSignalsMapBinding
@@ -133,13 +135,6 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View,
 
         //        setAddSignalViewVisibility(mVisibilityAddSignal);
         binding.mapSignals.getMapAsync(getMapReadyCallback())
-
-        if (savedInstanceState == null || PresenterManager.instance.getPresenter<SignalsMapPresenter>(screenId) == null) {
-            signalsMapPresenter = SignalsMapPresenter(this)
-        } else {
-            signalsMapPresenter = PresenterManager.instance.getPresenter(screenId)
-            signalsMapPresenter?.view = this
-        }
         actionsListener = signalsMapPresenter
         initLocationApi()
 

@@ -15,7 +15,6 @@ import org.helpapaw.helpapaw.R
 import org.helpapaw.helpapaw.authentication.AuthenticationActivity
 import org.helpapaw.helpapaw.base.BaseFragment
 import org.helpapaw.helpapaw.base.Presenter
-import org.helpapaw.helpapaw.base.PresenterManager
 import org.helpapaw.helpapaw.data.models.Comment
 import org.helpapaw.helpapaw.data.models.Comment.Companion.COMMENT_TYPE_STATUS_CHANGE
 import org.helpapaw.helpapaw.data.models.Signal
@@ -24,6 +23,7 @@ import org.helpapaw.helpapaw.signalphoto.SignalPhotoActivity
 import org.helpapaw.helpapaw.utils.Injection
 import org.helpapaw.helpapaw.utils.StatusUtils
 import org.helpapaw.helpapaw.utils.Utils
+import javax.inject.Inject
 
 class SignalDetailsFragment : BaseFragment(), SignalDetailsContract.View {
 
@@ -40,7 +40,8 @@ class SignalDetailsFragment : BaseFragment(), SignalDetailsContract.View {
         }
     }
 
-    var signalDetailsPresenter: SignalDetailsPresenter? = null
+    @Inject
+    lateinit var signalDetailsPresenter: SignalDetailsPresenter
     var actionsListener: SignalDetailsContract.UserActionsListener? = null
 
     lateinit var binding: FragmentSignalDetailsBinding
@@ -144,14 +145,7 @@ class SignalDetailsFragment : BaseFragment(), SignalDetailsContract.View {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         // Inflate the layout for this fragment
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_signal_details, container, false)
-
-        if (savedInstanceState == null || PresenterManager.instance.getPresenter<SignalDetailsPresenter>(screenId) == null) {
-            signalDetailsPresenter = SignalDetailsPresenter(this)
-        } else {
-            signalDetailsPresenter = PresenterManager.instance.getPresenter(screenId)
-            signalDetailsPresenter?.view = this
-        }
-
+        signalDetailsPresenter = SignalDetailsPresenter(this)
         actionsListener = signalDetailsPresenter
         setHasOptionsMenu(true)
         mSignal = null
