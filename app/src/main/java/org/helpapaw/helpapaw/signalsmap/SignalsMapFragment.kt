@@ -39,12 +39,10 @@ import org.helpapaw.helpapaw.base.BaseFragment
 import org.helpapaw.helpapaw.base.Presenter
 import org.helpapaw.helpapaw.data.models.Signal
 import org.helpapaw.helpapaw.data.models.backendless.repositories.BackendlessPhotoRepository
-import org.helpapaw.helpapaw.data.user.UserManager
 import org.helpapaw.helpapaw.databinding.FragmentSignalsMapBinding
 import org.helpapaw.helpapaw.reusable.AlertDialogFragment
 import org.helpapaw.helpapaw.sendsignal.SendPhotoBottomSheet
 import org.helpapaw.helpapaw.signaldetails.SignalDetailsActivity
-import org.helpapaw.helpapaw.utils.Injection
 import org.helpapaw.helpapaw.utils.StatusUtils
 import org.helpapaw.helpapaw.utils.images.ImageUtils
 import java.io.File
@@ -100,7 +98,9 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View,
     private var signalsGoogleMap: GoogleMap? = null
     private val mDisplayedSignals = ArrayList<Signal>()
 
-    val mSignalMarkers = HashMap<String, Signal>()
+    @Inject
+    lateinit var mSignalMarkers:HashMap<String,Signal>
+
     private var mCurrentlyShownInfoWindowSignal: Signal? = null
 
     private var mCurrentLat: Double = 0.toDouble()
@@ -126,6 +126,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View,
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        mSignalMarkers.clear()
         mFocusedSignalId = arguments?.getString(Signal.KEY_FOCUSED_SIGNAL_ID)
         arguments?.remove(Signal.KEY_FOCUSED_SIGNAL_ID)
     }

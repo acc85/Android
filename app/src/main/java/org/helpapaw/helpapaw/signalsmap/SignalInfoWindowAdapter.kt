@@ -13,13 +13,12 @@ import org.helpapaw.helpapaw.data.models.Signal
 import org.helpapaw.helpapaw.data.models.backendless.repositories.BackendlessPhotoRepository
 import org.helpapaw.helpapaw.databinding.InfoWindowSignalBinding
 import org.helpapaw.helpapaw.utils.images.RoundedTransformation
-import java.lang.Exception
 import javax.inject.Inject
 
 class SignalInfoWindowAdapter(private val signalMarkers:Map<String, Signal>, private val inflater:LayoutInflater, private var lastShownMarker: Marker? = null): GoogleMap.InfoWindowAdapter{
 
     @Inject
-    constructor(signalsMapFragment: SignalsMapFragment):this(signalsMapFragment.mSignalMarkers,signalsMapFragment.layoutInflater)
+    constructor(signals: HashMap<String,Signal>, signalsMapFragment: SignalsMapFragment):this(signals,signalsMapFragment.layoutInflater)
 
     val binding: InfoWindowSignalBinding = DataBindingUtil.inflate(inflater, R.layout.info_window_signal, null, false)
 
