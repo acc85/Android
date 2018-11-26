@@ -145,7 +145,6 @@ class SignalDetailsFragment : BaseFragment(), SignalDetailsContract.View {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         // Inflate the layout for this fragment
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_signal_details, container, false)
-        signalDetailsPresenter = SignalDetailsPresenter(this)
         actionsListener = signalDetailsPresenter
         setHasOptionsMenu(true)
         mSignal = null

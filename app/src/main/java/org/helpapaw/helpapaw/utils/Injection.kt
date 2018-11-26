@@ -10,10 +10,7 @@ class Injection{
 
     companion object {
         private var imageLoader: ImageLoader? = null
-        private var userManagerInstance: UserManager? = null
         private var signalRepositoryInstance: SignalRepository? = null
-        private var photoRepository: PhotoRepository? = null
-        private var commentRepository: CommentRepository? = null
         private var facebookLogin: FacebookLogin? = null
 
         @Synchronized
@@ -25,14 +22,6 @@ class Injection{
         }
 
         @Synchronized
-        fun getUserManagerInstance(): UserManager {
-            if (userManagerInstance == null) {
-                userManagerInstance = BackendlessUserManager()
-            }
-            return userManagerInstance!!
-        }
-
-        @Synchronized
         fun getSignalRepositoryInstance(): SignalRepository {
             if (signalRepositoryInstance == null) {
                 signalRepositoryInstance = BackendlessSignalRepository()
@@ -40,21 +29,6 @@ class Injection{
             return signalRepositoryInstance!!
         }
 
-        @Synchronized
-        fun getPhotoRepositoryInstance(): PhotoRepository {
-            if (photoRepository == null) {
-                photoRepository = BackendlessPhotoRepository()
-            }
-            return photoRepository!!
-        }
-
-        @Synchronized
-        fun getCommentRepositoryInstance(): CommentRepository {
-            if (commentRepository == null) {
-                commentRepository = BackendlessCommentRepository()
-            }
-            return commentRepository!!
-        }
 
         @Synchronized
         fun getFacebookLogin(): FacebookLogin {

@@ -6,6 +6,7 @@ import androidx.fragment.app.Fragment
 import com.backendless.Backendless
 import dagger.android.DispatchingAndroidInjector
 import dagger.android.support.DaggerApplication
+import org.helpapaw.helpapaw.data.user.BackendlessUserManager
 import org.helpapaw.helpapaw.data.user.UserManager
 import org.helpapaw.helpapaw.di.DaggerMainAppComponent
 import org.helpapaw.helpapaw.utils.Injection
@@ -15,7 +16,7 @@ import javax.inject.Inject
 class PawApplication: DaggerApplication(){
 
     @Inject
-    lateinit var activityInject: DispatchingAndroidInjector<Activity>
+    lateinit var userManager: BackendlessUserManager
 
     override fun applicationInjector() =
         DaggerMainAppComponent.builder().application(this).build()
@@ -39,8 +40,6 @@ class PawApplication: DaggerApplication(){
         Backendless.initApp(this, BACKENDLESS_APP_ID, BACKENDLESS_ANDROID_API_KEY)
         NotificationUtils.registerNotificationChannels(this)
 
-        // This is done in order to handle the situation where user token is saved on the device but is invalidated on the server
-        val userManager = Injection.getUserManagerInstance()
         userManager.isLoggedIn(object : UserManager.LoginCallback {
             override fun onLoginSuccess() {
                 // Do nothing

@@ -2,6 +2,7 @@ package org.helpapaw.helpapaw.authentication.register
 
 import org.helpapaw.helpapaw.R.id.view
 import org.helpapaw.helpapaw.base.Presenter
+import org.helpapaw.helpapaw.data.user.BackendlessUserManager
 import org.helpapaw.helpapaw.data.user.UserManager
 import org.helpapaw.helpapaw.utils.Injection
 import org.helpapaw.helpapaw.utils.Utils
@@ -16,7 +17,8 @@ class RegisterPresenter(override var view: RegisterContract.View?): Presenter<Re
         private const val MIN_PASS_LENGTH = 6
     }
 
-    private val userManager: UserManager = Injection.getUserManagerInstance()
+    @Inject
+    lateinit var userManager: BackendlessUserManager
 
     private var showProgressBar: Boolean = false
 

@@ -12,14 +12,17 @@ import com.firebase.jobdispatcher.JobService
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
+import dagger.android.AndroidInjection
 import org.helpapaw.helpapaw.data.models.Signal
 import org.helpapaw.helpapaw.data.models.Signal.Companion.SOLVED
+import org.helpapaw.helpapaw.data.models.backendless.repositories.BackendlessSignalRepository
 import org.helpapaw.helpapaw.data.models.backendless.repositories.SignalRepository
 import org.helpapaw.helpapaw.db.SignalsDatabase
 import org.helpapaw.helpapaw.signalsmap.SignalsMapPresenter.Companion.DEFAULT_SEARCH_RADIUS
 import org.helpapaw.helpapaw.utils.Injection
 import org.helpapaw.helpapaw.utils.NotificationUtils
 import java.util.HashSet
+import javax.inject.Inject
 
 class BackgroundCheckJobService: JobService() {
 
@@ -27,12 +30,19 @@ class BackgroundCheckJobService: JobService() {
     internal var mCurrentNotificationIds = HashSet<String>()
     internal var mNotificationManager: NotificationManager? = null
 
+    @Inject
+    lateinit var signalRepository: BackendlessSignalRepository
+
     companion object {
         val TAG = BackgroundCheckJobService::class.java.simpleName
 
         internal const val CURRENT_NOTIFICATION_IDS = "CurrentNotificationIds"
     }
 
+    override fun onCreate() {
+        super.onCreate()
+        AndroidInjection.inject(this)
+    }
 
     override fun onStartJob(job: JobParameters): Boolean {
         database = SignalsDatabase.getDatabase(this)
@@ -73,7 +83,7 @@ class BackgroundCheckJobService: JobService() {
 
     private fun getSignalsForLastKnownLocation(location: Location, job: JobParameters) {
 
-        Injection.getSignalRepositoryInstance().getAllSignals(location.latitude, location.longitude, DEFAULT_SEARCH_RADIUS.toDouble(), object : SignalRepository.LoadSignalsCallback {
+        signalRepository.getAllSignals(location.latitude, location.longitude, DEFAULT_SEARCH_RADIUS.toDouble(), object : SignalRepository.LoadSignalsCallback {
             override fun onSignalsLoaded(signals: MutableList<Signal>) {
 
                 Log.d(TAG, "got signals")

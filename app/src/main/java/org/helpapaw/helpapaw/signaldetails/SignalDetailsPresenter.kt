@@ -3,10 +3,11 @@ package org.helpapaw.helpapaw.signaldetails
 import org.helpapaw.helpapaw.base.Presenter
 import org.helpapaw.helpapaw.data.models.Comment
 import org.helpapaw.helpapaw.data.models.Signal
-import org.helpapaw.helpapaw.data.models.backendless.repositories.SignalRepository
-import org.helpapaw.helpapaw.data.models.backendless.repositories.PhotoRepository
-import org.helpapaw.helpapaw.data.models.backendless.repositories.CommentRepository
+import org.helpapaw.helpapaw.data.models.backendless.repositories.*
+import org.helpapaw.helpapaw.data.user.BackendlessUserManager
 import org.helpapaw.helpapaw.data.user.UserManager
+import org.helpapaw.helpapaw.di.DaggerMainAppComponent
+import org.helpapaw.helpapaw.di.MainAppComponent
 import org.helpapaw.helpapaw.utils.Injection
 import org.helpapaw.helpapaw.utils.Utils
 import javax.inject.Inject
@@ -17,25 +18,27 @@ class SignalDetailsPresenter(override var view: SignalDetailsContract.View?) : P
     @Inject
     constructor(signalDetailsFragment: SignalDetailsFragment):this(signalDetailsFragment as SignalDetailsContract.View)
 
-
     private var showProgressBar: Boolean = false
     private var commentList: MutableList<Comment>? = null
     lateinit var signal: Signal
 
     private var statusChanged: Boolean = false
 
-    private var commentRepository: CommentRepository? = null
-    private var photoRepository: PhotoRepository? = null
-    private var signalRepository: SignalRepository? = null
-    private var userManager: UserManager? = null
+    @Inject
+    lateinit var commentRepository: CommentRepository
+
+    @Inject
+    lateinit var photoRepository: BackendlessPhotoRepository
+
+    @Inject
+    lateinit var signalRepository: BackendlessSignalRepository
+
+    @Inject
+    lateinit var userManager: BackendlessUserManager
 
     init{
         showProgressBar = true
         statusChanged = false
-        commentRepository = Injection.getCommentRepositoryInstance()
-        photoRepository = Injection.getPhotoRepositoryInstance()
-        userManager = Injection.getUserManagerInstance()
-        signalRepository = Injection.getSignalRepositoryInstance()
     }
 
 

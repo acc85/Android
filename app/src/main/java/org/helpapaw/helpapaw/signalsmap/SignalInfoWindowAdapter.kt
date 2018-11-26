@@ -10,15 +10,21 @@ import com.squareup.picasso.Callback
 import com.squareup.picasso.Picasso
 import org.helpapaw.helpapaw.R
 import org.helpapaw.helpapaw.data.models.Signal
+import org.helpapaw.helpapaw.data.models.backendless.repositories.BackendlessPhotoRepository
 import org.helpapaw.helpapaw.databinding.InfoWindowSignalBinding
-import org.helpapaw.helpapaw.utils.Injection
 import org.helpapaw.helpapaw.utils.images.RoundedTransformation
 import java.lang.Exception
+import javax.inject.Inject
 
 class SignalInfoWindowAdapter(private val signalMarkers:Map<String, Signal>, private val inflater:LayoutInflater, private var lastShownMarker: Marker? = null): GoogleMap.InfoWindowAdapter{
 
+    @Inject
+    constructor(signalsMapFragment: SignalsMapFragment):this(signalsMapFragment.mSignalMarkers,signalsMapFragment.layoutInflater)
+
     val binding: InfoWindowSignalBinding = DataBindingUtil.inflate(inflater, R.layout.info_window_signal, null, false)
 
+    @Inject
+    lateinit var photoRepository: BackendlessPhotoRepository
 
     override fun getInfoWindow(marker: Marker): View? {
         return null
@@ -28,7 +34,6 @@ class SignalInfoWindowAdapter(private val signalMarkers:Map<String, Signal>, pri
 
         val signal = signalMarkers[marker.id]
         if (signal != null) {
-            val photoRepository = Injection.getPhotoRepositoryInstance()
             val photoUrl = photoRepository.getPhotoUrl(signal.id)
 
             if (lastShownMarker == null || lastShownMarker?.id != marker.id) {

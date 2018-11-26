@@ -17,7 +17,7 @@ abstract class FragmentComponent{
     @ContributesAndroidInjector(modules = [LoginFragmentModule::class])
     abstract fun contributeLoginFragment(): LoginFragment
 
-    @ContributesAndroidInjector(modules = [SignalFragmentModule::class])
+    @ContributesAndroidInjector(modules = [SignalDetailFragmentModule::class])
     abstract fun contributeSignalDetailFragment():SignalDetailsFragment
 
     @ContributesAndroidInjector(modules  = [SignalPhotoFragmentModule::class])

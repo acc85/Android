@@ -38,6 +38,7 @@ import org.helpapaw.helpapaw.authentication.AuthenticationActivity
 import org.helpapaw.helpapaw.base.BaseFragment
 import org.helpapaw.helpapaw.base.Presenter
 import org.helpapaw.helpapaw.data.models.Signal
+import org.helpapaw.helpapaw.data.models.backendless.repositories.BackendlessPhotoRepository
 import org.helpapaw.helpapaw.data.user.UserManager
 import org.helpapaw.helpapaw.databinding.FragmentSignalsMapBinding
 import org.helpapaw.helpapaw.reusable.AlertDialogFragment
@@ -98,7 +99,8 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View,
     private var locationRequest: LocationRequest? = null
     private var signalsGoogleMap: GoogleMap? = null
     private val mDisplayedSignals = ArrayList<Signal>()
-    private val mSignalMarkers = HashMap<String, Signal>()
+
+    val mSignalMarkers = HashMap<String, Signal>()
     private var mCurrentlyShownInfoWindowSignal: Signal? = null
 
     private var mCurrentLat: Double = 0.toDouble()
@@ -107,12 +109,17 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View,
     @Inject
     lateinit var signalsMapPresenter: SignalsMapPresenter
 
+    @Inject
+    lateinit var photoRepository:BackendlessPhotoRepository
+
+    @Inject
+    lateinit var infoWindowAdapter:SignalInfoWindowAdapter
+
     private var actionsListener: SignalsMapContract.UserActionsListener? = null
 
     private lateinit var binding: FragmentSignalsMapBinding
     private var optionsMenu: Menu? = null
 
-    private lateinit var userManager: UserManager
     private var mVisibilityAddSignal = false
     private var mFocusedSignalId: String? = null
 
@@ -126,7 +133,6 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View,
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         // Inflate the layout for this fragment
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_signals_map, container, false)
-        userManager = Injection.getUserManagerInstance()
         val mapViewSavedInstanceState = savedInstanceState?.getBundle(MAP_VIEW_STATE)
         binding.mapSignals.onCreate(mapViewSavedInstanceState)
 
@@ -308,7 +314,6 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View,
                 }
             }
 
-            val infoWindowAdapter = SignalInfoWindowAdapter(mSignalMarkers, activity!!.layoutInflater)
             signalsGoogleMap?.setInfoWindowAdapter(infoWindowAdapter)
 
             signalsGoogleMap?.setOnInfoWindowClickListener(GoogleMap.OnInfoWindowClickListener { marker -> actionsListener?.onSignalInfoWindowClicked(mSignalMarkers[marker.id]!!) })

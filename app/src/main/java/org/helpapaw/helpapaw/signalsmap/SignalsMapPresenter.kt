@@ -4,8 +4,11 @@ import android.text.TextUtils.isEmpty
 import io.fabric.sdk.android.services.concurrency.AsyncTask.init
 import org.helpapaw.helpapaw.base.Presenter
 import org.helpapaw.helpapaw.data.models.Signal
+import org.helpapaw.helpapaw.data.models.backendless.repositories.BackendlessPhotoRepository
+import org.helpapaw.helpapaw.data.models.backendless.repositories.BackendlessSignalRepository
 import org.helpapaw.helpapaw.data.models.backendless.repositories.PhotoRepository
 import org.helpapaw.helpapaw.data.models.backendless.repositories.SignalRepository
+import org.helpapaw.helpapaw.data.user.BackendlessUserManager
 import org.helpapaw.helpapaw.data.user.UserManager
 import org.helpapaw.helpapaw.di.FragmentComponent_ContributeSignalMapFragment
 import org.helpapaw.helpapaw.utils.Injection
@@ -26,9 +29,14 @@ class SignalsMapPresenter (override var view: SignalsMapContract.View?) : Presen
     @Inject
     constructor(signalMapFragment: SignalsMapFragment):this(signalMapFragment as SignalsMapContract.View)
 
-    private val userManager: UserManager
-    private val signalRepository: SignalRepository
-    private val photoRepository: PhotoRepository
+    @Inject
+    lateinit var userManager: BackendlessUserManager
+
+    @Inject
+    lateinit var signalRepository: BackendlessSignalRepository
+
+    @Inject
+    lateinit var photoRepository: BackendlessPhotoRepository
 
     private var latitude: Double = 0.toDouble()
     private var longitude: Double = 0.toDouble()
@@ -41,9 +49,6 @@ class SignalsMapPresenter (override var view: SignalsMapContract.View?) : Presen
     private var signalsList: MutableList<Signal> = arrayListOf()
 
     init{
-        signalRepository = Injection.getSignalRepositoryInstance()
-        userManager = Injection.getUserManagerInstance()
-        photoRepository = Injection.getPhotoRepositoryInstance()
         sendSignalViewVisibility = false
         signalsList = ArrayList()
     }

@@ -11,8 +11,9 @@ import org.helpapaw.helpapaw.data.models.Comment.Companion.COMMENT_TYPE_USER_COM
 import org.helpapaw.helpapaw.data.models.backendless.FINComment
 import java.text.SimpleDateFormat
 import java.util.*
+import javax.inject.Inject
 
-class BackendlessCommentRepository : CommentRepository {
+class BackendlessCommentRepository @Inject constructor() : CommentRepository {
 
     companion object {
         private const val DATE_TIME_FORMAT = "MM/dd/yyyy hh:mm:ss"

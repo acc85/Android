@@ -5,11 +5,13 @@ import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
+import dagger.android.AndroidInjection
+import dagger.android.support.DaggerAppCompatActivity
 import org.helpapaw.helpapaw.R
 import org.helpapaw.helpapaw.data.models.Signal
 import org.helpapaw.helpapaw.databinding.ActivitySignalDetailsBinding
 
-class SignalDetailsActivity : AppCompatActivity() {
+class SignalDetailsActivity : DaggerAppCompatActivity() {
 
     companion object {
         const val SIGNAL_KEY = "signalKey"
@@ -20,6 +22,7 @@ class SignalDetailsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        AndroidInjection.inject(this)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_signal_details)
         setSupportActionBar(binding.toolbar)
         val supportActionBar = supportActionBar
