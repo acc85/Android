@@ -19,7 +19,6 @@ import org.helpapaw.helpapaw.data.user.UserManager
 import org.helpapaw.helpapaw.databinding.ActivityBaseBinding
 import org.helpapaw.helpapaw.faq.FAQsView
 import org.helpapaw.helpapaw.reusable.AlertDialogFragment
-import org.helpapaw.helpapaw.utils.Injection
 import org.helpapaw.helpapaw.utils.SharingUtils
 import org.helpapaw.helpapaw.utils.Utils
 import javax.inject.Inject

@@ -6,9 +6,6 @@ import org.helpapaw.helpapaw.data.models.Signal
 import org.helpapaw.helpapaw.data.models.backendless.repositories.*
 import org.helpapaw.helpapaw.data.user.BackendlessUserManager
 import org.helpapaw.helpapaw.data.user.UserManager
-import org.helpapaw.helpapaw.di.DaggerMainAppComponent
-import org.helpapaw.helpapaw.di.MainAppComponent
-import org.helpapaw.helpapaw.utils.Injection
 import org.helpapaw.helpapaw.utils.Utils
 import javax.inject.Inject
 

@@ -2,6 +2,7 @@ package org.helpapaw.helpapaw.utils.services
 
 import android.Manifest
 import android.app.NotificationManager
+import android.app.Service
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
@@ -13,18 +14,27 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
 import dagger.android.AndroidInjection
+import dagger.android.AndroidInjector
+import dagger.android.HasServiceInjector
 import org.helpapaw.helpapaw.data.models.Signal
 import org.helpapaw.helpapaw.data.models.Signal.Companion.SOLVED
 import org.helpapaw.helpapaw.data.models.backendless.repositories.BackendlessSignalRepository
 import org.helpapaw.helpapaw.data.models.backendless.repositories.SignalRepository
 import org.helpapaw.helpapaw.db.SignalsDatabase
 import org.helpapaw.helpapaw.signalsmap.SignalsMapPresenter.Companion.DEFAULT_SEARCH_RADIUS
-import org.helpapaw.helpapaw.utils.Injection
 import org.helpapaw.helpapaw.utils.NotificationUtils
 import java.util.HashSet
 import javax.inject.Inject
+import dagger.android.DispatchingAndroidInjector
 
-class BackgroundCheckJobService: JobService() {
+
+
+class BackgroundCheckJobService: JobService(), HasServiceInjector {
+
+    @Inject
+    lateinit var dispatchingServiceInjector: DispatchingAndroidInjector<Service>
+
+    override fun serviceInjector(): AndroidInjector<Service> = dispatchingServiceInjector
 
     private var database: SignalsDatabase? = null
     internal var mCurrentNotificationIds = HashSet<String>()

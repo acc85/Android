@@ -1,7 +1,6 @@
 package org.helpapaw.helpapaw.signalsmap
 
 import android.text.TextUtils.isEmpty
-import io.fabric.sdk.android.services.concurrency.AsyncTask.init
 import org.helpapaw.helpapaw.base.Presenter
 import org.helpapaw.helpapaw.data.models.Signal
 import org.helpapaw.helpapaw.data.models.backendless.repositories.BackendlessPhotoRepository
@@ -10,8 +9,6 @@ import org.helpapaw.helpapaw.data.models.backendless.repositories.PhotoRepositor
 import org.helpapaw.helpapaw.data.models.backendless.repositories.SignalRepository
 import org.helpapaw.helpapaw.data.user.BackendlessUserManager
 import org.helpapaw.helpapaw.data.user.UserManager
-import org.helpapaw.helpapaw.di.FragmentComponent_ContributeSignalMapFragment
-import org.helpapaw.helpapaw.utils.Injection
 import org.helpapaw.helpapaw.utils.Utils
 import java.util.*
 import javax.inject.Inject

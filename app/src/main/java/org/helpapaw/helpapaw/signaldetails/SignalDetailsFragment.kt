@@ -20,7 +20,6 @@ import org.helpapaw.helpapaw.data.models.Comment.Companion.COMMENT_TYPE_STATUS_C
 import org.helpapaw.helpapaw.data.models.Signal
 import org.helpapaw.helpapaw.databinding.FragmentSignalDetailsBinding
 import org.helpapaw.helpapaw.signalphoto.SignalPhotoActivity
-import org.helpapaw.helpapaw.utils.Injection
 import org.helpapaw.helpapaw.utils.StatusUtils
 import org.helpapaw.helpapaw.utils.Utils
 import org.helpapaw.helpapaw.utils.images.PicassoImageLoader

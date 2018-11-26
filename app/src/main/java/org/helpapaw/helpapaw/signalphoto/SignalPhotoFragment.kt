@@ -10,7 +10,6 @@ import org.helpapaw.helpapaw.base.BaseFragment
 import org.helpapaw.helpapaw.base.Presenter
 import org.helpapaw.helpapaw.data.models.Signal
 import org.helpapaw.helpapaw.databinding.FragmentSignalPhotoBinding
-import org.helpapaw.helpapaw.utils.Injection
 import org.helpapaw.helpapaw.utils.images.PicassoImageLoader
 import javax.inject.Inject
 

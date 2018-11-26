@@ -1,10 +1,8 @@
 package org.helpapaw.helpapaw.authentication.register
 
-import org.helpapaw.helpapaw.R.id.view
 import org.helpapaw.helpapaw.base.Presenter
 import org.helpapaw.helpapaw.data.user.BackendlessUserManager
 import org.helpapaw.helpapaw.data.user.UserManager
-import org.helpapaw.helpapaw.utils.Injection
 import org.helpapaw.helpapaw.utils.Utils
 import javax.inject.Inject
 

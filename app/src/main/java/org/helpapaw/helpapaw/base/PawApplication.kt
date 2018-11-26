@@ -1,15 +1,11 @@
 package org.helpapaw.helpapaw.base
 
-import android.app.Activity
 import android.os.StrictMode
-import androidx.fragment.app.Fragment
 import com.backendless.Backendless
-import dagger.android.DispatchingAndroidInjector
 import dagger.android.support.DaggerApplication
 import org.helpapaw.helpapaw.data.user.BackendlessUserManager
 import org.helpapaw.helpapaw.data.user.UserManager
 import org.helpapaw.helpapaw.di.DaggerMainAppComponent
-import org.helpapaw.helpapaw.utils.Injection
 import org.helpapaw.helpapaw.utils.NotificationUtils
 import javax.inject.Inject
 
