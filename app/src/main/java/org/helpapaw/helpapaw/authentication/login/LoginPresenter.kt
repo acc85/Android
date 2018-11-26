@@ -6,9 +6,9 @@ import com.backendless.async.callback.AsyncCallback
 import com.backendless.exceptions.BackendlessFault
 import com.facebook.CallbackManager
 import org.helpapaw.helpapaw.base.Presenter
+import org.helpapaw.helpapaw.data.models.backendless.repositories.BackendlessFacebookLogin
 import org.helpapaw.helpapaw.data.user.BackendlessUserManager
 import org.helpapaw.helpapaw.data.user.UserManager
-import org.helpapaw.helpapaw.utils.Injection
 import org.helpapaw.helpapaw.utils.Utils
 import javax.inject.Inject
 
@@ -25,8 +25,11 @@ class LoginPresenter(override var view: LoginContract.View?): Presenter<LoginCon
     @Inject
     lateinit var userManager: BackendlessUserManager
 
+    @Inject
+    lateinit var facebookLogin:BackendlessFacebookLogin
+
     private var showProgressBar:Boolean = false
-    private val facebookLogin = Injection.getFacebookLogin()
+
 
     override fun onInitLoginScreen() {
         setProgressIndicator(showProgressBar)

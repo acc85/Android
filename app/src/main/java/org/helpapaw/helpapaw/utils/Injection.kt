@@ -9,17 +9,8 @@ import org.helpapaw.helpapaw.utils.images.PicassoImageLoader
 class Injection{
 
     companion object {
-        private var imageLoader: ImageLoader? = null
         private var signalRepositoryInstance: SignalRepository? = null
-        private var facebookLogin: FacebookLogin? = null
 
-        @Synchronized
-        fun getImageLoader(): ImageLoader {
-            if (imageLoader == null) {
-                imageLoader = PicassoImageLoader()
-            }
-            return imageLoader!!
-        }
 
         @Synchronized
         fun getSignalRepositoryInstance(): SignalRepository {
@@ -27,15 +18,6 @@ class Injection{
                 signalRepositoryInstance = BackendlessSignalRepository()
             }
             return signalRepositoryInstance!!
-        }
-
-
-        @Synchronized
-        fun getFacebookLogin(): FacebookLogin {
-            if (facebookLogin == null) {
-                facebookLogin = BackendlessFacebookLogin()
-            }
-            return facebookLogin!!
         }
     }
 }

@@ -11,6 +11,7 @@ import org.helpapaw.helpapaw.base.Presenter
 import org.helpapaw.helpapaw.data.models.Signal
 import org.helpapaw.helpapaw.databinding.FragmentSignalPhotoBinding
 import org.helpapaw.helpapaw.utils.Injection
+import org.helpapaw.helpapaw.utils.images.PicassoImageLoader
 import javax.inject.Inject
 
 class SignalPhotoFragment:BaseFragment(),SignalPhotoContract.View {
@@ -30,6 +31,10 @@ class SignalPhotoFragment:BaseFragment(),SignalPhotoContract.View {
 
     @Inject
     lateinit internal var signalPhotoPresenter: SignalPhotoPresenter
+
+    @Inject
+    lateinit var imageLoader:PicassoImageLoader
+
     internal var actionsListener: SignalPhotoContract.UserActionsListener? = null
 
     internal lateinit var binding: FragmentSignalPhotoBinding
@@ -54,7 +59,7 @@ class SignalPhotoFragment:BaseFragment(),SignalPhotoContract.View {
     }
 
     override fun showSignalPhoto(signal: Signal) {
-        Injection.getImageLoader().load(context, signal.photoUrl, binding.imgSignalPhoto, R.drawable.no_image)
+        imageLoader.load(context, signal.photoUrl, binding.imgSignalPhoto, R.drawable.no_image)
     }
 
     fun onBackPressed() {

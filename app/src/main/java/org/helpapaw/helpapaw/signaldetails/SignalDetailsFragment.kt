@@ -23,6 +23,7 @@ import org.helpapaw.helpapaw.signalphoto.SignalPhotoActivity
 import org.helpapaw.helpapaw.utils.Injection
 import org.helpapaw.helpapaw.utils.StatusUtils
 import org.helpapaw.helpapaw.utils.Utils
+import org.helpapaw.helpapaw.utils.images.PicassoImageLoader
 import javax.inject.Inject
 
 class SignalDetailsFragment : BaseFragment(), SignalDetailsContract.View {
@@ -42,6 +43,10 @@ class SignalDetailsFragment : BaseFragment(), SignalDetailsContract.View {
 
     @Inject
     lateinit var signalDetailsPresenter: SignalDetailsPresenter
+
+    @Inject
+    lateinit var imageLoader:PicassoImageLoader
+
     var actionsListener: SignalDetailsContract.UserActionsListener? = null
 
     lateinit var binding: FragmentSignalDetailsBinding
@@ -83,7 +88,7 @@ class SignalDetailsFragment : BaseFragment(), SignalDetailsContract.View {
             binding.btnCall.visibility = View.VISIBLE
         }
 
-        Injection.getImageLoader().loadWithRoundedCorners(context, signal.photoUrl, binding.imgSignalPhoto, R.drawable.ic_paw)
+        imageLoader.loadWithRoundedCorners(context, signal.photoUrl, binding.imgSignalPhoto, R.drawable.ic_paw)
     }
 
     override fun displayComments(comments: List<Comment>?) {
