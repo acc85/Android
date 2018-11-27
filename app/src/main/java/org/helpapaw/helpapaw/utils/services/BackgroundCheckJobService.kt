@@ -2,7 +2,6 @@ package org.helpapaw.helpapaw.utils.services
 
 import android.Manifest
 import android.app.NotificationManager
-import android.app.Service
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
@@ -11,11 +10,7 @@ import androidx.core.content.ContextCompat
 import com.firebase.jobdispatcher.JobParameters
 import com.firebase.jobdispatcher.JobService
 import com.google.android.gms.location.LocationServices
-import com.google.android.gms.tasks.OnFailureListener
-import com.google.android.gms.tasks.OnSuccessListener
 import dagger.android.AndroidInjection
-import dagger.android.AndroidInjector
-import dagger.android.HasServiceInjector
 import org.helpapaw.helpapaw.data.models.Signal
 import org.helpapaw.helpapaw.data.models.Signal.Companion.SOLVED
 import org.helpapaw.helpapaw.data.models.backendless.repositories.BackendlessSignalRepository
@@ -23,18 +18,11 @@ import org.helpapaw.helpapaw.data.models.backendless.repositories.SignalReposito
 import org.helpapaw.helpapaw.db.SignalsDatabase
 import org.helpapaw.helpapaw.signalsmap.SignalsMapPresenter.Companion.DEFAULT_SEARCH_RADIUS
 import org.helpapaw.helpapaw.utils.NotificationUtils
-import java.util.HashSet
+import java.util.*
 import javax.inject.Inject
-import dagger.android.DispatchingAndroidInjector
 
 
-
-class BackgroundCheckJobService: JobService(), HasServiceInjector {
-
-    @Inject
-    lateinit var dispatchingServiceInjector: DispatchingAndroidInjector<Service>
-
-    override fun serviceInjector(): AndroidInjector<Service> = dispatchingServiceInjector
+class BackgroundCheckJobService : JobService() {
 
     private var database: SignalsDatabase? = null
     internal var mCurrentNotificationIds = HashSet<String>()
@@ -103,7 +91,7 @@ class BackgroundCheckJobService: JobService(), HasServiceInjector {
                     for (signal in signals) {
                         if (signal.status < SOLVED) {
                             val signalsFromDB = database?.signalDao()?.getSignal(signal.id)
-                            if (signalsFromDB?.size?:0 > 0) {
+                            if (signalsFromDB?.size ?: 0 > 0) {
                                 val signalFromDb = signalsFromDB?.get(0)
                                 if (!signalFromDb?.seen!!) {
                                     NotificationUtils.showNotificationForSignal(signal, applicationContext)
