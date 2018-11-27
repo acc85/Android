@@ -9,7 +9,7 @@ import org.helpapaw.helpapaw.base.PawApplication
 import javax.inject.Singleton
 
 @Singleton
-@Component(modules = [AppModule::class,FragmentComponent::class,SignalMapComponent::class,ActivityBindingModule::class,JobBindingComponent::class,AndroidInjectionModule::class,AndroidSupportInjectionModule::class])
+@Component(modules = [AppModule::class,FragmentComponent::class,ActivityBindingModule::class,JobBindingComponent::class,AndroidInjectionModule::class,AndroidSupportInjectionModule::class])
 interface MainAppComponent:AndroidInjector<PawApplication> {
 
 
