@@ -22,7 +22,4 @@ abstract class FragmentComponent{
 
     @ContributesAndroidInjector(modules  = [SignalPhotoFragmentModule::class])
     abstract fun contributeSignalPhotoFragment():SignalPhotoFragment
-
-    @ContributesAndroidInjector(modules = [SignalMapFragmentModule::class])
-    abstract fun contributeSignalMapFragment():SignalsMapFragment
 }

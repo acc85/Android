@@ -126,7 +126,6 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View,
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mSignalMarkers.clear()
         mFocusedSignalId = arguments?.getString(Signal.KEY_FOCUSED_SIGNAL_ID)
         arguments?.remove(Signal.KEY_FOCUSED_SIGNAL_ID)
     }

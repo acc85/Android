@@ -20,12 +20,6 @@ class AppModule{
 
     @Singleton
     @Provides
-    fun provideSignalMap():HashMap<String,Signal>{
-        return HashMap()
-    }
-
-    @Singleton
-    @Provides
     fun provideUserManager():BackendlessUserManager{
         return BackendlessUserManager()
     }

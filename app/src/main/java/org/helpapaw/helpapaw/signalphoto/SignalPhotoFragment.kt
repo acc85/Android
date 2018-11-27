@@ -11,6 +11,7 @@ import org.helpapaw.helpapaw.base.Presenter
 import org.helpapaw.helpapaw.data.models.Signal
 import org.helpapaw.helpapaw.databinding.FragmentSignalPhotoBinding
 import org.helpapaw.helpapaw.utils.images.PicassoImageLoader
+import java.util.HashMap
 import javax.inject.Inject
 
 class SignalPhotoFragment:BaseFragment(),SignalPhotoContract.View {
