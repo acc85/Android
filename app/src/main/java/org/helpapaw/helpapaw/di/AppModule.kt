@@ -8,6 +8,7 @@ import org.helpapaw.helpapaw.data.models.backendless.repositories.BackendlessPho
 import org.helpapaw.helpapaw.data.models.backendless.repositories.BackendlessSignalRepository
 import org.helpapaw.helpapaw.data.user.BackendlessUserManager
 import org.helpapaw.helpapaw.utils.Utils
+import org.helpapaw.helpapaw.utils.images.ImageUtils
 import org.helpapaw.helpapaw.utils.images.PicassoImageLoader
 import javax.inject.Singleton
 
@@ -19,6 +20,13 @@ class AppModule{
     fun provideUtils(application: PawApplication): Utils {
         return Utils(application);
     }
+
+    @Singleton
+    @Provides
+    fun provideImageUtils():ImageUtils{
+        return ImageUtils()
+    }
+
 
     @Singleton
     @Provides
@@ -34,8 +42,8 @@ class AppModule{
 
     @Singleton
     @Provides
-    fun providePhotoRepository():BackendlessPhotoRepository{
-        return BackendlessPhotoRepository()
+    fun providePhotoRepository(imageUtils: ImageUtils):BackendlessPhotoRepository{
+        return BackendlessPhotoRepository(imageUtils)
     }
 
     @Singleton

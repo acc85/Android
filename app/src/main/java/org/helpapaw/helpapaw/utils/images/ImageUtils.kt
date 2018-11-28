@@ -14,22 +14,11 @@ import android.util.Log
 import androidx.exifinterface.media.ExifInterface
 import java.io.*
 
-class ImageUtils{
+class ImageUtils(){
 
     companion object {
         private const val SCHEME_FILE = "file"
         private const val SCHEME_CONTENT = "content"
-
-        private var instance: ImageUtils? = null
-
-
-        @Synchronized
-        fun getInstance(): ImageUtils {
-            if (instance == null) {
-                instance = ImageUtils()
-            }
-            return instance!!
-        }
     }
 
     fun closeSilently(c: Closeable?) {

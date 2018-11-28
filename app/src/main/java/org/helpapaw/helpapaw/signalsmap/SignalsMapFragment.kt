@@ -102,6 +102,9 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View,
     @Inject
     lateinit var mSignalMarkers:HashMap<String,Signal>
 
+    @Inject
+    lateinit var imageUtils: ImageUtils
+
     private var mCurrentlyShownInfoWindowSignal: Signal? = null
 
     private var mCurrentLat: Double = 0.toDouble()
@@ -520,7 +523,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View,
             if (intent.resolveActivity(context!!.packageManager) != null) {
                 val timeStamp = SimpleDateFormat(DATE_TIME_FORMAT, Locale.getDefault()).format(Date())
                 imageFileName = PHOTO_PREFIX + timeStamp + PHOTO_EXTENSION
-                intent.putExtra(MediaStore.EXTRA_OUTPUT, ImageUtils.getInstance().getPhotoFileUri(context, imageFileName))
+                intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUtils.getPhotoFileUri(context, imageFileName))
                 startActivityForResult(intent, REQUEST_CAMERA)
             }
         }
@@ -550,14 +553,14 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View,
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_CAMERA) {
             if (resultCode == Activity.RESULT_OK) {
-                val takenPhotoUri = ImageUtils.getInstance().getPhotoFileUri(context, imageFileName)
+                val takenPhotoUri = imageUtils.getPhotoFileUri(context, imageFileName)
                 actionsListener?.onSignalPhotoSelected(takenPhotoUri!!.path!!)
             }
         }
 
         if (requestCode == REQUEST_GALLERY && resultCode == Activity.RESULT_OK && data != null && data.data != null) {
             val photoMediaUri = data.data
-            val photoFile = ImageUtils.getInstance().getFromMediaUri(context, context!!.contentResolver, photoMediaUri)
+            val photoFile = imageUtils.getFromMediaUri(context, context!!.contentResolver, photoMediaUri)
             actionsListener?.onSignalPhotoSelected(Uri.fromFile(photoFile).path!!)
         }
 
@@ -573,7 +576,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View,
 
     override fun setThumbnailImage(photoUri: String?) {
         val res = resources
-        val drawable = RoundedBitmapDrawableFactory.create(res, ImageUtils.getInstance().getRotatedBitmap(File(photoUri!!)))
+        val drawable = RoundedBitmapDrawableFactory.create(res, imageUtils.getRotatedBitmap(File(photoUri!!)))
         drawable.cornerRadius = 10f
         binding.viewSendSignal.setSignalPhoto(drawable)
     }

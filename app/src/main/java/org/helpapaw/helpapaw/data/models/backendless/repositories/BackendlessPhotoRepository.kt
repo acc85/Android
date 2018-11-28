@@ -8,9 +8,13 @@ import com.backendless.files.BackendlessFile
 import org.helpapaw.helpapaw.base.PawApplication
 import org.helpapaw.helpapaw.utils.images.ImageUtils
 import java.io.File
-import javax.inject.Inject
+class BackendlessPhotoRepository():PhotoRepository{
 
-class BackendlessPhotoRepository @Inject constructor():PhotoRepository{
+    constructor(imageUtils: ImageUtils):this(){
+        this.imageUtils = imageUtils
+    }
+
+    lateinit var imageUtils: ImageUtils
 
     companion object {
         private const val BACKENDLESS_API_DOMAIN = "https://api.backendless.com/"
@@ -38,7 +42,7 @@ class BackendlessPhotoRepository @Inject constructor():PhotoRepository{
     }
 
     override fun savePhoto(photoUri: String, photoName: String, callback: PhotoRepository.SavePhotoCallback) {
-        val photo = ImageUtils.getInstance().getRotatedBitmap(File(photoUri))
+        val photo = imageUtils.getRotatedBitmap(File(photoUri))
         Backendless.Files.Android.upload(photo,
                 Bitmap.CompressFormat.JPEG, PHOTO_QUALITY, photoName + PHOTO_EXTENSION,
                 PHOTOS_DIRECTORY, true, object : AsyncCallback<BackendlessFile> {
