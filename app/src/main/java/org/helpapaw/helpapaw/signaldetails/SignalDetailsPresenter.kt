@@ -22,6 +22,9 @@ class SignalDetailsPresenter(override var view: SignalDetailsContract.View?) : P
     private var statusChanged: Boolean = false
 
     @Inject
+    lateinit var utils: Utils
+
+    @Inject
     lateinit var commentRepository: CommentRepository
 
     @Inject
@@ -43,7 +46,7 @@ class SignalDetailsPresenter(override var view: SignalDetailsContract.View?) : P
         setProgressIndicator(showProgressBar)
         if (signal != null) {
             this.signal = signal
-            signal.photoUrl = (photoRepository?.getPhotoUrl(signal.id)!!)
+            signal.photoUrl = (photoRepository.getPhotoUrl(signal.id))
             view?.showSignalDetails(signal)
 
             if (commentList != null) {
@@ -62,8 +65,8 @@ class SignalDetailsPresenter(override var view: SignalDetailsContract.View?) : P
     }
 
     override fun loadCommentsForSignal(signalId: String) {
-        if (Utils.getInstance().hasNetworkConnection()) {
-            commentRepository?.getAllCommentsBySignalId(signalId, object : CommentRepository.LoadCommentsCallback {
+        if (utils.hasNetworkConnection()) {
+            commentRepository.getAllCommentsBySignalId(signalId, object : CommentRepository.LoadCommentsCallback {
                 override fun onCommentsLoaded(comments: List<Comment>) {
                     if (!isViewAvailable()) return
                     commentList = comments.toMutableList()
@@ -90,13 +93,13 @@ class SignalDetailsPresenter(override var view: SignalDetailsContract.View?) : P
     }
 
     override fun onAddCommentButtonClicked(comment: String?) {
-        if (Utils.getInstance().hasNetworkConnection()) {
+        if (utils.hasNetworkConnection()) {
             if (comment != null && comment.trim().isNotEmpty()) {
                 view!!.hideKeyboard()
                 setProgressIndicator(true)
                 view!!.scrollToBottom()
 
-                userManager?.isLoggedIn(object : UserManager.LoginCallback {
+                userManager.isLoggedIn(object : UserManager.LoginCallback {
                     override fun onLoginSuccess() {
                         if (!isViewAvailable()) return
                         view!!.clearSendCommentView()
@@ -119,11 +122,11 @@ class SignalDetailsPresenter(override var view: SignalDetailsContract.View?) : P
     }
 
     override fun onRequestStatusChange(status: Int) {
-        if (Utils.getInstance().hasNetworkConnection()) {
+        if (utils.hasNetworkConnection()) {
 
-            userManager?.isLoggedIn(object : UserManager.LoginCallback {
+            userManager.isLoggedIn(object : UserManager.LoginCallback {
                 override fun onLoginSuccess() {
-                    signalRepository?.updateSignalStatus(signal.id, status, object : SignalRepository.UpdateStatusCallback {
+                    signalRepository.updateSignalStatus(signal.id, status, object : SignalRepository.UpdateStatusCallback {
                         override fun onStatusUpdated(status: Int) {
                             if (!isViewAvailable()) return
                             setSignalStatus(status)

@@ -15,6 +15,9 @@ import javax.inject.Inject
 class LoginPresenter(override var view: LoginContract.View?): Presenter<LoginContract.View>(view), LoginContract.UserActionsListener{
 
     @Inject
+    lateinit var utils:Utils
+
+    @Inject
     constructor(view: LoginFragment?) : this(view as LoginContract.View)
 
     companion object {
@@ -38,7 +41,7 @@ class LoginPresenter(override var view: LoginContract.View?): Presenter<LoginCon
     override fun onLoginButtonClicked(email: String, password: String) {
         view?.clearErrorMessages()
 
-        if (email.isBlank() || !Utils.getInstance().isEmailValid(email)) {
+        if (email.isBlank() || !utils.isEmailValid(email)) {
             view?.showEmailErrorMessage()
             return
         }
@@ -76,7 +79,7 @@ class LoginPresenter(override var view: LoginContract.View?): Presenter<LoginCon
     }
 
     private fun attemptToLogin(email:String , password:String ) {
-        if (Utils.getInstance().hasNetworkConnection()) {
+        if (utils.hasNetworkConnection()) {
             userManager.login(email, password, object : UserManager.LoginCallback {
                 override fun onLoginSuccess() {
                     this@LoginPresenter.onLoginSuccess()

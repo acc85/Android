@@ -86,7 +86,7 @@ class BackgroundCheckJobService : JobService() {
 
                 Log.d(TAG, "got signals")
 
-                if (signals != null && !signals.isEmpty() && database != null) {
+                if (!signals.isEmpty() && database != null) {
 
                     for (signal in signals) {
                         if (signal.status < SOLVED) {

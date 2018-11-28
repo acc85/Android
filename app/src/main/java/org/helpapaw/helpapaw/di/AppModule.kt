@@ -2,15 +2,23 @@ package org.helpapaw.helpapaw.di
 
 import dagger.Module
 import dagger.Provides
+import org.helpapaw.helpapaw.base.PawApplication
 import org.helpapaw.helpapaw.data.models.Signal
 import org.helpapaw.helpapaw.data.models.backendless.repositories.BackendlessPhotoRepository
 import org.helpapaw.helpapaw.data.models.backendless.repositories.BackendlessSignalRepository
 import org.helpapaw.helpapaw.data.user.BackendlessUserManager
+import org.helpapaw.helpapaw.utils.Utils
 import org.helpapaw.helpapaw.utils.images.PicassoImageLoader
 import javax.inject.Singleton
 
 @Module
 class AppModule{
+
+    @Singleton
+    @Provides
+    fun provideUtils(application: PawApplication): Utils {
+        return Utils(application);
+    }
 
     @Singleton
     @Provides
@@ -32,8 +40,8 @@ class AppModule{
 
     @Singleton
     @Provides
-    fun providesSignalRepository():BackendlessSignalRepository{
-        return  BackendlessSignalRepository()
+    fun providesSignalRepository(application: PawApplication):BackendlessSignalRepository{
+        return BackendlessSignalRepository(application)
     }
 
 }

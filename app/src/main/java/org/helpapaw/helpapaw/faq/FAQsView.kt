@@ -1,10 +1,12 @@
 package org.helpapaw.helpapaw.faq
 
+import android.os.Build
 import android.os.Bundle
 import android.text.Html
 import android.view.MenuItem
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.text.HtmlCompat
 import androidx.databinding.DataBindingUtil
 import org.helpapaw.helpapaw.R
 import org.helpapaw.helpapaw.databinding.ActivityFaqsViewBinding
@@ -27,7 +29,7 @@ class FAQsView : AppCompatActivity() {
         //            supportActionBar.setHomeAsUpIndicator(R.drawable.ic_close);
         supportActionBar?.setDisplayShowTitleEnabled(false)
         binding.toolbarTitle.text = getString(R.string.txt_faqs_view_title)
-        binding.tvFaqsText.text = Html.fromHtml(getString(R.string.string_faq))
+        binding.tvFaqsText.text = HtmlCompat.fromHtml(getString(R.string.string_faq),HtmlCompat.FROM_HTML_MODE_LEGACY)
     }
 
     //    "Q1" = "How does this app work?";

@@ -41,6 +41,9 @@ class SignalDetailsFragment : BaseFragment(), SignalDetailsContract.View {
     }
 
     @Inject
+    lateinit var utils: Utils
+
+    @Inject
     lateinit var signalDetailsPresenter: SignalDetailsPresenter
 
     @Inject
@@ -74,7 +77,7 @@ class SignalDetailsFragment : BaseFragment(), SignalDetailsContract.View {
         binding.txtSignalTitle.text = signal.title
         binding.txtSignalAuthor.text = signal.authorName
 
-        val formattedDate = Utils.getInstance().getFormattedDate(signal.dateSubmitted)
+        val formattedDate = utils.getFormattedDate(signal.dateSubmitted)
         binding.txtSubmittedDate.text = formattedDate
         binding.viewSignalStatus.updateStatus(signal.status)
 
@@ -130,7 +133,7 @@ class SignalDetailsFragment : BaseFragment(), SignalDetailsContract.View {
 
             txtCommentText.text = commentText
 
-            val formattedDate = Utils.getInstance().getFormattedDate(comment?.dateCreated!!)
+            val formattedDate = utils.getFormattedDate(comment?.dateCreated!!)
             txtCommentDate.text = formattedDate
 
             binding.grpComments.addView(inflatedCommentView)

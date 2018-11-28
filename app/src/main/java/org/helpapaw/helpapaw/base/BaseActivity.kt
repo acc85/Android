@@ -5,16 +5,18 @@ import android.content.res.Configuration
 import android.os.Bundle
 import android.view.MenuItem
 import androidx.appcompat.app.ActionBarDrawerToggle
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.GravityCompat
 import androidx.databinding.DataBindingUtil
 import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.snackbar.Snackbar
+import dagger.android.AndroidInjection
+import dagger.android.support.DaggerAppCompatActivity
 import org.helpapaw.helpapaw.R
 import org.helpapaw.helpapaw.about.AboutActivity
 import org.helpapaw.helpapaw.authentication.AuthenticationActivity
+import org.helpapaw.helpapaw.data.user.BackendlessUserManager
 import org.helpapaw.helpapaw.data.user.UserManager
 import org.helpapaw.helpapaw.databinding.ActivityBaseBinding
 import org.helpapaw.helpapaw.faq.FAQsView
@@ -23,17 +25,20 @@ import org.helpapaw.helpapaw.utils.SharingUtils
 import org.helpapaw.helpapaw.utils.Utils
 import javax.inject.Inject
 
-abstract class BaseActivity : AppCompatActivity() {
+abstract class BaseActivity : DaggerAppCompatActivity() {
 
     protected lateinit var binding: ActivityBaseBinding
     private lateinit var drawerToggle: ActionBarDrawerToggle
 
     @Inject
-    lateinit var userManager: UserManager
+    lateinit var userManager: BackendlessUserManager
 
+    @Inject
+    lateinit var utils:Utils
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        AndroidInjection.inject(this)
         binding = DataBindingUtil.setContentView(this, getLayoutId())
         setSupportActionBar(binding.toolbar)
 
@@ -86,12 +91,12 @@ abstract class BaseActivity : AppCompatActivity() {
     }
 
     fun logIn() {
-        val intent = Intent(PawApplication.getContext(), AuthenticationActivity::class.java)
+        val intent = Intent(applicationContext, AuthenticationActivity::class.java)
         startActivity(intent)
     }
 
     fun logOut() {
-        if (Utils.getInstance().hasNetworkConnection()) {
+        if (utils.hasNetworkConnection()) {
             userManager.logout((object : UserManager.LogoutCallback {
                 override fun onLogoutSuccess() {
                     Snackbar.make(binding.root.findViewById(R.id.fab_add_signal), R.string.txt_logout_succeeded, Snackbar.LENGTH_LONG).show()

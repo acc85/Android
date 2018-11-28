@@ -35,6 +35,9 @@ class SignalsMapPresenter (override var view: SignalsMapContract.View?) : Presen
     @Inject
     lateinit var photoRepository: BackendlessPhotoRepository
 
+    @Inject
+    lateinit var utils: Utils
+
     private var latitude: Double = 0.toDouble()
     private var longitude: Double = 0.toDouble()
 
@@ -56,13 +59,13 @@ class SignalsMapPresenter (override var view: SignalsMapContract.View?) : Presen
         if (!isEmpty(photoUri)) {
             view?.setThumbnailImage(photoUri)
         }
-        if (signalsList != null && signalsList?.size?:0 > 0) {
+        if (signalsList.size > 0) {
             view?.displaySignals(signalsList, false)
         }
     }
 
     private fun getAllSignals(latitude: Double, longitude: Double, showPopup: Boolean) {
-        if (Utils.getInstance().hasNetworkConnection()) {
+        if (utils.hasNetworkConnection()) {
             view?.setProgressVisibility(true)
             signalRepository.getAllSignals(latitude, longitude, DEFAULT_SEARCH_RADIUS.toDouble(),
                     object : SignalRepository.LoadSignalsCallback {
@@ -94,7 +97,7 @@ class SignalsMapPresenter (override var view: SignalsMapContract.View?) : Presen
         currentMapLatitude = latitude;
         currentMapLongitude = longitude;
 
-        if (Utils.getInstance().getDistanceBetween(latitude, longitude, this.latitude, this.longitude) > 300) {
+        if (utils.getDistanceBetween(latitude, longitude, this.latitude, this.longitude) > 300) {
             getAllSignals(latitude, longitude, false);
 
             this.latitude = latitude;
@@ -226,7 +229,7 @@ class SignalsMapPresenter (override var view: SignalsMapContract.View?) : Presen
                 if (!isEmpty(photoUri)) {
                     savePhoto(photoUri!!, signal)
                 } else {
-                    signalsList?.add(signal)
+                    signalsList.add(signal)
 
                     view?.displaySignals(signalsList, true, signal.id)
                     view?.setAddSignalViewVisibility(false)
@@ -260,7 +263,7 @@ class SignalsMapPresenter (override var view: SignalsMapContract.View?) : Presen
     }
 
     private fun logoutUser() {
-        if (Utils.getInstance().hasNetworkConnection()) {
+        if (utils.hasNetworkConnection()) {
             userManager.logout(object : UserManager.LogoutCallback {
                 override fun onLogoutSuccess() {
                     view?.onLogoutSuccess()

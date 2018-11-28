@@ -1,10 +1,12 @@
 package org.helpapaw.helpapaw.utils
 
+import android.annotation.TargetApi
 import android.content.Context
 import android.location.Location
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
 import android.util.Log
+import androidx.core.net.ConnectivityManagerCompat
 import org.helpapaw.helpapaw.base.PawApplication
 import java.io.BufferedReader
 import java.io.IOException
@@ -14,36 +16,13 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.regex.Pattern
 
-class Utils {
+class Utils() {
 
-    companion object {
-        private var instance: Utils? = null
-
-        @Synchronized
-        fun getInstance(): Utils {
-            if (instance == null) {
-                instance = Utils()
-            }
-            return instance!!
-        }
-
-        @Throws(IOException::class)
-        fun getHtml(url: String): String {
-            // Build and set timeout values for the request.
-            val connection = URL(url).openConnection()
-            connection.connectTimeout = 5000
-            connection.readTimeout = 5000
-            connection.connect()
-
-            // Read and store the result line by line then return the entire string.
-            val inputStream = connection.getInputStream()
-            val html = StringBuilder()
-            inputStream.bufferedReader().use { html.append(it.readLines()) }
-            inputStream.close()
-
-            return html.toString()
-        }
+    constructor(pawApplication: PawApplication):this(){
+        this.pawApplication = pawApplication
     }
+
+    lateinit var pawApplication:PawApplication
 
     //Validation
     fun isEmailValid(email: String): Boolean {

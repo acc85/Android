@@ -36,6 +36,7 @@ import org.helpapaw.helpapaw.R
 import org.helpapaw.helpapaw.R.id.menu_item_refresh
 import org.helpapaw.helpapaw.authentication.AuthenticationActivity
 import org.helpapaw.helpapaw.base.BaseFragment
+import org.helpapaw.helpapaw.base.PawApplication
 import org.helpapaw.helpapaw.base.Presenter
 import org.helpapaw.helpapaw.data.models.Signal
 import org.helpapaw.helpapaw.data.models.backendless.repositories.BackendlessPhotoRepository
@@ -615,9 +616,9 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View,
 
             if (refreshItem != null) {
                 if (visibility) {
-                    MenuItemCompat.setActionView(refreshItem, R.layout.toolbar_progress)
-                    if (MenuItemCompat.getActionView(refreshItem) != null) {
-                        val progressBar = MenuItemCompat.getActionView(refreshItem).findViewById<View>(R.id.toolbar_progress_bar) as ProgressBar
+                    refreshItem.setActionView(R.layout.toolbar_progress)
+                    if (refreshItem.getActionView() != null) {
+                        val progressBar = refreshItem.getActionView().findViewById<View>(R.id.toolbar_progress_bar) as ProgressBar
                         progressBar.indeterminateDrawable?.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN)
                     }
                 } else {

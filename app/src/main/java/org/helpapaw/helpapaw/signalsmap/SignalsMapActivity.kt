@@ -9,11 +9,10 @@ import com.firebase.jobdispatcher.*
 import org.helpapaw.helpapaw.R
 import org.helpapaw.helpapaw.R.layout.activity_base
 import org.helpapaw.helpapaw.base.BaseActivity
-import org.helpapaw.helpapaw.base.BaseDaggerActivity
 import org.helpapaw.helpapaw.data.models.Signal
 import org.helpapaw.helpapaw.utils.services.BackgroundCheckJobService
 
-class SignalsMapActivity : BaseDaggerActivity() {
+class SignalsMapActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

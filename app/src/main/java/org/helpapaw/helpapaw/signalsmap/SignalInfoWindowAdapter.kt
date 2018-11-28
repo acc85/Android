@@ -39,7 +39,7 @@ class SignalInfoWindowAdapter(private val signalMarkers:Map<String, Signal>, pri
                 lastShownMarker = marker
 
                 binding.txtSignalTitle.text = signal.title
-                binding.txtSignalStatus.text = getStatusString(signal.status!!)
+                binding.txtSignalStatus.text = getStatusString(signal.status)
 
                 Picasso.get().load(photoUrl).resize(200, 200)
                         .centerCrop()

@@ -11,6 +11,9 @@ class RegisterPresenter(override var view: RegisterContract.View?): Presenter<Re
     @Inject
     constructor(view:RegisterFragment):this(view as RegisterContract.View)
 
+    @Inject
+    lateinit var utils:Utils
+
     companion object {
         private const val MIN_PASS_LENGTH = 6
     }
@@ -28,7 +31,7 @@ class RegisterPresenter(override var view: RegisterContract.View?): Presenter<Re
     override fun onRegisterButtonClicked(email: String, password: String, passwordConfirmation: String, name: String, phoneNumber: String) {
         view?.clearErrorMessages()
 
-        if (email.isEmpty() || !Utils.getInstance().isEmailValid(email)) {
+        if (email.isEmpty() || !utils.isEmailValid(email)) {
             view?.showEmailErrorMessage()
             return
         }
@@ -62,7 +65,7 @@ class RegisterPresenter(override var view: RegisterContract.View?): Presenter<Re
     }
 
     private fun attemptToRegister(email: String, password: String, name: String, phoneNumber: String) {
-        if (Utils.getInstance().hasNetworkConnection()) {
+        if (utils.hasNetworkConnection()) {
             userManager.register(email, password, name, phoneNumber, object : UserManager.RegistrationCallback {
                 override fun onRegistrationSuccess() {
                     if (!view!!.isActive()) return

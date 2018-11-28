@@ -1,5 +1,7 @@
 package org.helpapaw.helpapaw.data.models.backendless.repositories
 
+import android.app.Application
+import android.content.Context
 import android.util.Log
 import com.backendless.Backendless
 import com.backendless.BackendlessUser
@@ -15,9 +17,16 @@ import org.helpapaw.helpapaw.data.models.Signal
 import org.helpapaw.helpapaw.db.SignalsDatabase
 import java.util.*
 
-class BackendlessSignalRepository:SignalRepository{
+class BackendlessSignalRepository():SignalRepository{
 
-    private var signalsDatabase: SignalsDatabase = SignalsDatabase.getDatabase(PawApplication.getContext())
+    lateinit var application: PawApplication
+    lateinit var signalsDatabase: SignalsDatabase
+
+    constructor(application:PawApplication):this(){
+        this.application = application
+        signalsDatabase =  SignalsDatabase.getDatabase(application.applicationContext)
+    }
+
 
     companion object {
         private const val SIGNAL_TITLE = "title"
@@ -99,7 +108,7 @@ class BackendlessSignalRepository:SignalRepository{
 
             override fun handleResponse(response: List<GeoPoint?>) {
                 if (response.isEmpty()) {
-                    callback.onStatusFailure(PawApplication.getContext().getString(R.string.error_empty_signal_response))
+                    callback.onStatusFailure(application.applicationContext.getString(R.string.error_empty_signal_response))
                     return
                 }
 
