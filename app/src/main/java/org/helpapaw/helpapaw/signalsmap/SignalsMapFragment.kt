@@ -32,6 +32,10 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.helpapaw.helpapaw.R
 import org.helpapaw.helpapaw.R.id.menu_item_refresh
 import org.helpapaw.helpapaw.authentication.AuthenticationActivity
@@ -100,7 +104,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View,
     private val mDisplayedSignals = ArrayList<Signal>()
 
     @Inject
-    lateinit var mSignalMarkers:HashMap<String,Signal>
+    lateinit var mSignalMarkers: HashMap<String, Signal>
 
     @Inject
     lateinit var imageUtils: ImageUtils
@@ -114,10 +118,10 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View,
     lateinit var signalsMapPresenter: SignalsMapPresenter
 
     @Inject
-    lateinit var photoRepository:BackendlessPhotoRepository
+    lateinit var photoRepository: BackendlessPhotoRepository
 
     @Inject
-    lateinit var infoWindowAdapter:SignalInfoWindowAdapter
+    lateinit var infoWindowAdapter: SignalInfoWindowAdapter
 
     private var actionsListener: SignalsMapContract.UserActionsListener? = null
 
@@ -134,52 +138,54 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View,
         arguments?.remove(Signal.KEY_FOCUSED_SIGNAL_ID)
     }
 
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         // Inflate the layout for this fragment
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_signals_map, container, false)
-        val mapViewSavedInstanceState = savedInstanceState?.getBundle(MAP_VIEW_STATE)
-        binding.mapSignals.onCreate(mapViewSavedInstanceState)
-
-
-        mVisibilityAddSignal = savedInstanceState?.getBoolean(VIEW_ADD_SIGNAL) ?: false
-
-        //        setAddSignalViewVisibility(mVisibilityAddSignal);
-        binding.mapSignals.getMapAsync(getMapReadyCallback())
-        actionsListener = signalsMapPresenter
-        initLocationApi()
-
-        setHasOptionsMenu(true)
-
         binding.fabAddSignal.setOnClickListener(getFabAddSignalClickListener())
         binding.viewSendSignal.setOnSignalSendClickListener(getOnSignalSendClickListener())
         binding.viewSendSignal.setOnSignalPhotoClickListener(getOnSignalPhotoClickListener())
-
         return binding.root
     }
 
-    override fun onStart() {
-        super.onStart()
-        binding.mapSignals.onStart()
-        googleApiClient?.connect()
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        val mapViewSavedInstanceState = savedInstanceState?.getBundle(MAP_VIEW_STATE)
+        GlobalScope.launch(Dispatchers.Main) {
+            binding.mapSignals.onCreate(mapViewSavedInstanceState)
+            mVisibilityAddSignal = savedInstanceState?.getBoolean(VIEW_ADD_SIGNAL) ?: false
+            setAddSignalViewVisibility(mVisibilityAddSignal);
+            binding.mapSignals.getMapAsync(getMapReadyCallback())
+            actionsListener = signalsMapPresenter
+            initLocationApi()
+            setHasOptionsMenu(true)
+            googleApiClient?.connect()
+            binding.mapSignals.onStart()
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        binding.mapSignals.onResume()
+        if (signalsGoogleMap != null) {
+            binding.mapSignals.onResume()
+        }
     }
 
     override fun onPause() {
         super.onPause()
-        binding.mapSignals.onPause()
+        if (signalsGoogleMap != null) {
+            binding.mapSignals.onPause()
+        }
     }
 
     override fun onStop() {
         super.onStop()
-        binding.mapSignals.onStop()
-
-        if (googleApiClient?.isConnected() ?: false) {
-            LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this)
-            googleApiClient?.disconnect()
+        if (signalsGoogleMap != null) {
+            binding.mapSignals.onStop()
+            if (googleApiClient?.isConnected() ?: false) {
+                LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this)
+                googleApiClient?.disconnect()
+            }
         }
     }
 
@@ -215,7 +221,8 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View,
             menu_item_refresh -> {
                 actionsListener?.onRefreshButtonClicked()
                 return true
-            }else->
+            }
+            else ->
                 return super.onOptionsItemSelected(item)
         }
     }
@@ -304,7 +311,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View,
 
                 if (mFocusedSignalId != null) {
                     if (signal.id.equals(mFocusedSignalId, ignoreCase = true)) {
-                        showingPopup= true
+                        showingPopup = true
                         markerToFocus = marker
                         signalToFocus = signal
                         mFocusedSignalId = null
@@ -346,6 +353,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View,
                 .setFastestInterval((10 * 1000).toLong()) // 10 seconds, in milliseconds
     }
 
+
     override fun onConnected(bundle: Bundle?) {
         val builder = LocationSettingsRequest.Builder().addLocationRequest(LocationRequest())
 
@@ -385,6 +393,12 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View,
         if (ContextCompat.checkSelfPermission(cont, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             showPermissionDialog(activity as AppCompatActivity, Manifest.permission.ACCESS_FINE_LOCATION, LOCATION_PERMISSIONS_REQUEST)
         } else {
+            zoomToUserLocation()
+        }
+    }
+
+    fun zoomToUserLocation() {
+        if (ContextCompat.checkSelfPermission(context!!, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             setAddSignalViewVisibility(mVisibilityAddSignal)
             signalsGoogleMap?.setMyLocationEnabled(true)
 
@@ -400,293 +414,293 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View,
         }
     }
 
-    override fun onConnectionSuspended(i: Int) {
-        Log.i(TAG, "Connection suspended")
-        googleApiClient?.connect()
-    }
-
-    override fun onConnectionFailed(connectionResult: ConnectionResult) {
-        Log.i(TAG, "Connection failed with error code: " + connectionResult.errorCode)
-    }
-
-    override fun onLocationChanged(location: Location) {
-        handleNewLocation(location)
-    }
-
-    private fun handleNewLocation(location: Location) {
-
-        Log.d(TAG, location.toString())
-        mCurrentLat = location.latitude
-        mCurrentLong = location.longitude
-
-        updateMapCameraPosition(mCurrentLat, mCurrentLong, DEFAULT_MAP_ZOOM)
-        actionsListener?.onLocationChanged(mCurrentLat, mCurrentLong)
-    }
-
-
-    override fun showMessage(message: String) {
-        Snackbar.make(binding.fabAddSignal, message, Snackbar.LENGTH_LONG).show()
-    }
-
-    fun getFabAddSignalClickListener(): View.OnClickListener {
-        return View.OnClickListener {
-            val visibility = binding.viewSendSignal.visibility == View.VISIBLE
-            actionsListener?.onAddSignalClicked(visibility)
+        override fun onConnectionSuspended(i: Int) {
+            Log.i(TAG, "Connection suspended")
+            googleApiClient?.connect()
         }
-    }
 
-    override fun setAddSignalViewVisibility(visibility: Boolean) {
-
-        mVisibilityAddSignal = visibility
-
-        if (visibility) {
-            showAddSignalView()
-            showAddSignalPin()
-
-            binding.fabAddSignal.setImageResource(R.drawable.ic_close)
-        } else {
-            hideAddSignalView()
-            hideAddSignalPin()
-
-            binding.fabAddSignal.setImageResource(R.drawable.fab_add)
+        override fun onConnectionFailed(connectionResult: ConnectionResult) {
+            Log.i(TAG, "Connection failed with error code: " + connectionResult.errorCode)
         }
-    }
 
-    private fun showAddSignalView() {
-        binding.viewSendSignal.visibility = View.VISIBLE
-        binding.viewSendSignal.alpha = 0.0f
-
-        binding.viewSendSignal
-                .animate()
-                .setInterpolator(AccelerateDecelerateInterpolator())
-                .setDuration(300)
-                .translationY(binding.viewSendSignal.height * 1.2f)
-                .alpha(1.0f)
-    }
-
-    private fun hideAddSignalView() {
-
-        binding.viewSendSignal
-                .animate()
-                .setInterpolator(AccelerateDecelerateInterpolator())
-                .setDuration(300)
-                .translationY(-(binding.viewSendSignal.height * 1.2f))
-                .withEndAction { binding.viewSendSignal.visibility = View.INVISIBLE }
-    }
-
-    private fun showAddSignalPin() {
-        binding.addSignalPin.visibility = View.VISIBLE
-        binding.addSignalPin.alpha = 0.0f
-
-        binding.addSignalPin
-                .animate()
-                .setInterpolator(AccelerateDecelerateInterpolator())
-                .setDuration(200)
-                .translationY(0f)
-                .alpha(1.0f)
-    }
-
-    private fun hideAddSignalPin() {
-
-        binding.addSignalPin
-                .animate()
-                .setInterpolator(AccelerateDecelerateInterpolator())
-                .setDuration(200)
-                .alpha(0.0f)
-                .withEndAction { binding.addSignalPin.visibility = View.INVISIBLE }
-    }
-
-
-    override fun hideKeyboard() {
-        super.hideKeyboard()
-    }
-
-    override fun showSendPhotoBottomSheet() {
-        val sendPhotoBottomSheet = SendPhotoBottomSheet()
-        sendPhotoBottomSheet.listener = object : SendPhotoBottomSheet.PhotoTypeSelectListener {
-            override fun onPhotoTypeSelected(@SendPhotoBottomSheet.Companion.PhotoType photoType: Int) {
-                if (photoType == SendPhotoBottomSheet.CAMERA) {
-                    actionsListener?.onCameraOptionSelected()
-            } else if (photoType == SendPhotoBottomSheet.GALLERY) {
-                    actionsListener?.onGalleryOptionSelected()
-                }
-            }
+        override fun onLocationChanged(location: Location) {
+            handleNewLocation(location)
         }
-        sendPhotoBottomSheet.show(fragmentManager!!, SendPhotoBottomSheet.TAG)
-    }
 
-    override fun openCamera() {
-        if (ContextCompat.checkSelfPermission(context!!, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            showPermissionDialog(activity as AppCompatActivity, Manifest.permission.READ_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE_FOR_CAMERA)
-        } else {
-            val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-            if (intent.resolveActivity(context!!.packageManager) != null) {
-                val timeStamp = SimpleDateFormat(DATE_TIME_FORMAT, Locale.getDefault()).format(Date())
-                imageFileName = PHOTO_PREFIX + timeStamp + PHOTO_EXTENSION
-                intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUtils.getPhotoFileUri(context, imageFileName))
-                startActivityForResult(intent, REQUEST_CAMERA)
-            }
+        private fun handleNewLocation(location: Location) {
+
+            Log.d(TAG, location.toString())
+            mCurrentLat = location.latitude
+            mCurrentLong = location.longitude
+
+            updateMapCameraPosition(mCurrentLat, mCurrentLong, DEFAULT_MAP_ZOOM)
+            actionsListener?.onLocationChanged(mCurrentLat, mCurrentLong)
         }
-    }
 
-    override fun openGallery() {
-        if (ContextCompat.checkSelfPermission(context!!, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            showPermissionDialog(activity as AppCompatActivity, Manifest.permission.READ_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE_FOR_GALLERY)
-        } else {
-            val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-            if (intent.resolveActivity(context!!.packageManager) != null) {
-                startActivityForResult(intent, REQUEST_GALLERY)
-            }
+
+        override fun showMessage(message: String) {
+            Snackbar.make(binding.fabAddSignal, message, Snackbar.LENGTH_LONG).show()
         }
-    }
 
-    override fun openLoginScreen() {
-        val intent = Intent(context, AuthenticationActivity::class.java)
-        startActivity(intent)
-    }
-
-    override fun getPresenter(): Presenter<*>? {
-        return signalsMapPresenter
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == REQUEST_CAMERA) {
-            if (resultCode == Activity.RESULT_OK) {
-                val takenPhotoUri = imageUtils.getPhotoFileUri(context, imageFileName)
-                actionsListener?.onSignalPhotoSelected(takenPhotoUri!!.path!!)
+        fun getFabAddSignalClickListener(): View.OnClickListener {
+            return View.OnClickListener {
+                val visibility = binding.viewSendSignal.visibility == View.VISIBLE
+                actionsListener?.onAddSignalClicked(visibility)
             }
         }
 
-        if (requestCode == REQUEST_GALLERY && resultCode == Activity.RESULT_OK && data != null && data.data != null) {
-            val photoMediaUri = data.data
-            val photoFile = imageUtils.getFromMediaUri(context, context!!.contentResolver, photoMediaUri)
-            actionsListener?.onSignalPhotoSelected(Uri.fromFile(photoFile).path!!)
-        }
+        override fun setAddSignalViewVisibility(visibility: Boolean) {
 
-        if (requestCode == REQUEST_SIGNAL_DETAILS) {
-            if (resultCode == Activity.RESULT_OK) {
-                val signal = data!!.getParcelableExtra<Signal>("signal")
-                if (signal != null) {
-                    actionsListener?.onSignalStatusUpdated(signal)
-                }
+            mVisibilityAddSignal = visibility
+
+            if (visibility) {
+                showAddSignalView()
+                showAddSignalPin()
+
+                binding.fabAddSignal.setImageResource(R.drawable.ic_close)
+            } else {
+                hideAddSignalView()
+                hideAddSignalPin()
+
+                binding.fabAddSignal.setImageResource(R.drawable.fab_add)
             }
         }
-    }
 
-    override fun setThumbnailImage(photoUri: String?) {
-        val res = resources
-        val drawable = RoundedBitmapDrawableFactory.create(res, imageUtils.getRotatedBitmap(File(photoUri!!)))
-        drawable.cornerRadius = 10f
-        binding.viewSendSignal.setSignalPhoto(drawable)
-    }
+        private fun showAddSignalView() {
+            binding.viewSendSignal.visibility = View.VISIBLE
+            binding.viewSendSignal.alpha = 0.0f
 
-    override fun clearSignalViewData() {
-        binding.viewSendSignal.clearData()
-    }
-
-    override fun setSignalViewProgressVisibility(visibility: Boolean) {
-        binding.viewSendSignal.setProgressVisibility(visibility)
-    }
-
-    override fun openSignalDetailsScreen(signal: Signal) {
-        val intent = Intent(context, SignalDetailsActivity::class.java)
-        intent.putExtra(SignalDetailsActivity.SIGNAL_KEY, signal)
-        startActivityForResult(intent, REQUEST_SIGNAL_DETAILS)
-    }
-
-    override fun closeSignalsMapScreen() {
-        if (activity != null) {
-            activity!!.finish()
+            binding.viewSendSignal
+                    .animate()
+                    .setInterpolator(AccelerateDecelerateInterpolator())
+                    .setDuration(300)
+                    .translationY(binding.viewSendSignal.height * 1.2f)
+                    .alpha(1.0f)
         }
-    }
 
-    override fun showDescriptionErrorMessage() {
-        showMessage(getString(R.string.txt_description_required))
-    }
+        private fun hideAddSignalView() {
 
-    override fun showAddedSignalMessage() {
-        showMessage(getString(R.string.txt_signal_added_successfully))
-    }
+            binding.viewSendSignal
+                    .animate()
+                    .setInterpolator(AccelerateDecelerateInterpolator())
+                    .setDuration(300)
+                    .translationY(-(binding.viewSendSignal.height * 1.2f))
+                    .withEndAction { binding.viewSendSignal.visibility = View.INVISIBLE }
+        }
 
-    override fun showNoInternetMessage() {
-        showMessage(getString(R.string.txt_no_internet))
-    }
+        private fun showAddSignalPin() {
+            binding.addSignalPin.visibility = View.VISIBLE
+            binding.addSignalPin.alpha = 0.0f
 
-    override fun setProgressVisibility(visibility: Boolean) {
-        if (optionsMenu != null) {
-            val refreshItem = optionsMenu?.findItem(R.id.menu_item_refresh)
+            binding.addSignalPin
+                    .animate()
+                    .setInterpolator(AccelerateDecelerateInterpolator())
+                    .setDuration(200)
+                    .translationY(0f)
+                    .alpha(1.0f)
+        }
 
-            if (refreshItem != null) {
-                if (visibility) {
-                    refreshItem.setActionView(R.layout.toolbar_progress)
-                    if (refreshItem.getActionView() != null) {
-                        val progressBar = refreshItem.getActionView().findViewById<View>(R.id.toolbar_progress_bar) as ProgressBar
-                        progressBar.indeterminateDrawable?.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN)
+        private fun hideAddSignalPin() {
+
+            binding.addSignalPin
+                    .animate()
+                    .setInterpolator(AccelerateDecelerateInterpolator())
+                    .setDuration(200)
+                    .alpha(0.0f)
+                    .withEndAction { binding.addSignalPin.visibility = View.INVISIBLE }
+        }
+
+
+        override fun hideKeyboard() {
+            super.hideKeyboard()
+        }
+
+        override fun showSendPhotoBottomSheet() {
+            val sendPhotoBottomSheet = SendPhotoBottomSheet()
+            sendPhotoBottomSheet.listener = object : SendPhotoBottomSheet.PhotoTypeSelectListener {
+                override fun onPhotoTypeSelected(@SendPhotoBottomSheet.Companion.PhotoType photoType: Int) {
+                    if (photoType == SendPhotoBottomSheet.CAMERA) {
+                        actionsListener?.onCameraOptionSelected()
+                    } else if (photoType == SendPhotoBottomSheet.GALLERY) {
+                        actionsListener?.onGalleryOptionSelected()
                     }
-                } else {
+                }
+            }
+            sendPhotoBottomSheet.show(fragmentManager!!, SendPhotoBottomSheet.TAG)
+        }
 
-                    MenuItemCompat.setActionView(refreshItem, null)
+        override fun openCamera() {
+            if (ContextCompat.checkSelfPermission(context!!, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                showPermissionDialog(activity as AppCompatActivity, Manifest.permission.READ_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE_FOR_CAMERA)
+            } else {
+                val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+                if (intent.resolveActivity(context!!.packageManager) != null) {
+                    val timeStamp = SimpleDateFormat(DATE_TIME_FORMAT, Locale.getDefault()).format(Date())
+                    imageFileName = PHOTO_PREFIX + timeStamp + PHOTO_EXTENSION
+                    intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUtils.getPhotoFileUri(context, imageFileName))
+                    startActivityForResult(intent, REQUEST_CAMERA)
                 }
             }
         }
-    }
 
-    override fun isActive(): Boolean {
-        return isAdded
-    }
-
-    override fun onLogoutSuccess() {
-        Snackbar.make(binding.root.findViewById(R.id.fab_add_signal), R.string.txt_logout_succeeded, Snackbar.LENGTH_LONG).show()
-    }
-
-    override fun onLogoutFailure(message: String) {
-        AlertDialogFragment.showAlert(getString(R.string.txt_logout_failed), message, true, this.fragmentManager)
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
-        when (requestCode) {
-            READ_EXTERNAL_STORAGE_FOR_CAMERA -> if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                actionsListener?.onStoragePermissionForCameraGranted()
+        override fun openGallery() {
+            if (ContextCompat.checkSelfPermission(context!!, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                showPermissionDialog(activity as AppCompatActivity, Manifest.permission.READ_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE_FOR_GALLERY)
             } else {
-                // Permission Denied
-                Toast.makeText(context, R.string.txt_storage_permissions_for_camera, Toast.LENGTH_SHORT)
-                        .show()
+                val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+                if (intent.resolveActivity(context!!.packageManager) != null) {
+                    startActivityForResult(intent, REQUEST_GALLERY)
+                }
+            }
+        }
+
+        override fun openLoginScreen() {
+            val intent = Intent(context, AuthenticationActivity::class.java)
+            startActivity(intent)
+        }
+
+        override fun getPresenter(): Presenter<*>? {
+            return signalsMapPresenter
+        }
+
+        override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+            super.onActivityResult(requestCode, resultCode, data)
+            if (requestCode == REQUEST_CAMERA) {
+                if (resultCode == Activity.RESULT_OK) {
+                    val takenPhotoUri = imageUtils.getPhotoFileUri(context, imageFileName)
+                    actionsListener?.onSignalPhotoSelected(takenPhotoUri!!.path!!)
+                }
             }
 
-            READ_EXTERNAL_STORAGE_FOR_GALLERY -> if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                actionsListener?.onStoragePermissionForGalleryGranted()
-            } else {
-                // Permission Denied
-                Toast.makeText(context, R.string.txt_storage_permissions_for_gallery, Toast.LENGTH_SHORT)
-                        .show()
+            if (requestCode == REQUEST_GALLERY && resultCode == Activity.RESULT_OK && data != null && data.data != null) {
+                val photoMediaUri = data.data
+                val photoFile = imageUtils.getFromMediaUri(context, context!!.contentResolver, photoMediaUri)
+                actionsListener?.onSignalPhotoSelected(Uri.fromFile(photoFile).path!!)
             }
-            else -> super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+            if (requestCode == REQUEST_SIGNAL_DETAILS) {
+                if (resultCode == Activity.RESULT_OK) {
+                    val signal = data!!.getParcelableExtra<Signal>("signal")
+                    if (signal != null) {
+                        actionsListener?.onSignalStatusUpdated(signal)
+                    }
+                }
+            }
         }
-    }
 
-    fun showPermissionDialog(activity: AppCompatActivity, permission: String, permissionCode: Int) {
-        if (ContextCompat.checkSelfPermission(activity, permission) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(arrayOf(permission), permissionCode)
+        override fun setThumbnailImage(photoUri: String?) {
+            val res = resources
+            val drawable = RoundedBitmapDrawableFactory.create(res, imageUtils.getRotatedBitmap(File(photoUri!!)))
+            drawable.cornerRadius = 10f
+            binding.viewSendSignal.setSignalPhoto(drawable)
         }
-    }
 
-    /* OnClick Listeners */
-
-    fun onBackPressed() {
-        actionsListener?.onBackButtonPressed()
-    }
-
-    fun getOnSignalSendClickListener(): View.OnClickListener {
-        return View.OnClickListener {
-            val description = binding.viewSendSignal.getSignalDescription()
-
-            actionsListener?.onSendSignalClicked(description)
+        override fun clearSignalViewData() {
+            binding.viewSendSignal.clearData()
         }
-    }
 
-    fun getOnSignalPhotoClickListener(): View.OnClickListener {
-        return View.OnClickListener { actionsListener?.onChoosePhotoIconClicked() }
-    }
+        override fun setSignalViewProgressVisibility(visibility: Boolean) {
+            binding.viewSendSignal.setProgressVisibility(visibility)
+        }
 
-}
+        override fun openSignalDetailsScreen(signal: Signal) {
+            val intent = Intent(context, SignalDetailsActivity::class.java)
+            intent.putExtra(SignalDetailsActivity.SIGNAL_KEY, signal)
+            startActivityForResult(intent, REQUEST_SIGNAL_DETAILS)
+        }
+
+        override fun closeSignalsMapScreen() {
+            if (activity != null) {
+                activity!!.finish()
+            }
+        }
+
+        override fun showDescriptionErrorMessage() {
+            showMessage(getString(R.string.txt_description_required))
+        }
+
+        override fun showAddedSignalMessage() {
+            showMessage(getString(R.string.txt_signal_added_successfully))
+        }
+
+        override fun showNoInternetMessage() {
+            showMessage(getString(R.string.txt_no_internet))
+        }
+
+        override fun setProgressVisibility(visibility: Boolean) {
+            if (optionsMenu != null) {
+                val refreshItem = optionsMenu?.findItem(R.id.menu_item_refresh)
+
+                if (refreshItem != null) {
+                    if (visibility) {
+                        refreshItem.setActionView(R.layout.toolbar_progress)
+                        if (refreshItem.getActionView() != null) {
+                            val progressBar = refreshItem.getActionView().findViewById<View>(R.id.toolbar_progress_bar) as ProgressBar
+                            progressBar.indeterminateDrawable?.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN)
+                        }
+                    } else {
+
+                        MenuItemCompat.setActionView(refreshItem, null)
+                    }
+                }
+            }
+        }
+
+        override fun isActive(): Boolean {
+            return isAdded
+        }
+
+        override fun onLogoutSuccess() {
+            Snackbar.make(binding.root.findViewById(R.id.fab_add_signal), R.string.txt_logout_succeeded, Snackbar.LENGTH_LONG).show()
+        }
+
+        override fun onLogoutFailure(message: String) {
+            AlertDialogFragment.showAlert(getString(R.string.txt_logout_failed), message, true, this.fragmentManager)
+        }
+
+        override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+            when (requestCode) {
+                READ_EXTERNAL_STORAGE_FOR_CAMERA -> if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    actionsListener?.onStoragePermissionForCameraGranted()
+                } else {
+                    // Permission Denied
+                    Toast.makeText(context, R.string.txt_storage_permissions_for_camera, Toast.LENGTH_SHORT)
+                            .show()
+                }
+
+                READ_EXTERNAL_STORAGE_FOR_GALLERY -> if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    actionsListener?.onStoragePermissionForGalleryGranted()
+                } else {
+                    // Permission Denied
+                    Toast.makeText(context, R.string.txt_storage_permissions_for_gallery, Toast.LENGTH_SHORT)
+                            .show()
+                }
+                else -> super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+            }
+        }
+
+        fun showPermissionDialog(activity: AppCompatActivity, permission: String, permissionCode: Int) {
+            if (ContextCompat.checkSelfPermission(activity, permission) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(arrayOf(permission), permissionCode)
+            }
+        }
+
+        /* OnClick Listeners */
+
+        fun onBackPressed() {
+            actionsListener?.onBackButtonPressed()
+        }
+
+        fun getOnSignalSendClickListener(): View.OnClickListener {
+            return View.OnClickListener {
+                val description = binding.viewSendSignal.getSignalDescription()
+
+                actionsListener?.onSendSignalClicked(description)
+            }
+        }
+
+        fun getOnSignalPhotoClickListener(): View.OnClickListener {
+            return View.OnClickListener { actionsListener?.onChoosePhotoIconClicked() }
+        }
+
+    }
