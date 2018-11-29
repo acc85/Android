@@ -36,9 +36,6 @@ class FAQsView : AppCompatActivity() {
 //    "Q4" = "Does this app track my location?";
 //    "A4" = "No. Your location is obtained and used only locally on your device. It will not be recorded on a server or used with any other purpose beside notifying you of animals in need in your area.";
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return super.onOptionsItemSelected(item)
-    }
 
     override fun onSupportNavigateUp(): Boolean {
         finish()
