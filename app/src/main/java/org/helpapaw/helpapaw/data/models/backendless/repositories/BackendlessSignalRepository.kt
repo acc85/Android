@@ -14,17 +14,18 @@ import org.helpapaw.helpapaw.BuildConfig
 import org.helpapaw.helpapaw.R
 import org.helpapaw.helpapaw.base.PawApplication
 import org.helpapaw.helpapaw.data.models.Signal
+import org.helpapaw.helpapaw.db.SignalDao
 import org.helpapaw.helpapaw.db.SignalsDatabase
 import java.util.*
 
 class BackendlessSignalRepository():SignalRepository{
 
     lateinit var application: PawApplication
-    lateinit var signalsDatabase: SignalsDatabase
+    lateinit var signalDao: SignalDao
 
-    constructor(application:PawApplication):this(){
+    constructor(application:PawApplication, signalDao:SignalDao):this(){
         this.application = application
-        signalsDatabase =  SignalsDatabase.getDatabase(application.applicationContext)
+        this.signalDao = signalDao
     }
 
 
@@ -79,7 +80,7 @@ class BackendlessSignalRepository():SignalRepository{
                         geoPoint.latitude,
                         geoPoint.longitude,
                         true)
-                signalsDatabase.signalDao().saveSignal(savedSignal)
+                signalDao.saveSignal(savedSignal)
                 callback.onSignalSaved(savedSignal)
             }
 
@@ -131,11 +132,11 @@ class BackendlessSignalRepository():SignalRepository{
                         val newSignalStatusInt = newSignalStatusString.toInt()
 
                         // Update signal in database
-                        val signalsFromDB = signalsDatabase.signalDao().getSignal(signalId)
+                        val signalsFromDB = signalDao.getSignal(signalId)
                         if (signalsFromDB.isNotEmpty()) {
                             val signal = signalsFromDB[0]
                             signal.status = newSignalStatusInt
-                            signalsDatabase.signalDao().saveSignal(signal)
+                            signalDao.saveSignal(signal)
                         }
 
                         callback.onStatusUpdated(newSignalStatusInt)
@@ -149,10 +150,10 @@ class BackendlessSignalRepository():SignalRepository{
         val signalIds:Array<String> = Array(signals.size){it->
             signals[it].id
         }
-        val signalsFromDB = signalsDatabase.signalDao().getSignals(signalIds)
+        val signalsFromDB = signalDao.getSignals(signalIds)
         for (signal in signalsFromDB) {
             signal.seen = true
-            signalsDatabase.signalDao().saveSignal(signal)
+            signalDao.saveSignal(signal)
         }
     }
 
@@ -207,12 +208,12 @@ class BackendlessSignalRepository():SignalRepository{
                             signalAuthorName!!, signalAuthorPhone!!, geoPoint.latitude!!, geoPoint.longitude!!, false)
 
                     // If signal is already in DB - keep seen status
-                    val signalsFromDB = signalsDatabase.signalDao().getSignal(geoPoint.objectId)
+                    val signalsFromDB = signalDao.getSignal(geoPoint.objectId)
                     if (signalsFromDB.size > 0) {
                         val (_, _, _, _, _, _, _, _, _, seen) = signalsFromDB[0]
                         newSignal.seen = seen
                     }
-                    signalsDatabase.signalDao().saveSignal(newSignal)
+                    signalDao.saveSignal(newSignal)
 
                     signals.add(newSignal)
                 }

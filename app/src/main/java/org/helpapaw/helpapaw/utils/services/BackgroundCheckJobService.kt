@@ -15,6 +15,7 @@ import org.helpapaw.helpapaw.data.models.Signal
 import org.helpapaw.helpapaw.data.models.Signal.Companion.SOLVED
 import org.helpapaw.helpapaw.data.models.backendless.repositories.BackendlessSignalRepository
 import org.helpapaw.helpapaw.data.models.backendless.repositories.SignalRepository
+import org.helpapaw.helpapaw.db.SignalDao
 import org.helpapaw.helpapaw.db.SignalsDatabase
 import org.helpapaw.helpapaw.signalsmap.SignalsMapPresenter.Companion.DEFAULT_SEARCH_RADIUS
 import org.helpapaw.helpapaw.utils.NotificationUtils
@@ -24,12 +25,14 @@ import javax.inject.Inject
 
 class BackgroundCheckJobService : JobService() {
 
-    private var database: SignalsDatabase? = null
     internal var mCurrentNotificationIds = HashSet<String>()
     internal var mNotificationManager: NotificationManager? = null
 
     @Inject
     lateinit var signalRepository: BackendlessSignalRepository
+
+    @Inject
+    lateinit var signalDao: SignalDao
 
     companion object {
         val TAG = BackgroundCheckJobService::class.java.simpleName
@@ -43,7 +46,6 @@ class BackgroundCheckJobService : JobService() {
     }
 
     override fun onStartJob(job: JobParameters): Boolean {
-        database = SignalsDatabase.getDatabase(this)
 
         Log.d(TAG, "onStartJob called")
 
@@ -75,7 +77,6 @@ class BackgroundCheckJobService : JobService() {
     }
 
     override fun onStopJob(job: JobParameters): Boolean {
-        database = null
         return true // Answers the question: "Should this job be retried?"
     }
 
@@ -86,18 +87,18 @@ class BackgroundCheckJobService : JobService() {
 
                 Log.d(TAG, "got signals")
 
-                if (!signals.isEmpty() && database != null) {
+                if (!signals.isEmpty()) {
 
                     for (signal in signals) {
                         if (signal.status < SOLVED) {
-                            val signalsFromDB = database?.signalDao()?.getSignal(signal.id)
+                            val signalsFromDB = signalDao.getSignal(signal.id)
                             if (signalsFromDB?.size ?: 0 > 0) {
                                 val signalFromDb = signalsFromDB?.get(0)
                                 if (!signalFromDb?.seen!!) {
                                     NotificationUtils.showNotificationForSignal(signal, applicationContext)
                                     mCurrentNotificationIds.add(signal.id)
                                     signalFromDb.seen = true
-                                    database?.signalDao()?.saveSignal(signalFromDb)
+                                    signalDao.saveSignal(signalFromDb)
                                 }
                             }
                         }
