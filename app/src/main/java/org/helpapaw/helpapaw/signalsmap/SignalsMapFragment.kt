@@ -354,6 +354,8 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View,
     }
 
 
+
+
     override fun onConnected(bundle: Bundle?) {
         val builder = LocationSettingsRequest.Builder().addLocationRequest(LocationRequest())
 
@@ -414,293 +416,303 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View,
         }
     }
 
-        override fun onConnectionSuspended(i: Int) {
-            Log.i(TAG, "Connection suspended")
-            googleApiClient?.connect()
-        }
-
-        override fun onConnectionFailed(connectionResult: ConnectionResult) {
-            Log.i(TAG, "Connection failed with error code: " + connectionResult.errorCode)
-        }
-
-        override fun onLocationChanged(location: Location) {
-            handleNewLocation(location)
-        }
-
-        private fun handleNewLocation(location: Location) {
-
-            Log.d(TAG, location.toString())
-            mCurrentLat = location.latitude
-            mCurrentLong = location.longitude
-
-            updateMapCameraPosition(mCurrentLat, mCurrentLong, DEFAULT_MAP_ZOOM)
-            actionsListener?.onLocationChanged(mCurrentLat, mCurrentLong)
-        }
-
-
-        override fun showMessage(message: String) {
-            Snackbar.make(binding.fabAddSignal, message, Snackbar.LENGTH_LONG).show()
-        }
-
-        fun getFabAddSignalClickListener(): View.OnClickListener {
-            return View.OnClickListener {
-                val visibility = binding.viewSendSignal.visibility == View.VISIBLE
-                actionsListener?.onAddSignalClicked(visibility)
-            }
-        }
-
-        override fun setAddSignalViewVisibility(visibility: Boolean) {
-
-            mVisibilityAddSignal = visibility
-
-            if (visibility) {
-                showAddSignalView()
-                showAddSignalPin()
-
-                binding.fabAddSignal.setImageResource(R.drawable.ic_close)
-            } else {
-                hideAddSignalView()
-                hideAddSignalPin()
-
-                binding.fabAddSignal.setImageResource(R.drawable.fab_add)
-            }
-        }
-
-        private fun showAddSignalView() {
-            binding.viewSendSignal.visibility = View.VISIBLE
-            binding.viewSendSignal.alpha = 0.0f
-
-            binding.viewSendSignal
-                    .animate()
-                    .setInterpolator(AccelerateDecelerateInterpolator())
-                    .setDuration(300)
-                    .translationY(binding.viewSendSignal.height * 1.2f)
-                    .alpha(1.0f)
-        }
-
-        private fun hideAddSignalView() {
-
-            binding.viewSendSignal
-                    .animate()
-                    .setInterpolator(AccelerateDecelerateInterpolator())
-                    .setDuration(300)
-                    .translationY(-(binding.viewSendSignal.height * 1.2f))
-                    .withEndAction { binding.viewSendSignal.visibility = View.INVISIBLE }
-        }
-
-        private fun showAddSignalPin() {
-            binding.addSignalPin.visibility = View.VISIBLE
-            binding.addSignalPin.alpha = 0.0f
-
-            binding.addSignalPin
-                    .animate()
-                    .setInterpolator(AccelerateDecelerateInterpolator())
-                    .setDuration(200)
-                    .translationY(0f)
-                    .alpha(1.0f)
-        }
-
-        private fun hideAddSignalPin() {
-
-            binding.addSignalPin
-                    .animate()
-                    .setInterpolator(AccelerateDecelerateInterpolator())
-                    .setDuration(200)
-                    .alpha(0.0f)
-                    .withEndAction { binding.addSignalPin.visibility = View.INVISIBLE }
-        }
-
-
-        override fun hideKeyboard() {
-            super.hideKeyboard()
-        }
-
-        override fun showSendPhotoBottomSheet() {
-            val sendPhotoBottomSheet = SendPhotoBottomSheet()
-            sendPhotoBottomSheet.listener = object : SendPhotoBottomSheet.PhotoTypeSelectListener {
-                override fun onPhotoTypeSelected(@SendPhotoBottomSheet.Companion.PhotoType photoType: Int) {
-                    if (photoType == SendPhotoBottomSheet.CAMERA) {
-                        actionsListener?.onCameraOptionSelected()
-                    } else if (photoType == SendPhotoBottomSheet.GALLERY) {
-                        actionsListener?.onGalleryOptionSelected()
-                    }
-                }
-            }
-            sendPhotoBottomSheet.show(fragmentManager!!, SendPhotoBottomSheet.TAG)
-        }
-
-        override fun openCamera() {
-            if (ContextCompat.checkSelfPermission(context!!, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                showPermissionDialog(activity as AppCompatActivity, Manifest.permission.READ_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE_FOR_CAMERA)
-            } else {
-                val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-                if (intent.resolveActivity(context!!.packageManager) != null) {
-                    val timeStamp = SimpleDateFormat(DATE_TIME_FORMAT, Locale.getDefault()).format(Date())
-                    imageFileName = PHOTO_PREFIX + timeStamp + PHOTO_EXTENSION
-                    intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUtils.getPhotoFileUri(context, imageFileName))
-                    startActivityForResult(intent, REQUEST_CAMERA)
-                }
-            }
-        }
-
-        override fun openGallery() {
-            if (ContextCompat.checkSelfPermission(context!!, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                showPermissionDialog(activity as AppCompatActivity, Manifest.permission.READ_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE_FOR_GALLERY)
-            } else {
-                val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-                if (intent.resolveActivity(context!!.packageManager) != null) {
-                    startActivityForResult(intent, REQUEST_GALLERY)
-                }
-            }
-        }
-
-        override fun openLoginScreen() {
-            val intent = Intent(context, AuthenticationActivity::class.java)
-            startActivity(intent)
-        }
-
-        override fun getPresenter(): Presenter<*>? {
-            return signalsMapPresenter
-        }
-
-        override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-            super.onActivityResult(requestCode, resultCode, data)
-            if (requestCode == REQUEST_CAMERA) {
-                if (resultCode == Activity.RESULT_OK) {
-                    val takenPhotoUri = imageUtils.getPhotoFileUri(context, imageFileName)
-                    actionsListener?.onSignalPhotoSelected(takenPhotoUri!!.path!!)
-                }
-            }
-
-            if (requestCode == REQUEST_GALLERY && resultCode == Activity.RESULT_OK && data != null && data.data != null) {
-                val photoMediaUri = data.data
-                val photoFile = imageUtils.getFromMediaUri(context, context!!.contentResolver, photoMediaUri)
-                actionsListener?.onSignalPhotoSelected(Uri.fromFile(photoFile).path!!)
-            }
-
-            if (requestCode == REQUEST_SIGNAL_DETAILS) {
-                if (resultCode == Activity.RESULT_OK) {
-                    val signal = data!!.getParcelableExtra<Signal>("signal")
-                    if (signal != null) {
-                        actionsListener?.onSignalStatusUpdated(signal)
-                    }
-                }
-            }
-        }
-
-        override fun setThumbnailImage(photoUri: String?) {
-            val res = resources
-            val drawable = RoundedBitmapDrawableFactory.create(res, imageUtils.getRotatedBitmap(File(photoUri!!)))
-            drawable.cornerRadius = 10f
-            binding.viewSendSignal.setSignalPhoto(drawable)
-        }
-
-        override fun clearSignalViewData() {
-            binding.viewSendSignal.clearData()
-        }
-
-        override fun setSignalViewProgressVisibility(visibility: Boolean) {
-            binding.viewSendSignal.setProgressVisibility(visibility)
-        }
-
-        override fun openSignalDetailsScreen(signal: Signal) {
-            val intent = Intent(context, SignalDetailsActivity::class.java)
-            intent.putExtra(SignalDetailsActivity.SIGNAL_KEY, signal)
-            startActivityForResult(intent, REQUEST_SIGNAL_DETAILS)
-        }
-
-        override fun closeSignalsMapScreen() {
-            if (activity != null) {
-                activity!!.finish()
-            }
-        }
-
-        override fun showDescriptionErrorMessage() {
-            showMessage(getString(R.string.txt_description_required))
-        }
-
-        override fun showAddedSignalMessage() {
-            showMessage(getString(R.string.txt_signal_added_successfully))
-        }
-
-        override fun showNoInternetMessage() {
-            showMessage(getString(R.string.txt_no_internet))
-        }
-
-        override fun setProgressVisibility(visibility: Boolean) {
-            if (optionsMenu != null) {
-                val refreshItem = optionsMenu?.findItem(R.id.menu_item_refresh)
-
-                if (refreshItem != null) {
-                    if (visibility) {
-                        refreshItem.setActionView(R.layout.toolbar_progress)
-                        if (refreshItem.getActionView() != null) {
-                            val progressBar = refreshItem.getActionView().findViewById<View>(R.id.toolbar_progress_bar) as ProgressBar
-                            progressBar.indeterminateDrawable?.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN)
-                        }
-                    } else {
-
-                        MenuItemCompat.setActionView(refreshItem, null)
-                    }
-                }
-            }
-        }
-
-        override fun isActive(): Boolean {
-            return isAdded
-        }
-
-        override fun onLogoutSuccess() {
-            Snackbar.make(binding.root.findViewById(R.id.fab_add_signal), R.string.txt_logout_succeeded, Snackbar.LENGTH_LONG).show()
-        }
-
-        override fun onLogoutFailure(message: String) {
-            AlertDialogFragment.showAlert(getString(R.string.txt_logout_failed), message, true, this.fragmentManager)
-        }
-
-        override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
-            when (requestCode) {
-                READ_EXTERNAL_STORAGE_FOR_CAMERA -> if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    actionsListener?.onStoragePermissionForCameraGranted()
-                } else {
-                    // Permission Denied
-                    Toast.makeText(context, R.string.txt_storage_permissions_for_camera, Toast.LENGTH_SHORT)
-                            .show()
-                }
-
-                READ_EXTERNAL_STORAGE_FOR_GALLERY -> if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    actionsListener?.onStoragePermissionForGalleryGranted()
-                } else {
-                    // Permission Denied
-                    Toast.makeText(context, R.string.txt_storage_permissions_for_gallery, Toast.LENGTH_SHORT)
-                            .show()
-                }
-                else -> super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-            }
-        }
-
-        fun showPermissionDialog(activity: AppCompatActivity, permission: String, permissionCode: Int) {
-            if (ContextCompat.checkSelfPermission(activity, permission) != PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(arrayOf(permission), permissionCode)
-            }
-        }
-
-        /* OnClick Listeners */
-
-        fun onBackPressed() {
-            actionsListener?.onBackButtonPressed()
-        }
-
-        fun getOnSignalSendClickListener(): View.OnClickListener {
-            return View.OnClickListener {
-                val description = binding.viewSendSignal.getSignalDescription()
-
-                actionsListener?.onSendSignalClicked(description)
-            }
-        }
-
-        fun getOnSignalPhotoClickListener(): View.OnClickListener {
-            return View.OnClickListener { actionsListener?.onChoosePhotoIconClicked() }
-        }
-
+    override fun onConnectionSuspended(i: Int) {
+        Log.i(TAG, "Connection suspended")
+        googleApiClient?.connect()
     }
+
+    override fun onConnectionFailed(connectionResult: ConnectionResult) {
+        Log.i(TAG, "Connection failed with error code: " + connectionResult.errorCode)
+    }
+
+    override fun onLocationChanged(location: Location) {
+        handleNewLocation(location)
+    }
+
+    private fun handleNewLocation(location: Location) {
+
+        Log.d(TAG, location.toString())
+        mCurrentLat = location.latitude
+        mCurrentLong = location.longitude
+
+        updateMapCameraPosition(mCurrentLat, mCurrentLong, DEFAULT_MAP_ZOOM)
+        actionsListener?.onLocationChanged(mCurrentLat, mCurrentLong)
+    }
+
+
+    override fun showMessage(message: String) {
+        Snackbar.make(binding.fabAddSignal, message, Snackbar.LENGTH_LONG).show()
+    }
+
+    fun getFabAddSignalClickListener(): View.OnClickListener {
+        return View.OnClickListener {
+            val visibility = binding.viewSendSignal.visibility == View.VISIBLE
+            actionsListener?.onAddSignalClicked(visibility)
+        }
+    }
+
+    override fun setAddSignalViewVisibility(visibility: Boolean) {
+
+        mVisibilityAddSignal = visibility
+
+        if (visibility) {
+            showAddSignalView()
+            showAddSignalPin()
+
+            binding.fabAddSignal.setImageResource(R.drawable.ic_close)
+        } else {
+            hideAddSignalView()
+            hideAddSignalPin()
+
+            binding.fabAddSignal.setImageResource(R.drawable.fab_add)
+        }
+    }
+
+    private fun showAddSignalView() {
+        binding.viewSendSignal.visibility = View.VISIBLE
+        binding.viewSendSignal.alpha = 0.0f
+
+        binding.viewSendSignal
+                .animate()
+                .setInterpolator(AccelerateDecelerateInterpolator())
+                .setDuration(300)
+                .translationY(binding.viewSendSignal.height * 1.2f)
+                .alpha(1.0f)
+    }
+
+    private fun hideAddSignalView() {
+
+        binding.viewSendSignal
+                .animate()
+                .setInterpolator(AccelerateDecelerateInterpolator())
+                .setDuration(300)
+                .translationY(-(binding.viewSendSignal.height * 1.2f))
+                .withEndAction { binding.viewSendSignal.visibility = View.INVISIBLE }
+    }
+
+    private fun showAddSignalPin() {
+        binding.addSignalPin.visibility = View.VISIBLE
+        binding.addSignalPin.alpha = 0.0f
+
+        binding.addSignalPin
+                .animate()
+                .setInterpolator(AccelerateDecelerateInterpolator())
+                .setDuration(200)
+                .translationY(0f)
+                .alpha(1.0f)
+    }
+
+    private fun hideAddSignalPin() {
+
+        binding.addSignalPin
+                .animate()
+                .setInterpolator(AccelerateDecelerateInterpolator())
+                .setDuration(200)
+                .alpha(0.0f)
+                .withEndAction { binding.addSignalPin.visibility = View.INVISIBLE }
+    }
+
+
+    override fun hideKeyboard() {
+        super.hideKeyboard()
+    }
+
+    override fun showSendPhotoBottomSheet() {
+        val sendPhotoBottomSheet = SendPhotoBottomSheet()
+        sendPhotoBottomSheet.listener = object : SendPhotoBottomSheet.PhotoTypeSelectListener {
+            override fun onPhotoTypeSelected(@SendPhotoBottomSheet.Companion.PhotoType photoType: Int) {
+                if (photoType == SendPhotoBottomSheet.CAMERA) {
+                    actionsListener?.onCameraOptionSelected()
+                } else if (photoType == SendPhotoBottomSheet.GALLERY) {
+                    actionsListener?.onGalleryOptionSelected()
+                }
+            }
+        }
+        sendPhotoBottomSheet.show(fragmentManager!!, SendPhotoBottomSheet.TAG)
+    }
+
+    override fun openCamera() {
+        if (ContextCompat.checkSelfPermission(context!!, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            showPermissionDialog(activity as AppCompatActivity, Manifest.permission.READ_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE_FOR_CAMERA)
+        } else {
+            val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+            if (intent.resolveActivity(context!!.packageManager) != null) {
+                val timeStamp = SimpleDateFormat(DATE_TIME_FORMAT, Locale.getDefault()).format(Date())
+                imageFileName = PHOTO_PREFIX + timeStamp + PHOTO_EXTENSION
+                intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUtils.getPhotoFileUri(context, imageFileName))
+                startActivityForResult(intent, REQUEST_CAMERA)
+            }
+        }
+    }
+
+    fun openImageContentViewer(){
+        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        if (intent.resolveActivity(context!!.packageManager) != null) {
+            val timeStamp = SimpleDateFormat(DATE_TIME_FORMAT, Locale.getDefault()).format(Date())
+            imageFileName = PHOTO_PREFIX + timeStamp + PHOTO_EXTENSION
+            intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUtils.getPhotoFileUri(context, imageFileName))
+            startActivityForResult(intent, REQUEST_CAMERA)
+        }
+    }
+
+    override fun openGallery() {
+        if (ContextCompat.checkSelfPermission(context!!, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            showPermissionDialog(activity as AppCompatActivity, Manifest.permission.READ_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE_FOR_GALLERY)
+        } else {
+            val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+            if (intent.resolveActivity(context!!.packageManager) != null) {
+                startActivityForResult(intent, REQUEST_GALLERY)
+            }
+        }
+    }
+
+    override fun openLoginScreen() {
+        val intent = Intent(context, AuthenticationActivity::class.java)
+        startActivity(intent)
+    }
+
+    override fun getPresenter(): Presenter<*>? {
+        return signalsMapPresenter
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_CAMERA) {
+            if (resultCode == Activity.RESULT_OK) {
+                val takenPhotoUri = imageUtils.getPhotoFileUri(context, imageFileName)
+                actionsListener?.onSignalPhotoSelected(takenPhotoUri!!.path!!)
+            }
+        }
+
+        if (requestCode == REQUEST_GALLERY && resultCode == Activity.RESULT_OK && data != null && data.data != null) {
+            val photoMediaUri = data.data
+            val photoFile = imageUtils.getFromMediaUri(context, context!!.contentResolver, photoMediaUri)
+            actionsListener?.onSignalPhotoSelected(Uri.fromFile(photoFile).path!!)
+        }
+
+        if (requestCode == REQUEST_SIGNAL_DETAILS) {
+            if (resultCode == Activity.RESULT_OK) {
+                val signal = data!!.getParcelableExtra<Signal>("signal")
+                if (signal != null) {
+                    actionsListener?.onSignalStatusUpdated(signal)
+                }
+            }
+        }
+    }
+
+    override fun setThumbnailImage(photoUri: String?) {
+        val res = resources
+        val drawable = RoundedBitmapDrawableFactory.create(res, imageUtils.getRotatedBitmap(File(photoUri!!)))
+        drawable.cornerRadius = 10f
+        binding.viewSendSignal.setSignalPhoto(drawable)
+    }
+
+    override fun clearSignalViewData() {
+        binding.viewSendSignal.clearData()
+    }
+
+    override fun setSignalViewProgressVisibility(visibility: Boolean) {
+        binding.viewSendSignal.setProgressVisibility(visibility)
+    }
+
+    override fun openSignalDetailsScreen(signal: Signal) {
+        val intent = Intent(context, SignalDetailsActivity::class.java)
+        intent.putExtra(SignalDetailsActivity.SIGNAL_KEY, signal)
+        startActivityForResult(intent, REQUEST_SIGNAL_DETAILS)
+    }
+
+    override fun closeSignalsMapScreen() {
+        if (activity != null) {
+            activity!!.finish()
+        }
+    }
+
+    override fun showDescriptionErrorMessage() {
+        showMessage(getString(R.string.txt_description_required))
+    }
+
+    override fun showAddedSignalMessage() {
+        showMessage(getString(R.string.txt_signal_added_successfully))
+    }
+
+    override fun showNoInternetMessage() {
+        showMessage(getString(R.string.txt_no_internet))
+    }
+
+    override fun setProgressVisibility(visibility: Boolean) {
+        if (optionsMenu != null) {
+            val refreshItem = optionsMenu?.findItem(R.id.menu_item_refresh)
+
+            if (refreshItem != null) {
+                if (visibility) {
+                    refreshItem.setActionView(R.layout.toolbar_progress)
+                    if (refreshItem.getActionView() != null) {
+                        val progressBar = refreshItem.getActionView().findViewById<View>(R.id.toolbar_progress_bar) as ProgressBar
+                        progressBar.indeterminateDrawable?.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN)
+                    }
+                } else {
+
+                    MenuItemCompat.setActionView(refreshItem, null)
+                }
+            }
+        }
+    }
+
+    override fun isActive(): Boolean {
+        return isAdded
+    }
+
+    override fun onLogoutSuccess() {
+        Snackbar.make(binding.root.findViewById(R.id.fab_add_signal), R.string.txt_logout_succeeded, Snackbar.LENGTH_LONG).show()
+    }
+
+    override fun onLogoutFailure(message: String) {
+        AlertDialogFragment.showAlert(getString(R.string.txt_logout_failed), message, true, this.fragmentManager)
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        when (requestCode) {
+            READ_EXTERNAL_STORAGE_FOR_CAMERA -> if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                actionsListener?.onStoragePermissionForCameraGranted()
+            } else {
+                // Permission Denied
+                Toast.makeText(context, R.string.txt_storage_permissions_for_camera, Toast.LENGTH_SHORT)
+                        .show()
+            }
+
+            READ_EXTERNAL_STORAGE_FOR_GALLERY -> if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                actionsListener?.onStoragePermissionForGalleryGranted()
+            } else {
+                // Permission Denied
+                Toast.makeText(context, R.string.txt_storage_permissions_for_gallery, Toast.LENGTH_SHORT)
+                        .show()
+            }
+            else -> super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        }
+    }
+
+    fun showPermissionDialog(activity: AppCompatActivity, permission: String, permissionCode: Int) {
+        if (ContextCompat.checkSelfPermission(activity, permission) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(arrayOf(permission), permissionCode)
+        }
+    }
+
+    /* OnClick Listeners */
+
+    fun onBackPressed() {
+        actionsListener?.onBackButtonPressed()
+    }
+
+    fun getOnSignalSendClickListener(): View.OnClickListener {
+        return View.OnClickListener {
+            val description = binding.viewSendSignal.getSignalDescription()
+
+            actionsListener?.onSendSignalClicked(description)
+        }
+    }
+
+    fun getOnSignalPhotoClickListener(): View.OnClickListener {
+        return View.OnClickListener { actionsListener?.onChoosePhotoIconClicked() }
+    }
+
+}

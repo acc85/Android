@@ -54,11 +54,20 @@ class SignalsMapActivity : BaseActivity() {
     override fun onRequestPermissionsResult(requestCode: Int,
                                             permissions: Array<String>, grantResults: IntArray) {
         for(permission in permissions){
-            if(permission == Manifest.permission.ACCESS_FINE_LOCATION){
-                if(grantResults.size > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
-                    val fragment: SignalsMapFragment? = supportFragmentManager.findFragmentByTag("SIGNAL_MAP_FRAGMENT") as SignalsMapFragment
-                    fragment?.zoomToUserLocation()
+            when(permission){
+                Manifest.permission.ACCESS_FINE_LOCATION->{
+                    if(grantResults.size > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                        val fragment: SignalsMapFragment? = supportFragmentManager.findFragmentByTag("SIGNAL_MAP_FRAGMENT") as SignalsMapFragment
+                        fragment?.zoomToUserLocation()
+                    }
                 }
+                Manifest.permission.READ_EXTERNAL_STORAGE->{
+                    val signalsMapFragment:SignalsMapFragment = supportFragmentManager.findFragmentByTag("SIGNAL_MAP_FRAGMENT") as SignalsMapFragment
+                    signalsMapFragment.openImageContentViewer()
+                }
+                else ->{
+                }
+
             }
         }
     }
