@@ -5,7 +5,6 @@ import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.appcompat.widget.Toolbar
-import androidx.core.content.PermissionChecker
 import androidx.core.view.GravityCompat
 import androidx.fragment.app.Fragment
 import com.firebase.jobdispatcher.*
@@ -17,7 +16,6 @@ import org.helpapaw.helpapaw.R.layout.activity_base
 import org.helpapaw.helpapaw.base.BaseActivity
 import org.helpapaw.helpapaw.data.models.Signal
 import org.helpapaw.helpapaw.utils.services.BackgroundCheckJobService
-import java.security.Permissions
 
 class SignalsMapActivity : BaseActivity() {
 
@@ -30,13 +28,15 @@ class SignalsMapActivity : BaseActivity() {
                 initFragment(SignalsMapFragment.newInstance())
             }
         }
-//        scheduleBackgroundChecks()
+        scheduleBackgroundChecks()
     }
 
     override fun getToolbarTitle(): String {
         var title = getString(R.string.app_name)
 
-        title += (if (BuildConfig.DEBUG) "(TEST VERSION)" else{""})
+        title += (if (BuildConfig.DEBUG) "(TEST VERSION)" else {
+            ""
+        })
 
         return title
     }
@@ -44,7 +44,7 @@ class SignalsMapActivity : BaseActivity() {
     private fun initFragment(signalsMapFragment: Fragment) {
         val fragmentManager = supportFragmentManager
         val transaction = fragmentManager.beginTransaction()
-        transaction.add(R.id.grp_content_frame, signalsMapFragment,"SIGNAL_MAP_FRAGMENT")
+        transaction.add(R.id.grp_content_frame, signalsMapFragment, "SIGNAL_MAP_FRAGMENT")
         transaction.commit()
     }
 
@@ -54,19 +54,19 @@ class SignalsMapActivity : BaseActivity() {
 
     override fun onRequestPermissionsResult(requestCode: Int,
                                             permissions: Array<String>, grantResults: IntArray) {
-        for(permission in permissions){
-            when(permission){
-                Manifest.permission.ACCESS_FINE_LOCATION->{
-                    if(grantResults.size > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+        for (permission in permissions) {
+            when (permission) {
+                Manifest.permission.ACCESS_FINE_LOCATION -> {
+                    if (grantResults.size > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                         val fragment: SignalsMapFragment? = supportFragmentManager.findFragmentByTag("SIGNAL_MAP_FRAGMENT") as SignalsMapFragment
                         fragment?.zoomToUserLocation()
                     }
                 }
-                Manifest.permission.READ_EXTERNAL_STORAGE->{
-                    val signalsMapFragment:SignalsMapFragment = supportFragmentManager.findFragmentByTag("SIGNAL_MAP_FRAGMENT") as SignalsMapFragment
+                Manifest.permission.READ_EXTERNAL_STORAGE -> {
+                    val signalsMapFragment: SignalsMapFragment = supportFragmentManager.findFragmentByTag("SIGNAL_MAP_FRAGMENT") as SignalsMapFragment
                     signalsMapFragment.openImageContentViewer()
                 }
-                else ->{
+                else -> {
                 }
 
             }
@@ -112,7 +112,7 @@ class SignalsMapActivity : BaseActivity() {
                     .setConstraints(Constraint.ON_ANY_NETWORK)
                     .build()
 
-        dispatcher.mustSchedule(backgroundCheckJob)
+            dispatcher.mustSchedule(backgroundCheckJob)
         }
 
     }
