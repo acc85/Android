@@ -11,6 +11,7 @@ import androidx.fragment.app.Fragment
 import com.firebase.jobdispatcher.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import org.helpapaw.helpapaw.BuildConfig
 import org.helpapaw.helpapaw.R
 import org.helpapaw.helpapaw.R.layout.activity_base
 import org.helpapaw.helpapaw.base.BaseActivity
@@ -35,7 +36,7 @@ class SignalsMapActivity : BaseActivity() {
     override fun getToolbarTitle(): String {
         var title = getString(R.string.app_name)
 
-        title += if (BuildConfig.DEBUG) "(TEST VERSION)" else{}
+        title += (if (BuildConfig.DEBUG) "(TEST VERSION)" else{""})
 
         return title
     }
