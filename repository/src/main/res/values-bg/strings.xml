@@ -1,0 +1,4 @@
+<resources>
+    <!-- Strings related to Login and Register screens -->
+    <string name="error_empty_signal_response">Получихме празен отговор! Може би сигналът не същестува вече!?</string>
+</resources>

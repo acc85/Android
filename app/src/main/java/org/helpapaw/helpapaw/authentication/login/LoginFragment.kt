@@ -54,6 +54,10 @@ class LoginFragment : AuthenticationFragment(), LoginContract.View {
 //            loginPresenter.view = this
 //        }
 
+        if (savedInstanceState != null){
+            loginPresenter.view = this
+        }
+
         actionsListener = loginPresenter
         ppResponseListener = loginPresenter
 
@@ -110,9 +114,6 @@ class LoginFragment : AuthenticationFragment(), LoginContract.View {
         binding.grpLogin.visibility = if (active) View.GONE else View.VISIBLE
     }
 
-    override fun getPresenter(): Presenter<*> {
-        return loginPresenter
-    }
 
     override fun hideKeyboard() {
         super.hideKeyboard()

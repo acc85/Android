@@ -21,22 +21,28 @@ import org.helpapaw.helpapaw.R
 import org.helpapaw.helpapaw.authentication.AuthenticationActivity
 import org.helpapaw.helpapaw.base.BaseFragment
 import org.helpapaw.helpapaw.base.Presenter
-import org.helpapaw.helpapaw.base.PresenterManager
-import org.helpapaw.helpapaw.data.models.Comment
-import org.helpapaw.helpapaw.data.models.Signal
+import org.helpapaw.helpapaw.models.Comment
+import org.helpapaw.helpapaw.models.Signal
 import org.helpapaw.helpapaw.databinding.FragmentSignalDetailsBinding
+import org.helpapaw.helpapaw.images.ImageLoader
 import org.helpapaw.helpapaw.signalphoto.SignalPhotoActivity
-import org.helpapaw.helpapaw.utils.Injection
+
+import org.helpapaw.helpapaw.models.Comment.COMMENT_TYPE_STATUS_CHANGE
 import org.helpapaw.helpapaw.utils.StatusUtils
 import org.helpapaw.helpapaw.utils.Utils
-
-import org.helpapaw.helpapaw.data.models.Comment.COMMENT_TYPE_STATUS_CHANGE
 import org.koin.android.ext.android.inject
+import org.koin.core.parameter.parametersOf
 
 
 class SignalDetailsFragment : BaseFragment(), SignalDetailsContract.View {
 
-    val signalDetailsPresenter: SignalDetailsPresenter by inject()
+    val signalDetailsPresenter: SignalDetailsPresenter by inject{
+        parametersOf(this)
+    }
+
+    val imageLoader:ImageLoader by inject()
+
+    val utils:Utils by inject()
     lateinit var actionsListener: SignalDetailsContract.UserActionsListener
 
     lateinit var binding: FragmentSignalDetailsBinding
@@ -54,7 +60,11 @@ class SignalDetailsFragment : BaseFragment(), SignalDetailsContract.View {
         get() = View.OnClickListener { actionsListener.onCallButtonClicked() }
 
     val onBottomReachedListener: InteractiveScrollView.OnBottomReachedListener
-        get() = InteractiveScrollView.OnBottomReachedListener { isBottomReached -> actionsListener.onBottomReached(isBottomReached) }
+        get() = object: InteractiveScrollView.OnBottomReachedListener{
+            override fun onBottomReached(isBottomReached: Boolean) {
+                actionsListener.onBottomReached(isBottomReached)
+            }
+        }
 
     val onSignalPhotoClickListener: View.OnClickListener
         get() = View.OnClickListener { actionsListener.onSignalPhotoClicked() }
@@ -70,14 +80,24 @@ class SignalDetailsFragment : BaseFragment(), SignalDetailsContract.View {
 //            signalDetailsPresenter!!.setView(this)
 //        }
 
+        if (savedInstanceState != null) {
+            signalDetailsPresenter.view = this
+        }
+//            signalDetailsPresenter = SignalDetailsPresenter(this)
+//        } else {
+//            signalDetailsPresenter = PresenterManager.getInstance().getPresenter<Presenter>(getScreenId())
+//            signalDetailsPresenter!!.setView(this)
+//        }
+
         actionsListener = signalDetailsPresenter
         setHasOptionsMenu(true)
         mSignal = null
         if (arguments != null) {
             mSignal = arguments!!.getParcelable(SIGNAL_DETAILS)
         }
-
-        actionsListener.onInitDetailsScreen(mSignal)
+        mSignal?.let{signal->
+            actionsListener.onInitDetailsScreen(signal)
+        }
 
         binding.btnAddComment.setOnClickListener(onAddCommentClickListener)
         binding.imgCall.setOnClickListener(onCallButtonClickListener)
@@ -108,9 +128,9 @@ class SignalDetailsFragment : BaseFragment(), SignalDetailsContract.View {
         binding.progressComments.visibility = if (active) View.VISIBLE else View.GONE
     }
 
-    override fun getPresenter(): Presenter<*>? {
-        return signalDetailsPresenter
-    }
+//    override fun getPresenter(): Presenter<*>? {
+//        return signalDetailsPresenter
+//    }
 
     override fun hideKeyboard() {
         super.hideKeyboard()
@@ -120,7 +140,7 @@ class SignalDetailsFragment : BaseFragment(), SignalDetailsContract.View {
         binding.txtSignalTitle.text = signal.title
         binding.txtSignalAuthor.text = signal.authorName
 
-        val formattedDate = Utils.getInstance().getFormattedDate(signal.dateSubmitted)
+        val formattedDate = utils.getFormattedDate(signal.dateSubmitted)
         binding.txtSubmittedDate.text = formattedDate
         binding.viewSignalStatus.updateStatus(signal.status)
 
@@ -134,7 +154,7 @@ class SignalDetailsFragment : BaseFragment(), SignalDetailsContract.View {
             binding.btnCall.visibility = View.VISIBLE
         }
 
-        Injection.getImageLoader().loadWithRoundedCorners(context, signal.photoUrl, binding.imgSignalPhoto, R.drawable.ic_paw)
+        imageLoader.loadWithRoundedCorners(context, signal.photoUrl, binding.imgSignalPhoto, R.drawable.ic_paw)
     }
 
     override fun displayComments(comments: List<Comment>) {
@@ -176,7 +196,7 @@ class SignalDetailsFragment : BaseFragment(), SignalDetailsContract.View {
 
             txtCommentText.text = commentText
 
-            val formattedDate = Utils.getInstance().getFormattedDate(comment.dateCreated)
+            val formattedDate = utils.getFormattedDate(comment.dateCreated)
             txtCommentDate.text = formattedDate
 
             binding.grpComments.addView(inflatedCommentView)
@@ -241,9 +261,9 @@ class SignalDetailsFragment : BaseFragment(), SignalDetailsContract.View {
     override fun closeScreenWithResult(signal: Signal) {
         val data = Intent()
         data.putExtra("signal", signal)
-        activity!!.setResult(Activity.RESULT_OK, data)
+        activity?.setResult(Activity.RESULT_OK, data)
 
-        activity!!.finish()
+        activity?.finish()
     }
 
     override fun setShadowVisibility(visibility: Boolean) {

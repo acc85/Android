@@ -17,13 +17,12 @@ import android.widget.TextView
 import org.helpapaw.helpapaw.R
 import org.helpapaw.helpapaw.about.AboutActivity
 import org.helpapaw.helpapaw.authentication.AuthenticationActivity
-import org.helpapaw.helpapaw.data.user.UserManager
+import org.helpapaw.helpapaw.user.UserManager
 import org.helpapaw.helpapaw.databinding.ActivityBaseBinding
 import org.helpapaw.helpapaw.faq.FAQsView
 import org.helpapaw.helpapaw.privacypolicy.PrivacyPolicyActivity
 import org.helpapaw.helpapaw.reusable.AlertDialogFragment
 import org.helpapaw.helpapaw.settings.SettingsActivity
-import org.helpapaw.helpapaw.utils.Injection
 import org.helpapaw.helpapaw.utils.SharingUtils
 import org.helpapaw.helpapaw.utils.Utils
 import org.koin.android.ext.android.inject
@@ -35,6 +34,7 @@ abstract class BaseActivity : AppCompatActivity() {
     protected lateinit var binding: ActivityBaseBinding
     private var drawerToggle: ActionBarDrawerToggle? = null
     val userManager: UserManager by inject()
+    val utils:Utils by inject()
 
     // This method will trigger on item Click of navigation menu
     // Closing drawer on item click
@@ -111,7 +111,7 @@ abstract class BaseActivity : AppCompatActivity() {
     }
 
     protected fun logOut() {
-        if (Utils.getInstance().hasNetworkConnection()) {
+        if (utils.hasNetworkConnection()) {
             userManager.logout(object : UserManager.LogoutCallback {
                 override fun onLogoutSuccess() {
                     Snackbar.make(binding.root, R.string.txt_logout_succeeded, Snackbar.LENGTH_LONG).show()
@@ -121,7 +121,7 @@ abstract class BaseActivity : AppCompatActivity() {
                     finish()
                 }
 
-                override fun onLogoutFailure(message: String?) {
+                override fun onLogoutFailure(message: String) {
                     AlertDialogFragment.showAlert(getString(R.string.txt_logout_failed), message, true, this@BaseActivity.supportFragmentManager)
                 }
             })

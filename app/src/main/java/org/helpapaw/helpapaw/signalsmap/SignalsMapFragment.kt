@@ -38,17 +38,15 @@ import com.google.android.gms.maps.model.MarkerOptions
 import org.helpapaw.helpapaw.R
 import org.helpapaw.helpapaw.authentication.AuthenticationActivity
 import org.helpapaw.helpapaw.base.BaseFragment
-import org.helpapaw.helpapaw.base.Presenter
-import org.helpapaw.helpapaw.data.models.Signal
-import org.helpapaw.helpapaw.data.repositories.ISettingsRepository
-import org.helpapaw.helpapaw.data.user.UserManager
+import org.helpapaw.helpapaw.models.Signal
+import org.helpapaw.helpapaw.repository.ISettingsRepository
+import org.helpapaw.helpapaw.user.UserManager
 import org.helpapaw.helpapaw.databinding.FragmentSignalsMapBinding
 import org.helpapaw.helpapaw.reusable.AlertDialogFragment
 import org.helpapaw.helpapaw.sendsignal.SendPhotoBottomSheet
 import org.helpapaw.helpapaw.signaldetails.SignalDetailsActivity
-import org.helpapaw.helpapaw.utils.Injection
+import org.helpapaw.helpapaw.images.ImageUtils
 import org.helpapaw.helpapaw.utils.StatusUtils
-import org.helpapaw.helpapaw.utils.images.ImageUtils
 import org.koin.android.ext.android.inject
 import org.koin.core.parameter.parametersOf
 import java.io.File
@@ -56,6 +54,8 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class SignalsMapFragment : BaseFragment(), SignalsMapContract.View, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
+
+    val userManager:UserManager by inject()
 
     private var googleApiClient: GoogleApiClient? = null
     private var locationRequest: LocationRequest? = null
@@ -73,7 +73,6 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View, GoogleApiCli
     lateinit var binding: FragmentSignalsMapBinding
     private var optionsMenu: Menu? = null
 
-    lateinit var userManager: UserManager
     private var mVisibilityAddSignal = false
     private var mFocusedSignalId: String? = null
 
@@ -152,7 +151,6 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View, GoogleApiCli
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         // Inflate the layout for this fragment
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_signals_map, container, false)
-        userManager = Injection.getUserManagerInstance()
         val mapViewSavedInstanceState = savedInstanceState?.getBundle(MAP_VIEW_STATE)
         binding.mapSignals.onCreate(mapViewSavedInstanceState)
 
@@ -170,6 +168,11 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View, GoogleApiCli
 //            signalsMapPresenter = PresenterManager.getInstance().getPresenter(getScreenId())
 //            signalsMapPresenter!!.view = this
 //        }
+
+        if (savedInstanceState != null) {
+            signalsMapPresenter.view = this
+        }
+
         actionsListener = signalsMapPresenter
         setHasOptionsMenu(true)
 
@@ -316,7 +319,10 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View, GoogleApiCli
                 }
             }
 
-            val infoWindowAdapter = SignalInfoWindowAdapter(mSignalMarkers, activity!!.layoutInflater)
+//            val infoWindowAdapter = SignalInfoWindowAdapter(mSignalMarkers, activity!!.layoutInflater)
+            val infoWindowAdapter : SignalInfoWindowAdapter by inject{
+                parametersOf(mSignalMarkers, activity!!.layoutInflater)
+            }
             signalsGoogleMap!!.setInfoWindowAdapter(infoWindowAdapter)
 
             signalsGoogleMap!!.setOnInfoWindowClickListener { marker -> actionsListener!!.onSignalInfoWindowClicked(mSignalMarkers[marker.id]) }
@@ -535,13 +541,15 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View, GoogleApiCli
 
     override fun showSendPhotoBottomSheet() {
         val sendPhotoBottomSheet = SendPhotoBottomSheet()
-        sendPhotoBottomSheet.setListener { photoType ->
-            if (photoType == SendPhotoBottomSheet.PhotoType.CAMERA) {
-                actionsListener!!.onCameraOptionSelected()
-            } else if (photoType == SendPhotoBottomSheet.PhotoType.GALLERY) {
-                actionsListener!!.onGalleryOptionSelected()
+        sendPhotoBottomSheet.setListener(object:SendPhotoBottomSheet.PhotoTypeSelectListener{
+            override fun onPhotoTypeSelected(photoType: Int) {
+                if (photoType == SendPhotoBottomSheet.PhotoType.CAMERA) {
+                    actionsListener!!.onCameraOptionSelected()
+                } else if (photoType == SendPhotoBottomSheet.PhotoType.GALLERY) {
+                    actionsListener!!.onGalleryOptionSelected()
+                }
             }
-        }
+        })
         sendPhotoBottomSheet.show(fragmentManager!!, SendPhotoBottomSheet.TAG)
     }
 
@@ -599,9 +607,9 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View, GoogleApiCli
         startActivity(intent)
     }
 
-    override fun getPresenter(): Presenter<*>? {
-        return signalsMapPresenter
-    }
+//    override fun getPresenter(): Presenter<*>? {
+//        return signalsMapPresenter
+//    }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)

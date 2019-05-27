@@ -4,22 +4,25 @@ import android.app.Application
 import android.content.Context
 import android.os.StrictMode
 import com.backendless.Backendless
-import org.helpapaw.helpapaw.data.user.UserManager
+import org.helpapaw.helpapaw.user.UserManager
 import org.helpapaw.helpapaw.koin.testModule
-import org.helpapaw.helpapaw.utils.Injection
 import org.helpapaw.helpapaw.utils.NotificationUtils
+import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 
 
 class PawApplication:Application(){
 
+    val userManager:UserManager by inject()
+
     companion object{
         const val BACKENDLESS_APP_ID: String = "BDCD56B9-351A-E067-FFA4-9EA9CF2F4000"
-        private var isTestEnvironment: Boolean? = null
-        private var pawApplication: PawApplication? = null
         const val BACKENDLESS_REST_API_KEY:String = "FF1687C9-961B-4388-FFF2-0C8BDC5DFB00"
         const val BACKENDLESS_ANDROID_API_KEY = "FF1687C9-961B-4388-FFF2-0C8BDC5DFB00"
+        private var isTestEnvironment: Boolean? = null
+        private var pawApplication: PawApplication? = null
+
         const val IS_TEST_ENVIRONMENT_KEY = "IS_TEST_ENVIRONMENT_KEY"
         fun getIsTestEnvironment(): Boolean? {
             return isTestEnvironment
@@ -53,7 +56,6 @@ class PawApplication:Application(){
         NotificationUtils.registerNotificationChannels(this)
 
         // This is done in order to handle the situation where user token is saved on the device but is invalidated on the server
-        val userManager = Injection.getUserManagerInstance()
         userManager.isLoggedIn(object : UserManager.LoginCallback {
             override fun onLoginSuccess() {
                 // Do nothing

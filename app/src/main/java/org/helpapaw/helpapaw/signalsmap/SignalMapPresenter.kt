@@ -1,12 +1,10 @@
 package org.helpapaw.helpapaw.signalsmap
 
 import org.helpapaw.helpapaw.base.Presenter
-import org.helpapaw.helpapaw.data.models.Signal
-import org.helpapaw.helpapaw.data.repositories.BackendlessSignalRepository
-import org.helpapaw.helpapaw.data.repositories.PhotoRepository
-import org.helpapaw.helpapaw.data.repositories.SignalRepository
-import org.helpapaw.helpapaw.data.user.UserManager
-import org.helpapaw.helpapaw.utils.Injection
+import org.helpapaw.helpapaw.models.Signal
+import org.helpapaw.helpapaw.repository.PhotoRepository
+import org.helpapaw.helpapaw.repository.SignalRepository
+import org.helpapaw.helpapaw.user.UserManager
 import org.helpapaw.helpapaw.utils.Utils
 
 import java.util.ArrayList
@@ -15,10 +13,12 @@ import java.util.Date
 /**
  * Created by iliyan on 7/28/16
  */
-class SignalsMapPresenter(val view: SignalsMapContract.View, val signalRepository: SignalRepository) : Presenter<SignalsMapContract.View>(view), SignalsMapContract.UserActionsListener {
-
-    private val userManager: UserManager
-    private val photoRepository: PhotoRepository
+class SignalsMapPresenter(
+        view: SignalsMapContract.View,
+        val signalRepository: SignalRepository,
+        val photoRepository: PhotoRepository,
+        val userManager: UserManager,
+        val utils:Utils) : Presenter<SignalsMapContract.View>(view), SignalsMapContract.UserActionsListener {
 
 
     private var latitude: Double = 0.toDouble()
@@ -34,28 +34,26 @@ class SignalsMapPresenter(val view: SignalsMapContract.View, val signalRepositor
     private var signalsList: MutableList<Signal>? = null
 
     private val isViewAvailable: Boolean
-        get() = view != null && view.isActive()
+        get() = view != null && view!!.isActive()
 
     init {
-        userManager = Injection.getUserManagerInstance()
-        photoRepository = Injection.getPhotoRepositoryInstance()
         sendSignalViewVisibility = false
         signalsList = ArrayList()
     }
 
     override fun onInitSignalsMap() {
-        view.setAddSignalViewVisibility(sendSignalViewVisibility)
+        view?.setAddSignalViewVisibility(sendSignalViewVisibility)
         if (!isEmpty(photoUri)) {
-            view.setThumbnailImage(photoUri!!)
+            view?.setThumbnailImage(photoUri!!)
         }
         if (signalsList != null && signalsList!!.size > 0) {
-            view.displaySignals(signalsList!!, false)
+            view?.displaySignals(signalsList!!, false)
         }
     }
 
     private fun getAllSignals(latitude: Double, longitude: Double, radius: Int, timeout: Int, showPopup: Boolean) {
-        if (Utils.getInstance().hasNetworkConnection()) {
-            view.setProgressVisibility(true)
+        if (utils.hasNetworkConnection()) {
+            view?.setProgressVisibility(true)
 
             signalRepository.getAllSignals(latitude, longitude, radius.toDouble(), timeout,
                     object : SignalRepository.LoadSignalsCallback {
@@ -63,18 +61,18 @@ class SignalsMapPresenter(val view: SignalsMapContract.View, val signalRepositor
                             if (!isViewAvailable) return
                             signalsList = signals
                             signalRepository.markSignalsAsSeen(signals)
-                            view.displaySignals(signals, showPopup)
-                            view.setProgressVisibility(false)
+                            view?.displaySignals(signals, showPopup)
+                            view?.setProgressVisibility(false)
                         }
 
                         override fun onSignalsFailure(message: String) {
                             if (!isViewAvailable) return
-                            view.showMessage(message)
-                            view.setProgressVisibility(false)
+                            view?.showMessage(message)
+                            view?.setProgressVisibility(false)
                         }
                     })
         } else {
-            view.showNoInternetMessage()
+            view?.showNoInternetMessage()
         }
     }
 
@@ -82,7 +80,7 @@ class SignalsMapPresenter(val view: SignalsMapContract.View, val signalRepositor
         currentMapLatitude = latitude
         currentMapLongitude = longitude
 
-        if (Utils.getInstance().getDistanceBetween(latitude, longitude, this.latitude, this.longitude) > 300 || this.radius != radius) {
+        if (utils.getDistanceBetween(latitude, longitude, this.latitude, this.longitude) > 300 || this.radius != radius) {
             getAllSignals(latitude, longitude, radius, timeout, false)
 
             this.latitude = latitude
@@ -97,20 +95,20 @@ class SignalsMapPresenter(val view: SignalsMapContract.View, val signalRepositor
     }
 
     override fun onCancelAddSignal() {
-        view.displaySignals(signalsList!!, false)
+        view?.displaySignals(signalsList!!, false)
     }
 
     override fun onSendSignalClicked(description: String) {
-        view.hideKeyboard()
-        view.setSignalViewProgressVisibility(true)
+        view?.hideKeyboard()
+        view?.setSignalViewProgressVisibility(true)
 
         userManager.isLoggedIn(object : UserManager.LoginCallback {
             override fun onLoginSuccess() {
                 if (!isViewAvailable) return
 
                 if (isEmpty(description)) {
-                    view.showDescriptionErrorMessage()
-                    view.setSignalViewProgressVisibility(false)
+                    view?.showDescriptionErrorMessage()
+                    view?.setSignalViewProgressVisibility(false)
                 } else {
                     saveSignal(description, Date(), 0, currentMapLatitude, currentMapLongitude)
                 }
@@ -118,8 +116,8 @@ class SignalsMapPresenter(val view: SignalsMapContract.View, val signalRepositor
 
             override fun onLoginFailure(message: String?) {
                 if (!isViewAvailable) return
-                view.setSignalViewProgressVisibility(false)
-                view.openLoginScreen()
+                view?.setSignalViewProgressVisibility(false)
+                view?.openLoginScreen()
             }
         })
     }
@@ -133,7 +131,7 @@ class SignalsMapPresenter(val view: SignalsMapContract.View, val signalRepositor
                 } else {
                     signalsList!!.add(signal)
 
-                    view.displaySignals(signalsList!!, true, signal.id)
+                    view?.displaySignals(signalsList!!, true, signal.id)
                     setSendSignalViewVisibility(false)
                     clearSignalViewData()
                 }
@@ -141,7 +139,7 @@ class SignalsMapPresenter(val view: SignalsMapContract.View, val signalRepositor
 
             override fun onSignalFailure(message: String) {
                 if (!isViewAvailable) return
-                view.showMessage(message)
+                view?.showMessage(message)
             }
         })
     }
@@ -151,54 +149,54 @@ class SignalsMapPresenter(val view: SignalsMapContract.View, val signalRepositor
             override fun onPhotoSaved() {
                 if (!isViewAvailable) return
                 signalsList!!.add(signal)
-                view.displaySignals(signalsList!!, true, signal.id)
+                view?.displaySignals(signalsList!!, true, signal.id)
                 setSendSignalViewVisibility(false)
                 clearSignalViewData()
-                view.showAddedSignalMessage()
+                view?.showAddedSignalMessage()
             }
 
             override fun onPhotoFailure(message: String) {
                 if (!isViewAvailable) return
-                view.showMessage(message)
+                view?.showMessage(message)
             }
         })
     }
 
     override fun onChoosePhotoIconClicked() {
-        view.hideKeyboard()
-        view.showSendPhotoBottomSheet()
+        view?.hideKeyboard()
+        view?.showSendPhotoBottomSheet()
     }
 
     override fun onCameraOptionSelected() {
-        view.openCamera()
+        view?.openCamera()
     }
 
     override fun onGalleryOptionSelected() {
-        view.openGallery()
+        view?.openGallery()
     }
 
     override fun onSignalPhotoSelected(photoUri: String) {
         this.photoUri = photoUri
-        view.setThumbnailImage(photoUri)
+        view?.setThumbnailImage(photoUri)
     }
 
     override fun onStoragePermissionForCameraGranted() {
-        view.openCamera()
+        view?.openCamera()
     }
 
     override fun onStoragePermissionForGalleryGranted() {
-        view.openGallery()
+        view?.openGallery()
     }
 
     override fun onSignalInfoWindowClicked(signal: Signal?) {
-        view.openSignalDetailsScreen(signal!!)
+        view?.openSignalDetailsScreen(signal!!)
     }
 
     override fun onBackButtonPressed() {
         if (sendSignalViewVisibility) {
             setSendSignalViewVisibility(false)
         } else {
-            view.closeSignalsMapScreen()
+            view?.closeSignalsMapScreen()
         }
     }
 
@@ -214,49 +212,49 @@ class SignalsMapPresenter(val view: SignalsMapContract.View, val signalRepositor
             if (currentSignal.id == signal.id) {
                 signalsList!!.removeAt(i)
                 signalsList!!.add(signal)
-                view.displaySignals(signalsList!!, true)
+                view?.displaySignals(signalsList!!, true)
                 break
             }
         }
     }
 
     override fun onAuthenticationAction() {
-        view.hideKeyboard()
+        view?.hideKeyboard()
         val userToken = userManager.userToken
 
         if (userToken != null && !userToken.isEmpty()) {
             logoutUser()
         } else {
-            view.openLoginScreen()
+            view?.openLoginScreen()
         }
     }
 
     private fun logoutUser() {
-        if (Utils.getInstance().hasNetworkConnection()) {
+        if (utils.hasNetworkConnection()) {
             userManager.logout(object : UserManager.LogoutCallback {
                 override fun onLogoutSuccess() {
-                    view.onLogoutSuccess()
+                    view?.onLogoutSuccess()
                 }
 
-                override fun onLogoutFailure(message: String?) {
-                    view.onLogoutFailure(message!!)
+                override fun onLogoutFailure(message: String) {
+                    view?.onLogoutFailure(message!!)
                 }
             })
         } else {
-            view.onLogoutFailure("No connection.")
+            view?.onLogoutFailure("No connection.")
         }
     }
 
     override fun onLoginAction() {}
 
     private fun clearSignalViewData() {
-        view.clearSignalViewData()
+        view?.clearSignalViewData()
         photoUri = null
     }
 
     private fun setSendSignalViewVisibility(visibility: Boolean) {
         sendSignalViewVisibility = visibility
-        view.setAddSignalViewVisibility(visibility)
+        view?.setAddSignalViewVisibility(visibility)
     }
 
     private fun isEmpty(value: String?): Boolean {

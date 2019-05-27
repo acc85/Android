@@ -30,9 +30,9 @@ class SettingsFragment : BaseFragment(), SettingsContract.View {
 
     }
 
-    override fun getPresenter(): Presenter<*> {
-        return settingsPresenter
-    }
+//    override fun getPresenter(): Presenter<*> {
+//        return settingsPresenter
+//    }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)

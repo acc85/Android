@@ -5,19 +5,21 @@ import org.helpapaw.helpapaw.authentication.PrivacyPolicyConfirmationContract
 import org.helpapaw.helpapaw.authentication.PrivacyPolicyConfirmationGetter
 import org.helpapaw.helpapaw.base.PawApplication
 import org.helpapaw.helpapaw.base.Presenter
-import org.helpapaw.helpapaw.data.user.UserManager
-import org.helpapaw.helpapaw.utils.Injection
+import org.helpapaw.helpapaw.user.UserManager
 import org.helpapaw.helpapaw.utils.Utils
 
 /**
  * Created by iliyan on 7/25/16
  */
-class LoginPresenter internal constructor(view: LoginContract.View,val userManager: UserManager) : Presenter<LoginContract.View>(view), LoginContract.UserActionsListener, PrivacyPolicyConfirmationContract.Obtain, PrivacyPolicyConfirmationContract.UserResponse {
+class LoginPresenter internal constructor(
+        view: LoginContract.View,val userManager: UserManager,
+        val utils:Utils
+) : Presenter<LoginContract.View>(view), LoginContract.UserActionsListener, PrivacyPolicyConfirmationContract.Obtain, PrivacyPolicyConfirmationContract.UserResponse {
 
     private var showProgressBar: Boolean = false
 
     private val isViewAvailable: Boolean
-        get() = view != null && view.isActive
+        get() = view != null && view!!.isActive()
 
     init {
         showProgressBar = false
@@ -28,25 +30,25 @@ class LoginPresenter internal constructor(view: LoginContract.View,val userManag
     }
 
     override fun onLoginButtonClicked(email: String, password: String) {
-        view.clearErrorMessages()
+        view?.clearErrorMessages()
 
-        if (isEmpty(email) || !Utils.getInstance().isEmailValid(email)) {
-            view.showEmailErrorMessage()
+        if (isEmpty(email) || !utils.isEmailValid(email)) {
+            view?.showEmailErrorMessage()
             return
         }
 
         if (isEmpty(password) || password.length < MIN_PASS_LENGTH) {
-            view.showPasswordErrorMessage()
+            view?.showPasswordErrorMessage()
             return
         }
 
-        view.hideKeyboard()
+        view?.hideKeyboard()
         setProgressIndicator(true)
         attemptToLogin(email, password)
     }
 
     private fun attemptToLogin(email: String, password: String) {
-        if (Utils.getInstance().hasNetworkConnection()) {
+        if (utils.hasNetworkConnection()) {
             userManager.login(email, password, object : UserManager.LoginCallback {
                 override fun onLoginSuccess() {
                     this@LoginPresenter.onLoginSuccess()
@@ -57,7 +59,7 @@ class LoginPresenter internal constructor(view: LoginContract.View,val userManag
                 }
             })
         } else {
-            view.showNoInternetMessage()
+            view?.showNoInternetMessage()
             setProgressIndicator(false)
         }
     }
@@ -74,11 +76,11 @@ class LoginPresenter internal constructor(view: LoginContract.View,val userManag
                         privacyPolicyConfirmationGetter.execute()
                     } else {
                         if (!isViewAvailable) return
-                        view.closeLoginScreen()
+                        view?.closeLoginScreen()
                     }
                 } catch (ignored: Exception) {
                     if (!isViewAvailable) return
-                    view.closeLoginScreen()
+                    view?.closeLoginScreen()
                 }
 
             }
@@ -86,7 +88,7 @@ class LoginPresenter internal constructor(view: LoginContract.View,val userManag
             override fun onFailure(message: String?) {
                 if (!isViewAvailable) return
                 setProgressIndicator(false)
-                view.showErrorMessage(message)
+                view?.showErrorMessage(message)
             }
         })
     }
@@ -94,16 +96,16 @@ class LoginPresenter internal constructor(view: LoginContract.View,val userManag
     private fun onLoginFailure(message: String?) {
         if (!isViewAvailable) return
         setProgressIndicator(false)
-        view.showErrorMessage(message)
+        view?.showErrorMessage(message)
     }
 
     private fun setProgressIndicator(active: Boolean) {
-        view.setProgressIndicator(active)
+        view?.setProgressIndicator(active)
         this.showProgressBar = active
     }
 
     override fun onRegisterButtonClicked() {
-        view.openRegisterScreen()
+        view?.openRegisterScreen()
     }
 
     private fun isEmpty(value: String?): Boolean {
@@ -111,7 +113,7 @@ class LoginPresenter internal constructor(view: LoginContract.View,val userManag
     }
 
     override fun onLoginFbSuccess(accessToken: String) {
-        if (Utils.getInstance().hasNetworkConnection()) {
+        if (utils.hasNetworkConnection()) {
             setProgressIndicator(true)
             userManager.loginWithFacebook(accessToken, object : UserManager.LoginCallback {
                 override fun onLoginSuccess() {
@@ -125,18 +127,18 @@ class LoginPresenter internal constructor(view: LoginContract.View,val userManag
                 }
             })
         } else {
-            view.showNoInternetMessage()
+            view?.showNoInternetMessage()
         }
     }
 
-    override fun onPrivacyPolicyObtained(privacyPolicy: String?) {
+    override fun onPrivacyPolicyObtained(privacyPolicy: String) {
         if (!isViewAvailable) return
         setProgressIndicator(false)
 
         if (privacyPolicy != null) {
-            view.showPrivacyPolicyDialog(privacyPolicy)
+            view?.showPrivacyPolicyDialog(privacyPolicy)
         } else {
-            view.showErrorMessage(PawApplication.getContext().getString(R.string.txt_error_getting_privacy_policy))
+            view?.showErrorMessage(PawApplication.getContext().getString(R.string.txt_error_getting_privacy_policy))
         }
     }
 
@@ -145,13 +147,13 @@ class LoginPresenter internal constructor(view: LoginContract.View,val userManag
         userManager.setHasAcceptedPrivacyPolicy(true, object : UserManager.SetUserPropertyCallback {
             override fun onSuccess() {
                 if (!isViewAvailable) return
-                view.closeLoginScreen()
+                view?.closeLoginScreen()
             }
 
             override fun onFailure(message: String?) {
                 if (!isViewAvailable) return
                 setProgressIndicator(false)
-                view.showErrorMessage(message)
+                view?.showErrorMessage(message)
             }
         })
     }

@@ -96,7 +96,8 @@
         <activity
             android:name=".privacypolicy.PrivacyPolicyActivity"
             android:noHistory="true"
-            android:parentActivityName=".signalsmap.SignalsMapActivity"/>
+            android:parentActivityName=".signalsmap.SignalsMapActivity"
+            android:screenOrientation="portrait" />
     </application>
 
 </manifest>
