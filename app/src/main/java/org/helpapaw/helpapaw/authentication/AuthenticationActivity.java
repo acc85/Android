@@ -26,7 +26,7 @@ public class AuthenticationActivity extends AppCompatActivity {
         callbackManager = CallbackManager.Factory.create();
 
         if (null == savedInstanceState) {
-            initFragment(LoginFragment.newInstance());
+            initFragment(LoginFragment.Companion.newInstance());
         }
     }
 

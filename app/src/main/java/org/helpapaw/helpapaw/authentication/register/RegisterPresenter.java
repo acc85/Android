@@ -72,7 +72,7 @@ public class RegisterPresenter extends Presenter<RegisterContract.View>
         this.name = name;
         this.phoneNumber = phoneNumber;
 
-        PrivacyPolicyConfirmationGetter privacyPolicyConfirmationGetter = new PrivacyPolicyConfirmationGetter(this, PawApplication.getContext());
+        PrivacyPolicyConfirmationGetter privacyPolicyConfirmationGetter = new PrivacyPolicyConfirmationGetter(this, PawApplication.Companion.getContext());
         privacyPolicyConfirmationGetter.execute();
     }
 
@@ -131,7 +131,7 @@ public class RegisterPresenter extends Presenter<RegisterContract.View>
         }
         else {
             setProgressIndicator(false);
-            getView().showErrorMessage(PawApplication.getContext().getString(R.string.txt_error_getting_privacy_policy));
+            getView().showErrorMessage(PawApplication.Companion.getContext().getString(R.string.txt_error_getting_privacy_policy));
         }
     }
 

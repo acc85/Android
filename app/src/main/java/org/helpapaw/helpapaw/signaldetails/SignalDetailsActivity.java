@@ -40,7 +40,7 @@ public class SignalDetailsActivity extends AppCompatActivity {
 
             if (getIntent() != null) {
                 Signal signal = getIntent().getParcelableExtra(SIGNAL_KEY);
-                SignalDetailsFragment fragment = SignalDetailsFragment.newInstance(signal);
+                SignalDetailsFragment fragment = SignalDetailsFragment.Companion.newInstance(signal);
                 initFragment(fragment);
             }
         }

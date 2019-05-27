@@ -15,11 +15,11 @@ public class StatusUtils {
     public static String getStatusStringForCode(int statusCode) {
         switch (statusCode) {
             case SOLVED:
-                return PawApplication.getContext().getString(R.string.txt_solved);
+                return PawApplication.Companion.getContext().getString(R.string.txt_solved);
             case SOMEBODY_ON_THE_WAY:
-                return PawApplication.getContext().getString(R.string.txt_somebody_on_the_way);
+                return PawApplication.Companion.getContext().getString(R.string.txt_somebody_on_the_way);
             default:
-                return PawApplication.getContext().getString(R.string.txt_help_needed);
+                return PawApplication.Companion.getContext().getString(R.string.txt_help_needed);
         }
     }
 

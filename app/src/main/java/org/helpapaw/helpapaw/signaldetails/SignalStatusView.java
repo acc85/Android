@@ -318,10 +318,6 @@ class ResizeAnimation extends Animation {
     }
 }
 
-interface StatusCallback {
-    void onRequestStatusChange(int status);
-}
-
 interface SignalStatusViewContract {
     void onStatusChangeRequestFinished(boolean success, int newStatus);
 }

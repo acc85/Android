@@ -37,13 +37,6 @@ public class Injection {
         return userManagerInstance;
     }
 
-    public synchronized static SignalRepository getSignalRepositoryInstance() {
-        if (signalRepositoryInstance == null) {
-            signalRepositoryInstance = new BackendlessSignalRepository();
-        }
-        return signalRepositoryInstance;
-    }
-
     public synchronized static PhotoRepository getPhotoRepositoryInstance() {
         if (photoRepository == null) {
             photoRepository = new BackendlessPhotoRepository();
@@ -58,10 +51,10 @@ public class Injection {
         return commentRepository;
     }
 
-    public synchronized static SettingsRepository getSettingsRepositoryInstance() {
-        if (settingsRepository == null) {
-            settingsRepository = new SettingsRepository();
-        }
-        return settingsRepository;
-    }
+//    public synchronized static SettingsRepository getSettingsRepositoryInstance() {
+//        if (settingsRepository == null) {
+//            settingsRepository = new SettingsRepository();
+//        }
+//        return settingsRepository;
+//    }
 }

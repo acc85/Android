@@ -28,7 +28,7 @@ public class SettingsActivity extends AppCompatActivity {
 
     private void initialize() {
         if (mSettingsFragment == null) {
-            mSettingsFragment = SettingsFragment.newInstance();
+            mSettingsFragment = SettingsFragment.Companion.newInstance();
             FragmentManager fragmentManager = getSupportFragmentManager();
             FragmentTransaction transaction = fragmentManager.beginTransaction();
             transaction.add(R.id.grp_content_frame, mSettingsFragment);

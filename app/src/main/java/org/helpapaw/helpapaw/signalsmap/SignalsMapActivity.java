@@ -51,9 +51,8 @@ public class SignalsMapActivity extends BaseActivity {
         scheduleBackgroundChecks();
 
         setupEnvironmentSwitching();
-
-        if (userManager.isLoggedIn()) {
-            userManager.getHasAcceptedPrivacyPolicy(new UserManager.GetUserPropertyCallback() {
+        if (getUserManager().isLoggedIn()) {
+            getUserManager().getHasAcceptedPrivacyPolicy(new UserManager.GetUserPropertyCallback() {
                 @Override
                 public void onSuccess(Object hasAcceptedPrivacyPolicy) {
                     try {
@@ -90,7 +89,7 @@ public class SignalsMapActivity extends BaseActivity {
     protected String getToolbarTitle() {
         String title = getString(R.string.app_name);
 
-        if (PawApplication.getIsTestEnvironment()) {
+        if (PawApplication.Companion.getIsTestEnvironment()) {
             title += " (TEST)";
         }
 
@@ -100,9 +99,9 @@ public class SignalsMapActivity extends BaseActivity {
     private void initFragment() {
         if (mSignalsMapFragment == null) {
             if (getIntent().hasExtra(Signal.KEY_FOCUSED_SIGNAL_ID)) {
-                mSignalsMapFragment = SignalsMapFragment.newInstance(getIntent().getStringExtra(Signal.KEY_FOCUSED_SIGNAL_ID));
+                mSignalsMapFragment = SignalsMapFragment.Companion.newInstance(getIntent().getStringExtra(Signal.KEY_FOCUSED_SIGNAL_ID));
             } else {
-                mSignalsMapFragment = SignalsMapFragment.newInstance();
+                mSignalsMapFragment = SignalsMapFragment.Companion.newInstance();
             }
             FragmentManager fragmentManager = getSupportFragmentManager();
             FragmentTransaction transaction = fragmentManager.beginTransaction();
@@ -112,7 +111,7 @@ public class SignalsMapActivity extends BaseActivity {
     }
 
     private void reinitFragment() {
-        mSignalsMapFragment = SignalsMapFragment.newInstance();
+        mSignalsMapFragment = SignalsMapFragment.Companion.newInstance();
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction transaction = fragmentManager.beginTransaction();
         transaction.replace(R.id.grp_content_frame, mSignalsMapFragment);
@@ -169,7 +168,7 @@ public class SignalsMapActivity extends BaseActivity {
     }
 
     private void switchEnvironment() {
-        PawApplication.setIsTestEnvironment(!PawApplication.getIsTestEnvironment());
+        PawApplication.Companion.setIsTestEnvironment(!PawApplication.Companion.getIsTestEnvironment());
         binding.toolbarTitle.setText(getToolbarTitle());
         reinitFragment();
         Toast.makeText(this, "Environment switched", Toast.LENGTH_LONG).show();
