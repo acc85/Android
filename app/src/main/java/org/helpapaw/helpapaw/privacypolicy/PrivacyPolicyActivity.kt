@@ -2,11 +2,10 @@ package org.helpapaw.helpapaw.privacypolicy
 
 import android.app.ProgressDialog
 import android.os.Bundle
-import android.support.v7.app.ActionBar
-import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.Toolbar
+import androidx.appcompat.widget.Toolbar
 import android.webkit.WebChromeClient
 import android.webkit.WebView
+import androidx.appcompat.app.AppCompatActivity
 
 import org.helpapaw.helpapaw.R
 

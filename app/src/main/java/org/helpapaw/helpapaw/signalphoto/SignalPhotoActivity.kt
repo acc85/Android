@@ -1,14 +1,12 @@
 package org.helpapaw.helpapaw.signalphoto
 
 import android.app.ActionBar
-import android.databinding.DataBindingUtil
+import androidx.databinding.DataBindingUtil
 import android.os.Bundle
-import android.support.v4.app.Fragment
-import android.support.v4.app.FragmentManager
-import android.support.v4.app.FragmentTransaction
-import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.View
+import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
 
 import org.helpapaw.helpapaw.R
 import org.helpapaw.helpapaw.models.Signal

@@ -5,7 +5,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.databinding.DataBindingUtil
+import androidx.databinding.DataBindingUtil
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.PorterDuff
@@ -14,10 +14,9 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
-import android.support.design.widget.Snackbar
-import android.support.v4.content.ContextCompat
-import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory
-import android.support.v4.view.MenuItemCompat
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
+import androidx.core.view.MenuItemCompat
 import android.util.Log
 import android.view.*
 import android.view.animation.AccelerateDecelerateInterpolator
@@ -35,6 +34,7 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.material.snackbar.Snackbar
 import org.helpapaw.helpapaw.R
 import org.helpapaw.helpapaw.authentication.AuthenticationActivity
 import org.helpapaw.helpapaw.base.BaseFragment
@@ -495,16 +495,16 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View, GoogleApiCli
         binding.viewSendSignal.visibility = View.VISIBLE
         binding.viewSendSignal.alpha = 0.0f
 
+        val height = (activity as SignalsMapActivity).supportActionBar?.height?.toFloat()?:0f
         binding.viewSendSignal
                 .animate()
                 .setInterpolator(AccelerateDecelerateInterpolator())
                 .setDuration(300)
-                .translationY(binding.viewSendSignal.height * 1.2f)
+                .translationY(binding.viewSendSignal.height + height)
                 .alpha(1.0f)
     }
 
     private fun hideAddSignalView() {
-
         binding.viewSendSignal
                 .animate()
                 .setInterpolator(AccelerateDecelerateInterpolator())
@@ -542,7 +542,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View, GoogleApiCli
     override fun showSendPhotoBottomSheet() {
         val sendPhotoBottomSheet = SendPhotoBottomSheet()
         sendPhotoBottomSheet.setListener(object:SendPhotoBottomSheet.PhotoTypeSelectListener{
-            override fun onPhotoTypeSelected(photoType: Int) {
+            override fun onPhotoTypeSelected(photoType: Long) {
                 if (photoType == SendPhotoBottomSheet.PhotoType.CAMERA) {
                     actionsListener!!.onCameraOptionSelected()
                 } else if (photoType == SendPhotoBottomSheet.PhotoType.GALLERY) {

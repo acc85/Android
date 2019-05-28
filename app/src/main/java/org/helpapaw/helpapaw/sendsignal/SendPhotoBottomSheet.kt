@@ -2,12 +2,12 @@ package org.helpapaw.helpapaw.sendsignal
 
 import android.app.Dialog
 import android.os.Bundle
-import android.support.annotation.IntDef
-import android.support.design.widget.BottomSheetBehavior
-import android.support.design.widget.BottomSheetDialog
-import android.support.design.widget.BottomSheetDialogFragment
 import android.view.View
 import android.widget.LinearLayout
+import androidx.annotation.LongDef
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
 import org.helpapaw.helpapaw.R
 
@@ -22,12 +22,12 @@ class SendPhotoBottomSheet : BottomSheetDialogFragment() {
 
     internal var listener: PhotoTypeSelectListener? = null
 
-    @IntDef(PhotoType.CAMERA.toLong(), PhotoType.GALLERY.toLong())
-    @Retention(RetentionPolicy.SOURCE)
+    @LongDef(PhotoType.CAMERA.toLong(), PhotoType.GALLERY.toLong())
+    @kotlin.annotation.Retention(AnnotationRetention.SOURCE)
     annotation class PhotoType {
         companion object {
-            const val CAMERA = 1
-            const val GALLERY = 2
+            const val CAMERA:Long = 1
+            const val GALLERY:Long = 2
         }
     }
 
@@ -66,7 +66,7 @@ class SendPhotoBottomSheet : BottomSheetDialogFragment() {
     }
 
     interface PhotoTypeSelectListener {
-        fun onPhotoTypeSelected(@PhotoType photoType: Int)
+        fun onPhotoTypeSelected(@PhotoType photoType: Long)
     }
 
     companion object {

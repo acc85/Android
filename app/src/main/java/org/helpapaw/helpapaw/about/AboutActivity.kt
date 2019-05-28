@@ -1,10 +1,8 @@
 package org.helpapaw.helpapaw.about
 
-import android.databinding.DataBindingUtil
+import androidx.databinding.DataBindingUtil
 import android.os.Bundle
-import android.support.v7.app.ActionBar
-import android.support.v7.app.AppCompatActivity
-import android.view.View
+import androidx.appcompat.app.AppCompatActivity
 
 import org.helpapaw.helpapaw.BuildConfig
 import org.helpapaw.helpapaw.R

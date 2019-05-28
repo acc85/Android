@@ -2,11 +2,8 @@ package org.helpapaw.helpapaw.signalsmap
 
 import android.annotation.SuppressLint
 import android.os.Bundle
-import android.support.v4.app.Fragment
-import android.support.v4.app.FragmentManager
-import android.support.v4.app.FragmentTransaction
-import android.support.v4.view.GravityCompat
-import android.support.v7.widget.Toolbar
+import androidx.core.view.GravityCompat
+import androidx.appcompat.widget.Toolbar
 import android.view.View
 import android.widget.Toast
 
@@ -104,7 +101,7 @@ class SignalsMapActivity : BaseActivity() {
             }
             val fragmentManager = supportFragmentManager
             val transaction = fragmentManager.beginTransaction()
-            transaction.add(R.id.grp_content_frame, mSignalsMapFragment)
+            transaction.add(R.id.grp_content_frame, mSignalsMapFragment!!)
             transaction.commit()
         }
     }
@@ -113,7 +110,7 @@ class SignalsMapActivity : BaseActivity() {
         mSignalsMapFragment = SignalsMapFragment.newInstance()
         val fragmentManager = supportFragmentManager
         val transaction = fragmentManager.beginTransaction()
-        transaction.replace(R.id.grp_content_frame, mSignalsMapFragment)
+        transaction.replace(R.id.grp_content_frame, mSignalsMapFragment!!)
         transaction.commit()
     }
 

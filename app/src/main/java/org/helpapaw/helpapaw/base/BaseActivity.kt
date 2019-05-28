@@ -2,18 +2,18 @@ package org.helpapaw.helpapaw.base
 
 import android.content.Intent
 import android.content.res.Configuration
-import android.databinding.DataBindingUtil
+import androidx.databinding.DataBindingUtil
 import android.os.Bundle
-import android.support.design.widget.NavigationView
-import android.support.design.widget.Snackbar
-import android.support.graphics.drawable.VectorDrawableCompat
-import android.support.v4.content.res.ResourcesCompat
-import android.support.v4.view.GravityCompat
-import android.support.v7.app.ActionBarDrawerToggle
-import android.support.v7.app.AppCompatActivity
+import com.google.android.material.navigation.NavigationView
+import androidx.core.content.res.ResourcesCompat
+import androidx.core.view.GravityCompat
 import android.util.Log
 import android.view.MenuItem
 import android.widget.TextView
+import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.appcompat.app.AppCompatActivity
+import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat
+import com.google.android.material.snackbar.Snackbar
 import org.helpapaw.helpapaw.R
 import org.helpapaw.helpapaw.about.AboutActivity
 import org.helpapaw.helpapaw.authentication.AuthenticationActivity

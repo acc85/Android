@@ -1,10 +1,8 @@
 package org.helpapaw.helpapaw.settings
 
-import android.databinding.DataBindingUtil
+import androidx.databinding.DataBindingUtil
 import android.os.Bundle
-import android.support.v4.app.FragmentManager
-import android.support.v4.app.FragmentTransaction
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
 
 import org.helpapaw.helpapaw.R
 import org.helpapaw.helpapaw.databinding.ActivitySettingsBinding
@@ -29,7 +27,7 @@ class SettingsActivity : AppCompatActivity() {
             mSettingsFragment = SettingsFragment.newInstance()
             val fragmentManager = supportFragmentManager
             val transaction = fragmentManager.beginTransaction()
-            transaction.add(R.id.grp_content_frame, mSettingsFragment)
+            transaction.add(R.id.grp_content_frame, mSettingsFragment!!)
             transaction.commit()
         }
     }

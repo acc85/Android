@@ -3,10 +3,9 @@ package org.helpapaw.helpapaw.signaldetails
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.databinding.DataBindingUtil
+import androidx.databinding.DataBindingUtil
 import android.net.Uri
 import android.os.Bundle
-import android.support.design.widget.Snackbar
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
@@ -16,6 +15,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.ScrollView
 import android.widget.TextView
+import com.google.android.material.snackbar.Snackbar
 
 import org.helpapaw.helpapaw.R
 import org.helpapaw.helpapaw.authentication.AuthenticationActivity
@@ -72,22 +72,9 @@ class SignalDetailsFragment : BaseFragment(), SignalDetailsContract.View {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         // Inflate the layout for this fragment
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_signal_details, container, false)
-
-//        if (savedInstanceState == null || PresenterManager.getInstance().getPresenter<Presenter>(getScreenId()) == null) {
-//            signalDetailsPresenter = SignalDetailsPresenter(this)
-//        } else {
-//            signalDetailsPresenter = PresenterManager.getInstance().getPresenter<Presenter>(getScreenId())
-//            signalDetailsPresenter!!.setView(this)
-//        }
-
         if (savedInstanceState != null) {
             signalDetailsPresenter.view = this
         }
-//            signalDetailsPresenter = SignalDetailsPresenter(this)
-//        } else {
-//            signalDetailsPresenter = PresenterManager.getInstance().getPresenter<Presenter>(getScreenId())
-//            signalDetailsPresenter!!.setView(this)
-//        }
 
         actionsListener = signalDetailsPresenter
         setHasOptionsMenu(true)

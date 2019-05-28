@@ -1,12 +1,10 @@
 package org.helpapaw.helpapaw.authentication
 
 import android.content.Intent
-import android.databinding.DataBindingUtil
+import androidx.databinding.DataBindingUtil
 import android.os.Bundle
-import android.support.v4.app.Fragment
-import android.support.v4.app.FragmentManager
-import android.support.v4.app.FragmentTransaction
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
 
 import com.facebook.CallbackManager
 
@@ -30,14 +28,14 @@ class AuthenticationActivity : AppCompatActivity() {
         }
     }
 
-    private fun initFragment(loginFragment: Fragment) {
+    private fun initFragment(loginFragment: LoginFragment) {
         val fragmentManager = supportFragmentManager
         val transaction = fragmentManager.beginTransaction()
         transaction.add(R.id.grp_content_frame, loginFragment)
         transaction.commit()
     }
 
-    public override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         callbackManager.onActivityResult(requestCode, resultCode, data)
     }

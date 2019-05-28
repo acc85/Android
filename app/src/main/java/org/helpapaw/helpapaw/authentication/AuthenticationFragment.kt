@@ -1,7 +1,6 @@
 package org.helpapaw.helpapaw.authentication
 
 import android.app.AlertDialog
-import android.content.DialogInterface
 import android.text.Html
 
 import org.helpapaw.helpapaw.R

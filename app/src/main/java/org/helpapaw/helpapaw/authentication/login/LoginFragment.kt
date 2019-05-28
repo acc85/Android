@@ -1,7 +1,7 @@
 package org.helpapaw.helpapaw.authentication.login
 
 import android.content.Intent
-import android.databinding.DataBindingUtil
+import androidx.databinding.DataBindingUtil
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -14,8 +14,6 @@ import org.helpapaw.helpapaw.R
 import org.helpapaw.helpapaw.authentication.AuthenticationActivity
 import org.helpapaw.helpapaw.authentication.AuthenticationFragment
 import org.helpapaw.helpapaw.authentication.register.RegisterFragment
-import org.helpapaw.helpapaw.base.Presenter
-import org.helpapaw.helpapaw.base.PresenterManager
 import org.helpapaw.helpapaw.databinding.FragmentLoginBinding
 import org.helpapaw.helpapaw.reusable.AlertDialogFragment
 import org.helpapaw.helpapaw.signalsmap.SignalsMapActivity

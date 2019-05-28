@@ -1,8 +1,7 @@
 package org.helpapaw.helpapaw.sendsignal
 
 import android.content.Context
-import android.support.v4.graphics.drawable.RoundedBitmapDrawable
-import android.support.v7.widget.CardView
+import androidx.core.graphics.drawable.RoundedBitmapDrawable
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
@@ -10,6 +9,7 @@ import android.widget.EditText
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.cardview.widget.CardView
 
 import org.helpapaw.helpapaw.R
 

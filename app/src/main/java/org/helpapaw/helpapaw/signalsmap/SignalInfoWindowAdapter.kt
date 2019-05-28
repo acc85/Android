@@ -1,6 +1,6 @@
 package org.helpapaw.helpapaw.signalsmap
 
-import android.databinding.DataBindingUtil
+import androidx.databinding.DataBindingUtil
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -15,6 +15,7 @@ import org.helpapaw.helpapaw.models.Signal
 import org.helpapaw.helpapaw.repository.PhotoRepository
 import org.helpapaw.helpapaw.databinding.InfoWindowSignalBinding
 import org.helpapaw.helpapaw.images.RoundedTransformation
+import java.lang.Exception
 
 /**
  * Created by iliyan on 8/2/16
@@ -49,7 +50,7 @@ class SignalInfoWindowAdapter(
                 binding.txtSignalTitle.text = signal.title
                 binding.txtSignalStatus.text = getStatusString(signal.status)
 
-                Picasso.with(inflater.context).load(photoUrl).resize(200, 200)
+                Picasso.get().load(photoUrl).resize(200, 200)
                         .centerCrop()
                         .noFade()
                         .placeholder(R.drawable.ic_paw)
@@ -69,7 +70,7 @@ class SignalInfoWindowAdapter(
             this.marker = marker
         }
 
-        override fun onError() {
+        override fun onError(e: Exception?) {
             Log.e(javaClass.simpleName, "Error loading thumbnail!")
         }
 

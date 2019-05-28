@@ -1,13 +1,12 @@
 package org.helpapaw.helpapaw.settings
 
-import android.databinding.DataBindingUtil
+import androidx.databinding.DataBindingUtil
 import android.os.Bundle
-import android.support.v7.app.ActionBar
-import android.support.v7.app.AppCompatActivity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.SeekBar
+import androidx.appcompat.app.AppCompatActivity
 
 import org.helpapaw.helpapaw.R
 import org.helpapaw.helpapaw.base.BaseFragment
