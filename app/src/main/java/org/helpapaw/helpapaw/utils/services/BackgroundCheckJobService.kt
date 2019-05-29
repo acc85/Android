@@ -15,6 +15,7 @@ import org.helpapaw.helpapaw.models.Signal.SOLVED
 import org.helpapaw.helpapaw.repository.SettingsRepository
 import org.helpapaw.helpapaw.repository.SignalRepository
 import org.helpapaw.helpapaw.db.SignalsDatabase
+import org.helpapaw.helpapaw.repository.ISettingsRepository
 import org.helpapaw.helpapaw.repository.PushNotificationsRepository
 import org.helpapaw.helpapaw.utils.NotificationUtils
 import org.koin.android.ext.android.inject
@@ -30,7 +31,7 @@ class BackgroundCheckJobService : JobService() {
 
     internal var mCurrentNotificationIds = HashSet<String>()
     lateinit var mNotificationManager: NotificationManager
-    val settingsRepository : SettingsRepository by inject()
+    val settingsRepository : ISettingsRepository by inject()
     val signalRepositoryInstance : SignalRepository by inject()
     val pushNotificationsRepository:PushNotificationsRepository by inject()
     override fun onStartJob(job: JobParameters): Boolean {

@@ -104,47 +104,51 @@ class LoginViewModel(
         })
     }
 
+    fun verify(view:View):Boolean{
+        var isValid = true
+        if (isEmpty(username) || !utils.isEmailValid(username)) {
+            userNameErrorText = view.context.getString(R.string.txt_invalid_email)
+            isValid = false
+        }
+
+        if (isEmpty(username) || !utils.isEmailValid(username)) {
+            userNameErrorText = view.context.getString(R.string.txt_invalid_email)
+            isValid = false
+        }
+
+        if (isEmpty(password) || password.length < MIN_PASS_LENGTH) {
+            passwordErrorText = view.context.getString(R.string.txt_invalid_password)
+            isValid = false
+        }
+        return isValid
+    }
 
     fun attemptToLogin(view: View) {
 
         userNameErrorText = null
         passwordErrorText = null
-        if (isEmpty(username) || !utils.isEmailValid(username) && (isEmpty(password) || password.length < MIN_PASS_LENGTH)) {
-            userNameErrorText = view.context.getString(R.string.txt_invalid_email)
-            passwordErrorText = view.context.getString(R.string.txt_invalid_password)
-            return
-        }
-
-        if (isEmpty(username) || !utils.isEmailValid(username)) {
-            userNameErrorText = view.context.getString(R.string.txt_invalid_email)
-            return
-        }
-
-        if (isEmpty(password) || password.length < MIN_PASS_LENGTH) {
-            passwordErrorText = view.context.getString(R.string.txt_invalid_password)
-            return
-        }
-
-        if (utils.hasNetworkConnection()) {
-            showProgress = View.VISIBLE
-            showGroupLogin = View.GONE
-            userManager.login(username, password, object : UserManager.LoginCallback {
-                override fun onLoginSuccess() {
-                    runBlocking {
-                        getPrivacyPolicyDetials(view)
+        if(verify(view)) {
+            if (utils.hasNetworkConnection()) {
+                showProgress = View.VISIBLE
+                showGroupLogin = View.GONE
+                userManager.login(username, password, object : UserManager.LoginCallback {
+                    override fun onLoginSuccess() {
+                        runBlocking {
+                            getPrivacyPolicyDetials(view)
+                        }
                     }
-                }
 
-                override fun onLoginFailure(message: String?) {
-                    showProgress = View.GONE
-                    showGroupLogin = View.VISIBLE
-                    authenticationLiveData.value = HelpAPawLoginResult.Fail(message)
-                }
-            })
-        } else {
-            authenticationLiveData.value = HelpAPawLoginResult.ShowNoInternetMessage("")
-            showProgress = View.GONE
-            showGroupLogin = View.VISIBLE
+                    override fun onLoginFailure(message: String?) {
+                        showProgress = View.GONE
+                        showGroupLogin = View.VISIBLE
+                        authenticationLiveData.value = HelpAPawLoginResult.Fail(message)
+                    }
+                })
+            } else {
+                authenticationLiveData.value = HelpAPawLoginResult.ShowNoInternetMessage("")
+                showProgress = View.GONE
+                showGroupLogin = View.VISIBLE
+            }
         }
     }
 

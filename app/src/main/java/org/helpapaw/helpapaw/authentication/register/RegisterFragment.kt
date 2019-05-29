@@ -5,12 +5,14 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.lifecycle.ViewModelProviders
 
 import org.helpapaw.helpapaw.R
 import org.helpapaw.helpapaw.authentication.AuthenticationFragment
 import org.helpapaw.helpapaw.base.Presenter
 import org.helpapaw.helpapaw.databinding.FragmentRegisterBinding
 import org.helpapaw.helpapaw.reusable.AlertDialogFragment
+import org.helpapaw.helpapaw.viewmodels.RegisterViewModel
 import org.koin.android.ext.android.inject
 import org.koin.core.parameter.parametersOf
 
@@ -44,13 +46,7 @@ class RegisterFragment : AuthenticationFragment(), RegisterContract.View {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_register, container, false)
-
-//        if (savedInstanceState == null || PresenterManager.getInstance().getPresenter<Presenter>(getScreenId()) == null) {
-//            registerPresenter = RegisterPresenter(this)
-//        } else {
-//            registerPresenter = PresenterManager.getInstance().getPresenter(getScreenId())
-//        }
-
+        binding.viewModel = ViewModelProviders.of(this).get(RegisterViewModel::class.java)
         if (savedInstanceState != null){
             registerPresenter.view = this
         }
