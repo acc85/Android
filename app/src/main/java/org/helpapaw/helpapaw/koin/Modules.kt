@@ -37,6 +37,7 @@ var testModule = module {
     single<SignalRepository> { BackendlessSignalRepository(get(), get()) }
     single<ImageLoader> { PicassoImageLoader() }
     single<ISettingsRepository> { SettingsRepository(androidContext().getSharedPreferences("HelpAPawSettings", Context.MODE_PRIVATE)) }
+    single<PushNotificationsRepository>{ BackendlessPushNotificationsRepository(get())}
 
     single {CallbackManager.Factory.create()}
 

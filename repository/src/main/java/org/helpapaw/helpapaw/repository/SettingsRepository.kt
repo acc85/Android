@@ -11,6 +11,7 @@ class SettingsRepository(val preferences: SharedPreferences) : ISettingsReposito
         const val LAST_SHOWN_LATITUDE_FIELD = "lastShownLatitude"
         const val LAST_SHOWN_LONGITUDE_FIELD = "lastShownLongitude"
         const val LAST_SHOWN_ZOOM_FIELD = "lastShownZoom"
+        const val DEVICE_BACKENDLESS_TOKEN = "deviceBackendlessToken"
 
     }
 
@@ -70,6 +71,18 @@ class SettingsRepository(val preferences: SharedPreferences) : ISettingsReposito
         editor.remove(LAST_SHOWN_LONGITUDE_FIELD)
         editor.remove(LAST_SHOWN_ZOOM_FIELD)
         editor.apply()
+    }
+
+    //Save Backendless device-token to local-preferences
+    fun saveTokenToPreferences(deviceToken: String) {
+        val editor = preferences.edit()
+        editor.putString(DEVICE_BACKENDLESS_TOKEN, deviceToken)
+        editor.apply()
+    }
+
+    //Get Backendless device-token from local-preferences
+    fun getTokenFromPreferences(): String? {
+        return preferences.getString(DEVICE_BACKENDLESS_TOKEN, "-1")
     }
 
 }

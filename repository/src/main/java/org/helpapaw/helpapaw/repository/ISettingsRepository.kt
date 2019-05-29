@@ -23,4 +23,8 @@ interface ISettingsRepository {
     fun saveTimeout(timeout: Int)
 
     fun clearLocationData()
+
+    abstract fun saveTokenToPreferences(deviceToken: String)
+
+    abstract fun getTokenFromPreferences(): String
 }
