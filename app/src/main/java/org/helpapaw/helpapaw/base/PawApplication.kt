@@ -6,6 +6,7 @@ import android.os.StrictMode
 import com.backendless.Backendless
 import org.helpapaw.helpapaw.user.UserManager
 import org.helpapaw.helpapaw.koin.testModule
+import org.helpapaw.helpapaw.repository.PushNotificationsRepository
 import org.helpapaw.helpapaw.utils.NotificationUtils
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
@@ -15,6 +16,7 @@ import org.koin.core.context.startKoin
 class PawApplication:Application(){
 
     val userManager:UserManager by inject()
+    val pushNotificationsRepository:PushNotificationsRepository by inject()
 
     companion object{
         const val BACKENDLESS_APP_ID: String = "BDCD56B9-351A-E067-FFA4-9EA9CF2F4000"
@@ -49,6 +51,9 @@ class PawApplication:Application(){
         }
         val builder = StrictMode.VmPolicy.Builder()
         StrictMode.setVmPolicy(builder.build())
+
+
+        pushNotificationsRepository.registerDeviceForToken()
 
         pawApplication = this
         isTestEnvironment = loadIsTestEnvironment()

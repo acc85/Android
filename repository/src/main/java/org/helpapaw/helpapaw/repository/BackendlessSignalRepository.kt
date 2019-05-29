@@ -24,7 +24,10 @@ import java.util.HashMap
 /**
  * Created by iliyan on 7/28/16
  */
-class BackendlessSignalRepository(private val context: Context, private val signalsDatabase: SignalsDatabase) : SignalRepository {
+class BackendlessSignalRepository(
+        private val context: Context,
+        private val signalsDatabase: SignalsDatabase,
+        val pushNotificationsRepository: PushNotificationsRepository) : SignalRepository {
 
     private// Category should only be added if it's not Default
     val category: String?
@@ -144,6 +147,10 @@ class BackendlessSignalRepository(private val context: Context, private val sign
                         signalAuthorName, signalAuthorPhone, geoPoint.latitude!!, geoPoint.longitude!!, true)
                 signalsDatabase.signalDao().saveSignal(savedSignal)
                 callback.onSignalSaved(savedSignal)
+
+                // Push notification on successfully saved-signal
+                pushNotificationsRepository.pushNewSignalNotification("New signal", savedSignal.title, savedSignal.id,
+                        savedSignal.latitude, savedSignal.longitude)
             }
 
             override fun handleFault(backendlessFault: BackendlessFault) {

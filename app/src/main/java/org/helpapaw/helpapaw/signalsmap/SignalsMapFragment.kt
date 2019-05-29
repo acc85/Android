@@ -46,6 +46,7 @@ import org.helpapaw.helpapaw.reusable.AlertDialogFragment
 import org.helpapaw.helpapaw.sendsignal.SendPhotoBottomSheet
 import org.helpapaw.helpapaw.signaldetails.SignalDetailsActivity
 import org.helpapaw.helpapaw.images.ImageUtils
+import org.helpapaw.helpapaw.repository.PushNotificationsRepository
 import org.helpapaw.helpapaw.utils.StatusUtils
 import org.koin.android.ext.android.inject
 import org.koin.core.parameter.parametersOf
@@ -56,6 +57,7 @@ import java.util.*
 class SignalsMapFragment : BaseFragment(), SignalsMapContract.View, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
     val userManager:UserManager by inject()
+    val pushNotificationsRepository:PushNotificationsRepository by inject()
 
     private var googleApiClient: GoogleApiClient? = null
     private var locationRequest: LocationRequest? = null
@@ -421,6 +423,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View, GoogleApiCli
         val zoom = if (newZoom == 0f) calculateMetersToZoom() else newZoom
         updateMapCameraPosition(mCurrentLat, mCurrentLong, zoom)
         actionsListener!!.onLocationChanged(mCurrentLat, mCurrentLong, settingsRepository!!.getRadius(), settingsRepository!!.getTimeout())
+        pushNotificationsRepository.saveNewDeviceLocation(location)
     }
 
     override fun onConnectionSuspended(i: Int) {
