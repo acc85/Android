@@ -54,27 +54,29 @@ class BackendlessPushNotificationsRepository(
                             // every loaded object from the "DeviceRegistration" table
                             // is now an individual java.util.Map
 
-                            // Extract 'Map' object from the 'List<Map>'
-                            val mapFoundDevice = foundDevices[0]
-                            try {
-                                mapFoundDevice["signalRadius"] = settingsRepository.getRadius()
-                                mapFoundDevice["lastLatitude"] = location.latitude
-                                mapFoundDevice["lastLongitude"] = location.longitude
-                                mapFoundDevice["signalTimeout"] = settingsRepository.getTimeout()
-                            } catch (e: Error) {
-                                Log.e(TAG, e.message)
+                            if (foundDevices.isNotEmpty()) {
+                                // Extract 'Map' object from the 'List<Map>
+                                val mapFoundDevice = foundDevices[0]
+                                try {
+                                    mapFoundDevice["signalRadius"] = settingsRepository.getRadius()
+                                    mapFoundDevice["lastLatitude"] = location.latitude
+                                    mapFoundDevice["lastLongitude"] = location.longitude
+                                    mapFoundDevice["signalTimeout"] = settingsRepository.getTimeout()
+                                } catch (e: Error) {
+                                    Log.e(TAG, e.message)
+                                }
+
+                                // Save updated object
+                                Backendless.Persistence.of("DeviceRegistration").save(mapFoundDevice, object : AsyncCallback<Map<*, *>> {
+                                    override fun handleResponse(response: Map<*, *>) {
+                                        Log.d(TAG, "obj updated")
+                                    }
+
+                                    override fun handleFault(fault: BackendlessFault) {
+                                        Log.d(TAG, fault.message)
+                                    }
+                                })
                             }
-
-                            // Save updated object
-                            Backendless.Persistence.of("DeviceRegistration").save(mapFoundDevice, object : AsyncCallback<Map<*, *>> {
-                                override fun handleResponse(response: Map<*, *>) {
-                                    Log.d(TAG, "obj updated")
-                                }
-
-                                override fun handleFault(fault: BackendlessFault) {
-                                    Log.d(TAG, fault.message)
-                                }
-                            })
                         }
 
                         override fun handleFault(fault: BackendlessFault) {
