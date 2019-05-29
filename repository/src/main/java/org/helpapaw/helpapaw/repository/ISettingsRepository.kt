@@ -24,7 +24,7 @@ interface ISettingsRepository {
 
     fun clearLocationData()
 
-    abstract fun saveTokenToPreferences(deviceToken: String)
+    fun saveTokenToPreferences(deviceToken: String)
 
-    abstract fun getTokenFromPreferences(): String
+    fun getTokenFromPreferences(): String?
 }

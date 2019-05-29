@@ -74,14 +74,14 @@ class SettingsRepository(val preferences: SharedPreferences) : ISettingsReposito
     }
 
     //Save Backendless device-token to local-preferences
-    fun saveTokenToPreferences(deviceToken: String) {
+    override fun saveTokenToPreferences(deviceToken: String) {
         val editor = preferences.edit()
         editor.putString(DEVICE_BACKENDLESS_TOKEN, deviceToken)
         editor.apply()
     }
 
     //Get Backendless device-token from local-preferences
-    fun getTokenFromPreferences(): String? {
+    override fun getTokenFromPreferences(): String? {
         return preferences.getString(DEVICE_BACKENDLESS_TOKEN, "-1")
     }
 

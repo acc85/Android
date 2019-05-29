@@ -34,7 +34,7 @@ var testModule = module {
 
     single<CommentRepository> { BackendlessCommentRepository() }
     single<PhotoRepository> { BackendlessPhotoRepository() }
-    single<SignalRepository> { BackendlessSignalRepository(get(), get()) }
+    single<SignalRepository> { BackendlessSignalRepository(get(), get(),get()) }
     single<ImageLoader> { PicassoImageLoader() }
     single<ISettingsRepository> { SettingsRepository(androidContext().getSharedPreferences("HelpAPawSettings", Context.MODE_PRIVATE)) }
     single<PushNotificationsRepository>{ BackendlessPushNotificationsRepository(get())}
