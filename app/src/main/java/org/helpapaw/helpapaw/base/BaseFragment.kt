@@ -60,7 +60,7 @@ abstract class BaseFragment : Fragment() {
 
     protected fun openFragment(fragmentToOpen: Fragment, addToBackStack: Boolean, shouldAnimate: Boolean, animateBothDirections: Boolean) {
         if (activity != null) {
-            val toolbar = activity!!.findViewById(R.id.toolbar) as Toolbar
+            val toolbar:Toolbar? = activity?.findViewById(R.id.toolbar)
             toolbar?.menu?.clear()
             val ft = activity!!.supportFragmentManager.beginTransaction()
             if (shouldAnimate) {

@@ -1,5 +1,7 @@
 package org.helpapaw.helpapaw.user
 
+import kotlinx.coroutines.Deferred
+
 /**
  * Created by iliyan on 7/25/16
  */
@@ -21,8 +23,11 @@ interface UserManager {
 
     fun getUserName(getUserPropertyCallback: GetUserPropertyCallback)
 
-    fun getHasAcceptedPrivacyPolicy(getUserPropertyCallback: GetUserPropertyCallback)
-    fun setHasAcceptedPrivacyPolicy(value: Boolean, setUserPropertyCallback: SetUserPropertyCallback)
+    fun getHasAcceptedPrivacyPolicy(userPropertyCallback: UserPropertyCallback)
+    fun setHasAcceptedPrivacyPolicy(value: Boolean, userPropertyCallback: UserPropertyCallback)
+//    suspend fun getHasAcceptedPrivacyPolicy():Deferred<UserPropertyResult>
+
+//    suspend fun setHasAcceptedPrivacyPolicy(value: Boolean): Deferred<UserPropertyResult>
 
     interface LoginCallback {
         fun onLoginSuccess()
@@ -39,11 +44,19 @@ interface UserManager {
         fun onLogoutFailure(message: String)
     }
 
+    interface UserPropertyCallback {
+        fun onResult(userPropertyResult: UserPropertyResult)
+    }
+
     interface GetUserPropertyCallback {
         fun onSuccess(value: Any)
         fun onFailure(message: String?)
     }
 
+    sealed class UserPropertyResult{
+        data class Success(val value:Any=""):UserPropertyResult()
+        data class Failed(var message: String?):UserPropertyResult()
+    }
     interface SetUserPropertyCallback {
         fun onSuccess()
         fun onFailure(message: String?)

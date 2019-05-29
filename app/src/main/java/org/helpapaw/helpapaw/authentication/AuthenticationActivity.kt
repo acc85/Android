@@ -11,18 +11,16 @@ import com.facebook.CallbackManager
 import org.helpapaw.helpapaw.R
 import org.helpapaw.helpapaw.authentication.login.LoginFragment
 import org.helpapaw.helpapaw.databinding.ActivityAuthenticationBinding
+import org.koin.android.ext.android.inject
 
 class AuthenticationActivity : AppCompatActivity() {
 
     lateinit var binding: ActivityAuthenticationBinding
-    lateinit var callbackManager: CallbackManager
+    val callbackManager: CallbackManager by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_authentication)
-
-        callbackManager = CallbackManager.Factory.create()
-
         if (null == savedInstanceState) {
             initFragment(LoginFragment.newInstance())
         }

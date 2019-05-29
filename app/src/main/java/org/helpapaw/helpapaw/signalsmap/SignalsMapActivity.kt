@@ -13,6 +13,7 @@ import com.firebase.jobdispatcher.GooglePlayDriver
 import com.firebase.jobdispatcher.Job
 import com.firebase.jobdispatcher.RetryStrategy
 import com.firebase.jobdispatcher.Trigger
+import kotlinx.coroutines.runBlocking
 import org.helpapaw.helpapaw.BuildConfig
 
 import org.helpapaw.helpapaw.R
@@ -63,22 +64,24 @@ class SignalsMapActivity : BaseActivity() {
 
         setupEnvironmentSwitching()
         if (userManager.isLoggedIn) {
-            userManager.getHasAcceptedPrivacyPolicy(object : UserManager.GetUserPropertyCallback {
-                override fun onSuccess(hasAcceptedPrivacyPolicy: Any) {
-                    try {
-                        val accepted = hasAcceptedPrivacyPolicy as Boolean
-                        if (!accepted) {
-                            logOut()
+            runBlocking {
+                userManager.getHasAcceptedPrivacyPolicy(object : UserManager.UserPropertyCallback {
+                    override fun onResult(userPropertyResult: UserManager.UserPropertyResult) {
+                        when (userPropertyResult) {
+                            is UserManager.UserPropertyResult.Success -> {
+                                try {
+                                    val accepted = userPropertyResult.value as Boolean
+                                    if (!accepted) {
+                                        logOut()
+                                    }
+                                } catch (ignored: Exception) {
+
+                                }
+                            }
                         }
-                    } catch (ignored: Exception) {
                     }
-
-                }
-
-                override fun onFailure(message: String?) {
-                    // Do nothing
-                }
-            })
+                })
+            }
         }
     }
 

@@ -1,12 +1,16 @@
 package org.helpapaw.helpapaw.viewmodels
 
-import androidx.databinding.BaseObservable
+import android.view.View
 import androidx.databinding.Bindable
-import androidx.lifecycle.ViewModel
+import org.helpapaw.helpapaw.BuildConfig
+import org.helpapaw.helpapaw.utils.SharingUtils
 
-class AboutViewwModel: BaseObservable() {
+class AboutViewModel : BaseViewModel() {
 
-//    @Bindable
+    @Bindable
+    var aboutText = BuildConfig.VERSION_NAME
 
-
+    fun contactSupport(view: View){
+        SharingUtils.contactSupport(view.context)
+    }
 }

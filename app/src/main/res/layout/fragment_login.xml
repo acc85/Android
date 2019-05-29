@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+    <data>
+        <variable
+            name="viewModel"
+            type="org.helpapaw.helpapaw.viewmodels.LoginViewModel" />
+    </data>
 
     <FrameLayout
         android:layout_width="match_parent"
@@ -10,6 +17,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
+            android:visibility="@{viewModel.showGroupLogin}"
             android:paddingLeft="24dp"
             android:paddingRight="24dp">
 
@@ -24,7 +32,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="@string/txt_email_hint"
-                    android:inputType="textEmailAddress" />
+                    android:inputType="textEmailAddress"
+                    android:text="@={viewModel.username}"
+                    app:userError="@{viewModel.userNameErrorText}"/>
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
@@ -38,11 +48,14 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="@string/txt_password_hint"
-                    android:inputType="textPassword" />
+                    android:inputType="textPassword"
+                    android:text="@={viewModel.password}"
+                    app:passwordError="@{viewModel.passwordErrorText}"/>
             </com.google.android.material.textfield.TextInputLayout>
 
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/btn_login"
+                android:onClick="@{viewModel::attemptToLogin}"
                 style="@style/Widget.AppCompat.Button.Colored"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -88,7 +101,8 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="0dp"
-                android:layout_marginBottom="30dp" />
+                android:layout_marginBottom="30dp"
+                app:facebookLoginSetup="@{viewModel}"/>
 
         </LinearLayout>
 
@@ -99,6 +113,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="20dp"
-            android:visibility="gone" />
+            tools:visibility="gone"
+            android:visibility="@{viewModel.showProgress}" />
     </FrameLayout>
 </layout>

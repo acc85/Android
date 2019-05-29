@@ -8,6 +8,10 @@ import com.backendless.exceptions.BackendlessException
 import com.backendless.exceptions.BackendlessFault
 import com.backendless.persistence.local.UserTokenStorageFactory
 import com.facebook.login.LoginManager
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
 
 /**
  * Created by iliyan on 7/25/16
@@ -47,8 +51,7 @@ class BackendlessUserManager : UserManager {
             override fun handleFault(fault: BackendlessFault) {
                 loginCallback.onLoginFailure(fault.message)
             }
-        },
-                true)
+        },true)
     }
 
     override fun register(email: String, password: String, name: String, phoneNumber: String, registrationCallback: UserManager.RegistrationCallback) {
@@ -72,13 +75,13 @@ class BackendlessUserManager : UserManager {
 
     override fun logout(logoutCallback: UserManager.LogoutCallback) {
         Backendless.UserService.logout(object : AsyncCallback<Void> {
-            override fun handleResponse(response: Void) {
+            override fun handleResponse(response: Void?) {
                 LoginManager.getInstance().logOut()
                 logoutCallback.onLogoutSuccess()
             }
 
-            override fun handleFault(fault: BackendlessFault) {
-                logoutCallback.onLogoutFailure(fault.message?:"")
+            override fun handleFault(fault: BackendlessFault?) {
+                logoutCallback.onLogoutFailure(fault?.message?:"")
             }
         })
     }
@@ -120,16 +123,16 @@ class BackendlessUserManager : UserManager {
         })
     }
 
-    override fun setHasAcceptedPrivacyPolicy(value: Boolean, setUserPropertyCallback: UserManager.SetUserPropertyCallback) {
+    override fun setHasAcceptedPrivacyPolicy(value: Boolean, userPropertyCallback: UserManager.UserPropertyCallback) {
         try {
             Backendless.UserService.CurrentUser().setProperty(USER_ACCEPTED_PRIVACY_POLICY_FIELD, true)
             Backendless.UserService.update(Backendless.UserService.CurrentUser(), object : AsyncCallback<BackendlessUser> {
                 override fun handleResponse(response: BackendlessUser) {
-                    setUserPropertyCallback.onSuccess()
+                    userPropertyCallback.onResult(UserManager.UserPropertyResult.Success(response))
                 }
 
                 override fun handleFault(fault: BackendlessFault) {
-                    setUserPropertyCallback.onFailure(fault.message)
+                    userPropertyCallback.onResult(UserManager.UserPropertyResult.Failed(fault.message))
                 }
             })
         } catch (exception: BackendlessException) {
@@ -139,7 +142,7 @@ class BackendlessUserManager : UserManager {
 
     }
 
-    override fun getHasAcceptedPrivacyPolicy(getUserPropertyCallback: UserManager.GetUserPropertyCallback) {
+    override fun getHasAcceptedPrivacyPolicy(userPropertyCallback: UserManager.UserPropertyCallback) {
 
         //https://support.backendless.com/t/userservice-currentuser-is-null-even-if-usertokenstoragefactory-retruns-token/3239
         val currentUserId = Backendless.UserService.loggedInUser()
@@ -151,17 +154,18 @@ class BackendlessUserManager : UserManager {
                     if (value != null) {
                         result = value
                     }
-                    getUserPropertyCallback.onSuccess(result!!)
+                    userPropertyCallback.onResult(UserManager.UserPropertyResult.Success(result!!))
                 }
 
                 override fun handleFault(fault: BackendlessFault) {
-                    getUserPropertyCallback.onFailure(fault.message)
+                    userPropertyCallback.onResult(UserManager.UserPropertyResult.Failed(fault.message))
                 }
             })
         } else {
-            getUserPropertyCallback.onFailure("User not logged in!")
+            userPropertyCallback.onResult(UserManager.UserPropertyResult.Failed("User not logged in!"))
         }
     }
+
 
     override fun getUserName(getUserPropertyCallback: UserManager.GetUserPropertyCallback) {
         val currentUserId = Backendless.UserService.loggedInUser()

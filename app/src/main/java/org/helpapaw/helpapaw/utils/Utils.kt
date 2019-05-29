@@ -5,6 +5,7 @@ import android.location.Location
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
 import android.util.Log
+import kotlinx.coroutines.*
 
 import java.io.BufferedReader
 import java.io.IOException
@@ -79,6 +80,25 @@ class Utils(val context:Context) {
     }
 
     companion object {
+
+        @Throws(IOException::class)
+        fun getHtmlByCouroutines(url: String): Deferred<String> {
+            return GlobalScope.async(Dispatchers.IO){
+                val connection = (URL(url)).openConnection()
+                connection.connectTimeout = 5000
+                connection.readTimeout = 5000
+                connection.connect()
+
+                // Read and store the result line by line then return the entire string.
+                val input = connection.getInputStream()
+
+                val html = input.bufferedReader().use { it.readText() }
+                html
+            }
+            // Build and set timeout values for the request.
+
+        }
+
 
         @Throws(IOException::class)
         fun getHtml(url: String): String {
