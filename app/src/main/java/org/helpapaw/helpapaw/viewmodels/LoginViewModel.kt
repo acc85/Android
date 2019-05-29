@@ -222,14 +222,3 @@ fun setUpfaceBookLogin(view: LoginButton, viewModel: LoginViewModel) {
         }
     })
 }
-
-@BindingAdapter(value = ["userError"])
-fun setUsernameErrorMessage(view: TextInputEditText, errorText: String?) {
-    view.error = errorText
-}
-
-
-@BindingAdapter(value = ["passwordError"])
-fun setPasswordErrorMessage(view: TextInputEditText, errorText: String?) {
-    view.error = errorText
-}
