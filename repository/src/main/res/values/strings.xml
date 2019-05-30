@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">repository</string>
+    <string name="error_empty_signal_response">Got empty response! Signal not present anymore!?</string>
+
+</resources>

@@ -2,9 +2,10 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/HelpAPaw.iml" filepath="$PROJECT_DIR$/.idea/HelpAPaw.iml" />
-      <module fileurl="file://$PROJECT_DIR$/HelpaPaw.iml" filepath="$PROJECT_DIR$/HelpaPaw.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Android-Personal-helpapaw.iml" filepath="$PROJECT_DIR$/Android-Personal-helpapaw.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/repository/repository.iml" filepath="$PROJECT_DIR$/repository/repository.iml" />
+      <module fileurl="file://$PROJECT_DIR$/utilities/utilities.iml" filepath="$PROJECT_DIR$/utilities/utilities.iml" />
     </modules>
   </component>
 </project>

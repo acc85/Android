@@ -1,9 +1,13 @@
 package org.helpapaw.helpapaw.signalphoto
 
-import org.helpapaw.helpapaw.data.models.Signal
+import org.helpapaw.helpapaw.models.Signal
 
-interface SignalPhotoContract{
+/**
+ * Created by milen on 05/03/18.
+ *
+ */
 
+interface SignalPhotoContract {
     interface View {
 
         fun showSignalPhoto(signal: Signal)

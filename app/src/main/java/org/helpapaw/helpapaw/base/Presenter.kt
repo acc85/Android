@@ -1,12 +1,12 @@
 package org.helpapaw.helpapaw.base
 
-interface IPresenter {
-}
-
-abstract class Presenter<T>(open var view: T?):IPresenter {
+/**
+ * Created by iliyan on 6/22/16
+ */
+abstract class Presenter<T>(var view: T?) {
 
     fun clearView() {
-        view = null
+        this.view = null
     }
 
 }

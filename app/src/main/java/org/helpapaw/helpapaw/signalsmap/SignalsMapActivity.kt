@@ -1,76 +1,120 @@
 package org.helpapaw.helpapaw.signalsmap
 
-import android.Manifest
 import android.annotation.SuppressLint
-import android.content.pm.PackageManager
 import android.os.Bundle
-import androidx.appcompat.widget.Toolbar
 import androidx.core.view.GravityCompat
-import androidx.fragment.app.Fragment
-import com.firebase.jobdispatcher.*
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import androidx.appcompat.widget.Toolbar
+import android.view.View
+import android.widget.Toast
+
+import com.firebase.jobdispatcher.Constraint
+import com.firebase.jobdispatcher.FirebaseJobDispatcher
+import com.firebase.jobdispatcher.GooglePlayDriver
+import com.firebase.jobdispatcher.Job
+import com.firebase.jobdispatcher.RetryStrategy
+import com.firebase.jobdispatcher.Trigger
+import kotlinx.coroutines.runBlocking
 import org.helpapaw.helpapaw.BuildConfig
+
 import org.helpapaw.helpapaw.R
-import org.helpapaw.helpapaw.R.layout.activity_base
 import org.helpapaw.helpapaw.base.BaseActivity
-import org.helpapaw.helpapaw.data.models.Signal
+import org.helpapaw.helpapaw.base.PawApplication
+import org.helpapaw.helpapaw.models.Signal
+import org.helpapaw.helpapaw.user.UserManager
 import org.helpapaw.helpapaw.utils.services.BackgroundCheckJobService
 
 class SignalsMapActivity : BaseActivity() {
 
+    private var mSignalsMapFragment: SignalsMapFragment? = null
+    private var numberOfTitleClicks = 0
+    private var restoringActivity = false
+
+    override val toolbarTitle: String
+        get() {
+            var title = getString(R.string.app_name)
+
+            if (PawApplication.getIsTestEnvironment()!!) {
+                title += " (TEST)"
+            }
+
+            return title
+        }
+
+    override val layoutId: Int
+        get() = R.layout.activity_base
+
+    val toolbar: Toolbar
+        get() = binding.toolbar
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (null == savedInstanceState) {
-            if (intent.hasExtra(Signal.KEY_FOCUSED_SIGNAL_ID)) {
-                initFragment(SignalsMapFragment.newInstance(intent.getStringExtra(Signal.KEY_FOCUSED_SIGNAL_ID)))
-            } else {
-                initFragment(SignalsMapFragment.newInstance())
-            }
+
+        if (savedInstanceState != null) {
+            restoringActivity = true
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+        if (!restoringActivity) {
+            initFragment()
         }
         scheduleBackgroundChecks()
-    }
 
-    override fun getToolbarTitle(): String {
-        var title = getString(R.string.app_name)
+        setupEnvironmentSwitching()
+        if (userManager.isLoggedIn) {
+            runBlocking {
+                userManager.getHasAcceptedPrivacyPolicy(object : UserManager.UserPropertyCallback {
+                    override fun onResult(userPropertyResult: UserManager.UserPropertyResult) {
+                        when (userPropertyResult) {
+                            is UserManager.UserPropertyResult.Success -> {
+                                try {
+                                    val accepted = userPropertyResult.value as Boolean
+                                    if (!accepted) {
+                                        logOut()
+                                    }
+                                } catch (ignored: Exception) {
 
-        title += (if (BuildConfig.DEBUG) "(TEST VERSION)" else {
-            ""
-        })
-
-        return title
-    }
-
-    private fun initFragment(signalsMapFragment: Fragment) {
-        val fragmentManager = supportFragmentManager
-        val transaction = fragmentManager.beginTransaction()
-        transaction.add(R.id.grp_content_frame, signalsMapFragment, "SIGNAL_MAP_FRAGMENT")
-        transaction.commit()
-    }
-
-    override fun getLayoutId(): Int {
-        return activity_base
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int,
-                                            permissions: Array<String>, grantResults: IntArray) {
-        for (permission in permissions) {
-            when (permission) {
-                Manifest.permission.ACCESS_FINE_LOCATION -> {
-                    if (grantResults.size > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                        val fragment: SignalsMapFragment? = supportFragmentManager.findFragmentByTag("SIGNAL_MAP_FRAGMENT") as SignalsMapFragment
-                        fragment?.zoomToUserLocation()
+                                }
+                            }
+                        }
                     }
-                }
-                Manifest.permission.READ_EXTERNAL_STORAGE -> {
-                    val signalsMapFragment: SignalsMapFragment = supportFragmentManager.findFragmentByTag("SIGNAL_MAP_FRAGMENT") as SignalsMapFragment
-                    signalsMapFragment.openImageContentViewer()
-                }
-                else -> {
-                }
-
+                })
             }
         }
+    }
+
+    private fun setupEnvironmentSwitching() {
+        binding.toolbarTitle.setOnClickListener {
+            numberOfTitleClicks++
+            if (numberOfTitleClicks >= 7) {
+                switchEnvironment()
+                numberOfTitleClicks = 0
+            }
+        }
+    }
+
+    private fun initFragment() {
+        if (mSignalsMapFragment == null) {
+            if (intent.hasExtra(Signal.KEY_FOCUSED_SIGNAL_ID)) {
+                mSignalsMapFragment = SignalsMapFragment.newInstance(intent.getStringExtra(Signal.KEY_FOCUSED_SIGNAL_ID))
+            } else {
+                mSignalsMapFragment = SignalsMapFragment.newInstance()
+            }
+            val fragmentManager = supportFragmentManager
+            val transaction = fragmentManager.beginTransaction()
+            transaction.add(R.id.grp_content_frame, mSignalsMapFragment!!)
+            transaction.commit()
+        }
+    }
+
+    private fun reinitFragment() {
+        mSignalsMapFragment = SignalsMapFragment.newInstance()
+        val fragmentManager = supportFragmentManager
+        val transaction = fragmentManager.beginTransaction()
+        transaction.replace(R.id.grp_content_frame, mSignalsMapFragment!!)
+        transaction.commit()
     }
 
     @SuppressLint("RestrictedApi")
@@ -80,41 +124,42 @@ class SignalsMapActivity : BaseActivity() {
         } else {
 
             val fragmentList = supportFragmentManager.fragments
-            for (fragment in fragmentList) {
-                if (fragment is SignalsMapFragment) {
-                    fragment.onBackPressed()
+            if (fragmentList != null) {
+                for (fragment in fragmentList) {
+                    if (fragment is SignalsMapFragment) {
+                        fragment.onBackPressed()
+                    }
                 }
             }
         }
     }
 
-    fun getToolbar(): Toolbar {
-        return binding.toolbar
-    }
-
     private fun scheduleBackgroundChecks() {
-        GlobalScope.launch {
-            val dispatcher = FirebaseJobDispatcher(GooglePlayDriver(this@SignalsMapActivity))
+        val dispatcher = FirebaseJobDispatcher(GooglePlayDriver(this))
 
-            val backgroundCheckJob = dispatcher.newJobBuilder()
-                    // the JobService that will be called
-                    .setService(BackgroundCheckJobService::class.java)
-                    // uniquely identifies the job
-                    .setTag("BackgroundCheckJobService")
-                    .setRecurring(true)
-                    // start between 30 and 60 minutes from now
-                    .setTrigger(Trigger.executionWindow(15 * 60, 30 * 60))
-                    // overwrite an existing job with the same tag
-                    .setReplaceCurrent(true)
-                    // retry with exponential backoff
-                    .setRetryStrategy(RetryStrategy.DEFAULT_EXPONENTIAL)
-                    // constraints that need to be satisfied for the job to run
-                    .setConstraints(Constraint.ON_ANY_NETWORK)
-                    .build()
+        val backgroundCheckJob = dispatcher.newJobBuilder()
+                // the JobService that will be called
+                .setService(BackgroundCheckJobService::class.java)
+                // uniquely identifies the job
+                .setTag("BackgroundCheckJobService")
+                .setRecurring(true)
+                // start between 30 and 60 minutes from now
+                .setTrigger(Trigger.executionWindow(15 * 60, 30 * 60))
+                // overwrite an existing job with the same tag
+                .setReplaceCurrent(true)
+                // retry with exponential backoff
+                .setRetryStrategy(RetryStrategy.DEFAULT_EXPONENTIAL)
+                // constraints that need to be satisfied for the job to run
+                .setConstraints(Constraint.ON_ANY_NETWORK)
+                .build()
 
-            dispatcher.mustSchedule(backgroundCheckJob)
-        }
-
+        dispatcher.mustSchedule(backgroundCheckJob)
     }
 
+    private fun switchEnvironment() {
+        PawApplication.setIsTestEnvironment(BuildConfig.DEBUG)
+        binding.toolbarTitle.text = toolbarTitle
+        reinitFragment()
+        Toast.makeText(this, "Environment switched", Toast.LENGTH_LONG).show()
+    }
 }

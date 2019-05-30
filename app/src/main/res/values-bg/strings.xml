@@ -35,6 +35,7 @@
     <string name="permission_not_granted">Разрешението не бе предоставено!</string>
     <string name="txt_storage_permissions_for_camera">Упс… Не можем да отворим камерата без Ваше разрешение.</string>
     <string name="txt_storage_permissions_for_gallery">Упс… не можем да отворим галерията без Ваше разрешение.</string>
+    <string name="txt_location_permissions_for_map">Упс… не можем да получим местоположението Ви без Ваше разрешение.</string>
     <string name="txt_status_help_needed">Статус: Нужна е помощ</string>
     <string name="txt_status_somebody_on_the_way">Статус: Някой е на път</string>
     <string name="txt_status_solved">Статус: Приключен</string>
@@ -64,6 +65,7 @@
     <string name="txt_new_signal">Нов сигнал</string>
     <string name="text_faqs">Често задавани въпроси</string>
     <string name="text_about">Относно</string>
+    <string name="text_privacy_policy">Политика за поверителност</string>
     <string name="text_feedback">Обратна връзка</string>
     <string name="txt_faqs_view_title">Често задавани въпроси</string>
     <string name="txt_user_changed_status_to">%1$s промени статуса на \'%2$s\'</string>
@@ -71,8 +73,6 @@
     <string name="string_about_title">Относно</string>r
     <string name="string_about_contact">Свържете се с нас</string>
     <string name="string_about_milen">© Милен Маринов 2018</string>
-    <string name="string_support_email">help.a.paw.app@gmail.com</string>
-    <string name="string_mail_chooser_title">help.a.paw.app@gmail.com</string>
     <string name="error_empty_signal_response">Получихме празен отговор! Може би сигналът не същестува вече!?</string>
     <string name="txt_channel_description_help_needed">Показва сигналите за животни в близост до мен, които се нуждаят от спешна помощ</string>
     <string name="txt_channel_description_somebody_on_the_way">Показва сигналите, на които някой вече се е отзовал, но са все още неразрешени</string>
@@ -95,5 +95,24 @@
         Не. Местоположението Ви се използва само при подаване на сигнал. Местоположението Ви няма да бъде записано на сървър и няма да се използва за друго предназначение, освен за да Ви информира за животни близо до Вас, които се нуждаят от помощ .</font>]]>
      </string>
     <string name="error_facebook_not_installed">Фейсбуук не е инсталиран</string>
+
+    <string name="privacy_policy_dialog_title">Правила за поверителност</string>
+    <string name="accept">Приемам</string>
+    <string name="decline">Отхвърлям</string>
+    <string name="txt_success">Успех</string>
+    <string name="txt_error">Грешка</string>
+    <string name="txt_registration_successful">Линк за потвърждение е изпратен на имейла Ви. Моля кликнете на него за да завършите регистрацията си.</string>
+    <string name="content_description_app_logo">Лого на приложението</string>
+    <string name="txt_error_getting_privacy_policy">Грешка при изтеглянето на Политиката за поверителност!</string>
+    <string name="txt_login_successful">Вписването успешно!</string>
+    <string name="text_settings">Настройки</string>
+    <string name="txt_radius">РАДИУС</string>
+    <string name="txt_signal_timeout">ВРЕМЕТРАЕНЕ НА СИГНАЛИТЕ</string>
+    <string name="txt_radius_description">Областта около текущото ви местоположение във всеки един момент, за която искате да бъдете известявани в случай на нови сигнали</string>
+    <string name="txt_timeout_description">Колко да са стари сигналите, за които бивате известявани</string>
+    <string name="radius_output">%d километра</string>
+    <string name="radius_output_single">%d километър</string>
+    <string name="timeout_output">%d дни</string>
+    <string name="timeout_output_single">%d ден</string>
 
 </resources>

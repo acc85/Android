@@ -1,6 +1,7 @@
 package org.helpapaw.helpapaw.sendsignal
 
 import android.content.Context
+import androidx.core.graphics.drawable.RoundedBitmapDrawable
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
@@ -9,23 +10,27 @@ import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.cardview.widget.CardView
-import androidx.core.graphics.drawable.RoundedBitmapDrawable
-import kotlinx.android.synthetic.main.view_send_signal.view.*
+
 import org.helpapaw.helpapaw.R
 
+/**
+ * Created by iliyan on 0/29/16
+ */
 class SendSignalView : CardView {
 
-    private lateinit var imgSignalPhoto: ImageView
-    private lateinit var editSignalDescription: EditText
-    private lateinit var txtSignalSend: TextView
-    private lateinit var progressSendSignal: ProgressBar
+    lateinit var imgSignalPhoto: ImageView
+    lateinit var editSignalDescription: EditText
+    lateinit var txtSignalSend: TextView
+    lateinit var progressSendSignal: ProgressBar
+
+    val signalDescription: String
+        get() = editSignalDescription.text.toString().trim { it <= ' ' }
 
     constructor(context: Context) : super(context) {
         initViews(context)
-        initViews(context)
     }
 
-    constructor(context: Context, attributeSet: AttributeSet?) : super(context, attributeSet) {
+    constructor(context: Context, attrs: AttributeSet) : super(context, attrs) {
         initViews(context)
     }
 
@@ -39,13 +44,13 @@ class SendSignalView : CardView {
         inflater.inflate(R.layout.view_send_signal, this)
     }
 
-
     override fun onFinishInflate() {
         super.onFinishInflate()
-        imgSignalPhoto = img_signal_photo
-        editSignalDescription = edit_signal_description
-        txtSignalSend = txt_signal_send
-        progressSendSignal = progress_send_signal
+
+        imgSignalPhoto = this.findViewById(R.id.img_signal_photo) as ImageView
+        editSignalDescription = this.findViewById(R.id.edit_signal_description) as EditText
+        txtSignalSend = this.findViewById(R.id.txt_signal_send) as TextView
+        progressSendSignal = this.findViewById(R.id.progress_send_signal) as ProgressBar
     }
 
     fun setOnSignalSendClickListener(clickListener: View.OnClickListener) {
@@ -61,14 +66,10 @@ class SendSignalView : CardView {
         imgSignalPhoto.setImageDrawable(bitmap)
     }
 
-    fun getSignalDescription(): String {
-        return editSignalDescription.text.toString().trim { it <= ' ' }
-    }
-
     fun clearData() {
         imgSignalPhoto.scaleType = ImageView.ScaleType.CENTER_INSIDE
         imgSignalPhoto.setImageResource(R.drawable.ic_camera)
-        editSignalDescription.text = null
+        editSignalDescription.setText(null)
         setProgressVisibility(false)
     }
 

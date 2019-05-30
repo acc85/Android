@@ -1,37 +1,34 @@
 package org.helpapaw.helpapaw.authentication
 
 import android.content.Intent
-import android.os.Bundle
 import androidx.databinding.DataBindingUtil
+import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+
 import com.facebook.CallbackManager
-import dagger.android.AndroidInjection
-import dagger.android.support.DaggerAppCompatActivity
+
 import org.helpapaw.helpapaw.R
 import org.helpapaw.helpapaw.authentication.login.LoginFragment
 import org.helpapaw.helpapaw.databinding.ActivityAuthenticationBinding
-import javax.inject.Inject
+import org.koin.android.ext.android.inject
 
-class AuthenticationActivity: DaggerAppCompatActivity(){
+class AuthenticationActivity : AppCompatActivity() {
 
-    internal lateinit var binding: ActivityAuthenticationBinding
-
-    @Inject
-    lateinit var callbackManager: CallbackManager
-
+    lateinit var binding: ActivityAuthenticationBinding
+    val callbackManager: CallbackManager by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        AndroidInjection.inject(this)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_authentication)
-
         if (null == savedInstanceState) {
             initFragment(LoginFragment.newInstance())
         }
     }
 
-    private fun initFragment(loginFragment: Fragment) {
-        val transaction = supportFragmentManager.beginTransaction()
+    private fun initFragment(loginFragment: LoginFragment) {
+        val fragmentManager = supportFragmentManager
+        val transaction = fragmentManager.beginTransaction()
         transaction.add(R.id.grp_content_frame, loginFragment)
         transaction.commit()
     }

@@ -1,28 +1,25 @@
 package org.helpapaw.helpapaw.utils
 
-import android.annotation.TargetApi
 import android.content.Context
 import android.location.Location
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
 import android.util.Log
-import androidx.core.net.ConnectivityManagerCompat
-import org.helpapaw.helpapaw.base.PawApplication
+import kotlinx.coroutines.*
+
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
 import java.net.URL
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 import java.util.regex.Pattern
 
-class Utils() {
-
-    constructor(pawApplication: PawApplication):this(){
-        this.pawApplication = pawApplication
-    }
-
-    lateinit var pawApplication:PawApplication
+/**
+ * Created by iliyan on 7/25/16
+ */
+class Utils(val context:Context) {
 
     //Validation
     fun isEmailValid(email: String): Boolean {
@@ -41,13 +38,15 @@ class Utils() {
 
     //Network
     fun hasNetworkConnection(): Boolean {
-        val connectivity = PawApplication.getContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val info = connectivity.allNetworkInfo
-        if (info != null)
-            for (i in info.indices)
-                if (info[i].state == NetworkInfo.State.CONNECTED) {
-                    return true
-                }
+        val connectivity =context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        if (connectivity != null) {
+            val info = connectivity!!.allNetworkInfo
+            if (info != null)
+                for (i in info!!.indices)
+                    if (info!![i].state == NetworkInfo.State.CONNECTED) {
+                        return true
+                    }
+        }
         return false
     }
 
@@ -74,9 +73,47 @@ class Utils() {
             val targetFormat = SimpleDateFormat(DETAILS_DATE_FORMAT, Locale.getDefault())
             formattedDate = targetFormat.format(date)
         } catch (ex: Exception) {
-            Log.d(Utils::class.java.name, "Failed to parse date.")
+            Log.d(Utils::class.java!!.name, "Failed to parse date.")
         }
 
         return formattedDate
+    }
+
+    companion object {
+
+        @Throws(IOException::class)
+        fun getHtmlByCouroutines(url: String): Deferred<String> {
+            return GlobalScope.async(Dispatchers.IO){
+                val connection = (URL(url)).openConnection()
+                connection.connectTimeout = 5000
+                connection.readTimeout = 5000
+                connection.connect()
+
+                // Read and store the result line by line then return the entire string.
+                val input = connection.getInputStream()
+
+                val html = input.bufferedReader().use { it.readText() }
+                html
+            }
+            // Build and set timeout values for the request.
+
+        }
+
+
+        @Throws(IOException::class)
+        fun getHtml(url: String): String {
+            // Build and set timeout values for the request.
+            val connection = (URL(url)).openConnection()
+            connection.connectTimeout = 5000
+            connection.readTimeout = 5000
+            connection.connect()
+
+            // Read and store the result line by line then return the entire string.
+            val input = connection.getInputStream()
+
+            val html = input.bufferedReader().use { it.readText() }
+
+            return html
+        }
     }
 }

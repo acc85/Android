@@ -1,9 +1,12 @@
 package org.helpapaw.helpapaw.signaldetails
 
-import org.helpapaw.helpapaw.data.models.Comment
-import org.helpapaw.helpapaw.data.models.Signal
+import org.helpapaw.helpapaw.models.Comment
+import org.helpapaw.helpapaw.models.Signal
 
-interface SignalDetailsContract{
+/**
+ * Created by iliyan on 7/25/16
+ */
+interface SignalDetailsContract {
 
     interface View {
 
@@ -17,7 +20,7 @@ interface SignalDetailsContract{
 
         fun showSignalDetails(signal: Signal)
 
-        fun displayComments(comments: List<Comment>?)
+        fun displayComments(comments: List<Comment>)
 
         fun showCommentErrorMessage()
 
@@ -27,7 +30,7 @@ interface SignalDetailsContract{
 
         fun setNoCommentsTextVisibility(visibility: Boolean)
 
-        fun openNumberDialer(phoneNumber: String?)
+        fun openNumberDialer(phoneNumber: String)
 
         fun showNoInternetMessage()
 
@@ -62,5 +65,4 @@ interface SignalDetailsContract{
 
         fun onSignalPhotoClicked()
     }
-
 }

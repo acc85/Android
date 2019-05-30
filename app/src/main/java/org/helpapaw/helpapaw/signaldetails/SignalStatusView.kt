@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.res.Resources
 import android.os.Parcel
 import android.os.Parcelable
+import androidx.appcompat.widget.AppCompatImageView
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.LayoutInflater
@@ -13,13 +14,15 @@ import android.view.animation.Transformation
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.ProgressBar
-import androidx.appcompat.widget.AppCompatImageView
-import kotlinx.android.synthetic.main.view_signal_status.view.*
+
 import org.helpapaw.helpapaw.R
-import java.util.*
 
+import java.util.ArrayList
+
+/**
+ * Created by iliyan on 0/29/16
+ */
 class SignalStatusView : FrameLayout, SignalStatusViewContract {
-
 
     private lateinit var grpStatusContainer: FrameLayout
 
@@ -32,11 +35,13 @@ class SignalStatusView : FrameLayout, SignalStatusViewContract {
     private lateinit var imgOnWaySelected: AppCompatImageView
     private lateinit var imgSolvedSelected: AppCompatImageView
 
-    private var selectedStatus: Int = 0
+    var selectedStatus: Int = 0
+        private set
     private var isExpanded = false
     private var callback: StatusCallback? = null
     private val statusList = ArrayList<LinearLayout>()
     private val selectedImages = ArrayList<AppCompatImageView>()
+
 
     constructor(context: Context) : super(context) {
         initViews(context)
@@ -63,17 +68,17 @@ class SignalStatusView : FrameLayout, SignalStatusViewContract {
     }
 
     private fun initUi() {
-        grpStatusContainer = grp_status_container
+        grpStatusContainer = this.findViewById(R.id.grp_status_container) as FrameLayout
 
-        grpSignalNeedHelp = grp_signal_need_help
-        grpSignalOnWay = grp_signal_on_way
-        grpSignalSolved = grp_signal_solved
+        grpSignalNeedHelp = this.findViewById(R.id.grp_signal_need_help) as LinearLayout
+        grpSignalOnWay = this.findViewById(R.id.grp_signal_on_way) as LinearLayout
+        grpSignalSolved = this.findViewById(R.id.grp_signal_solved) as LinearLayout
 
-        grpProgressBar = grp_progress_bar
+        grpProgressBar = this.findViewById(R.id.grp_progress_bar) as ProgressBar
 
-        imgNeedHelpSelected = img_signal_need_help_selected
-        imgOnWaySelected = grpSignalOnWay.img_signal_on_way_selected
-        imgSolvedSelected = grpSignalSolved.img_signal_solved_selected
+        imgNeedHelpSelected = grpSignalNeedHelp.findViewById(R.id.img_signal_need_help_selected) as AppCompatImageView
+        imgOnWaySelected = grpSignalOnWay.findViewById(R.id.img_signal_on_way_selected) as AppCompatImageView
+        imgSolvedSelected = grpSignalSolved.findViewById(R.id.img_signal_solved_selected) as AppCompatImageView
     }
 
     private fun initData() {
@@ -86,6 +91,7 @@ class SignalStatusView : FrameLayout, SignalStatusViewContract {
         selectedImages.add(imgSolvedSelected)
     }
 
+
     private fun expandStatusView(status: Int) {
         for (i in statusList.indices) {
             statusList[i].isClickable = false
@@ -95,8 +101,8 @@ class SignalStatusView : FrameLayout, SignalStatusViewContract {
                 statusList[i].animate().translationYBy(getPixels(TypedValue.COMPLEX_UNIT_DIP, (i * 80).toFloat()).toFloat()).alpha(1f)
             } else {
                 statusList[i].animate().translationYBy(getPixels(TypedValue.COMPLEX_UNIT_DIP, (i * 80).toFloat()).toFloat()).alpha(1f).withEndAction {
-                    for (index in statusList.indices) {
-                        statusList[index].isClickable = true
+                    for (i in statusList.indices) {
+                        statusList[i].isClickable = true
                     }
                 }
             }
@@ -160,19 +166,15 @@ class SignalStatusView : FrameLayout, SignalStatusViewContract {
         this.callback = callback
     }
 
-    fun getSelectedStatus(): Int {
-        return this.selectedStatus
-    }
-
     fun setStatusClickListeners(statusList: List<LinearLayout>) {
         for (i in statusList.indices) {
             statusList[i].setOnClickListener {
                 if (isExpanded()) {
-                    if (getSelectedStatus() != i) {
+                    if (selectedStatus != i) {
                         if (callback != null) {
                             grpProgressBar.visibility = View.VISIBLE
 
-                            callback?.onRequestStatusChange(i)
+                            callback!!.onRequestStatusChange(i)
                         }
                     }
                 } else {
@@ -212,11 +214,10 @@ class SignalStatusView : FrameLayout, SignalStatusViewContract {
             return
         }
 
-        val savedState = state
-        super.onRestoreInstanceState(savedState.getSuperState())
+        super.onRestoreInstanceState(state.superState)
 
-        this.selectedStatus = savedState.selectedStatus
-        this.isExpanded = savedState.isExpanded
+        this.selectedStatus = state.selectedStatus
+        this.isExpanded = state.isExpanded
 
         restoreState(selectedStatus, isExpanded)
     }
@@ -229,19 +230,17 @@ class SignalStatusView : FrameLayout, SignalStatusViewContract {
         }
     }
 
-    internal class SavedState : BaseSavedState {
-
+    internal class SavedState : View.BaseSavedState {
         var selectedStatus: Int = 0
 
         var isExpanded: Boolean = false
 
-        constructor(parcel: Parcel) : super(parcel) {
-            selectedStatus = parcel.readInt()
-            isExpanded = parcel.readByte().toInt() != 0
+        constructor(superState: Parcelable) : super(superState) {}
+
+        private constructor(`in`: Parcel) : super(`in`) {
+            this.selectedStatus = `in`.readInt()
+            this.isExpanded = `in`.readByte().toInt() != 0
         }
-
-
-        constructor(parcelable: Parcelable?) : super(parcelable)
 
         override fun writeToParcel(out: Parcel, flags: Int) {
             super.writeToParcel(out, flags)
@@ -250,22 +249,20 @@ class SignalStatusView : FrameLayout, SignalStatusViewContract {
         }
 
 
-        companion object {
-            @JvmField
-            val CREATOR: Parcelable.Creator<SavedState> = object : Parcelable.Creator<SavedState> {
-                override fun createFromParcel(`in`: Parcel): SavedState {
-                    return SavedState(`in`)
-                }
+        companion object CREATOR : Parcelable.Creator<SavedState> {
+            override fun createFromParcel(`in`: Parcel): SavedState {
+                return SavedState(`in`)
+            }
 
-                override fun newArray(size: Int): Array<SavedState?> {
-                    return arrayOfNulls(size)
-                }
+            override fun newArray(size: Int): Array<SavedState?> {
+                return arrayOfNulls(size)
             }
         }
     }
+
 }
 
-internal class ResizeAnimation(private val view: View, private val fromHeight: Float, private val toHeight: Float) : Animation() {
+class ResizeAnimation(private val view: View, private val fromHeight: Float, private val toHeight: Float) : Animation() {
 
     init {
         duration = 300
@@ -279,10 +276,7 @@ internal class ResizeAnimation(private val view: View, private val fromHeight: F
     }
 }
 
-interface StatusCallback {
-    fun onRequestStatusChange(status: Int)
-}
-
 interface SignalStatusViewContract {
     fun onStatusChangeRequestFinished(success: Boolean, newStatus: Int)
 }
+

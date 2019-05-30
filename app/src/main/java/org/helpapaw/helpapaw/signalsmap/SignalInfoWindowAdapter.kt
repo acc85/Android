@@ -1,29 +1,38 @@
 package org.helpapaw.helpapaw.signalsmap
 
+import androidx.databinding.DataBindingUtil
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
-import androidx.databinding.DataBindingUtil
+
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.Marker
 import com.squareup.picasso.Callback
 import com.squareup.picasso.Picasso
+
 import org.helpapaw.helpapaw.R
-import org.helpapaw.helpapaw.data.models.Signal
-import org.helpapaw.helpapaw.data.models.backendless.repositories.BackendlessPhotoRepository
+import org.helpapaw.helpapaw.models.Signal
+import org.helpapaw.helpapaw.repository.PhotoRepository
 import org.helpapaw.helpapaw.databinding.InfoWindowSignalBinding
-import org.helpapaw.helpapaw.utils.images.RoundedTransformation
-import javax.inject.Inject
+import org.helpapaw.helpapaw.images.RoundedTransformation
+import java.lang.Exception
 
-class SignalInfoWindowAdapter(private val signalMarkers:Map<String, Signal>, private val inflater:LayoutInflater, private var lastShownMarker: Marker? = null): GoogleMap.InfoWindowAdapter{
+/**
+ * Created by iliyan on 8/2/16
+ */
+class SignalInfoWindowAdapter(
+        private val signalMarkers: Map<String, Signal> = emptyMap(),
+        private val inflater: LayoutInflater,
+        val photoRepository: PhotoRepository
 
-    @Inject
-    constructor(signals: HashMap<String,Signal>, signalsMapFragment: SignalsMapFragment):this(signals,signalsMapFragment.layoutInflater)
+) : GoogleMap.InfoWindowAdapter {
+    private var lastShownMarker: Marker? = null
 
-    val binding: InfoWindowSignalBinding = DataBindingUtil.inflate(inflater, R.layout.info_window_signal, null, false)
+    internal var binding: InfoWindowSignalBinding
 
-    @Inject
-    lateinit var photoRepository: BackendlessPhotoRepository
+    init {
+        this.binding = DataBindingUtil.inflate(inflater, R.layout.info_window_signal, null, false)
+    }
 
     override fun getInfoWindow(marker: Marker): View? {
         return null
@@ -35,7 +44,7 @@ class SignalInfoWindowAdapter(private val signalMarkers:Map<String, Signal>, pri
         if (signal != null) {
             val photoUrl = photoRepository.getPhotoUrl(signal.id)
 
-            if (lastShownMarker == null || lastShownMarker?.id != marker.id) {
+            if (lastShownMarker == null || lastShownMarker!!.id != marker.id) {
                 lastShownMarker = marker
 
                 binding.txtSignalTitle.text = signal.title
@@ -55,17 +64,15 @@ class SignalInfoWindowAdapter(private val signalMarkers:Map<String, Signal>, pri
     }
 
     private inner class MarkerCallback internal constructor(marker: Marker) : Callback {
-
-        override fun onError(e: Exception?) {
-            Log.e(javaClass.simpleName, "Error loading thumbnail!:"+e?.message)
-        }
-
         internal var marker: Marker? = null
 
         init {
             this.marker = marker
         }
 
+        override fun onError(e: Exception?) {
+            Log.e(javaClass.simpleName, "Error loading thumbnail!")
+        }
 
         override fun onSuccess() {
             if (marker != null && marker!!.isInfoWindowShown) {
@@ -75,12 +82,11 @@ class SignalInfoWindowAdapter(private val signalMarkers:Map<String, Signal>, pri
     }
 
     private fun getStatusString(status: Int): String {
-        return when (status) {
-            0 -> inflater.context.getString(R.string.txt_status_help_needed)
-            1 -> inflater.context.getString(R.string.txt_status_somebody_on_the_way)
-            2 -> inflater.context.getString(R.string.txt_status_solved)
-            else -> inflater.context.getString(R.string.txt_status_help_needed)
+        when (status) {
+            0 -> return inflater.context.getString(R.string.txt_status_help_needed)
+            1 -> return inflater.context.getString(R.string.txt_status_somebody_on_the_way)
+            2 -> return inflater.context.getString(R.string.txt_status_solved)
+            else -> return inflater.context.getString(R.string.txt_status_help_needed)
         }
     }
-
 }

@@ -1,61 +1,55 @@
 package org.helpapaw.helpapaw.signaldetails
 
 import org.helpapaw.helpapaw.base.Presenter
-import org.helpapaw.helpapaw.data.models.Comment
-import org.helpapaw.helpapaw.data.models.Signal
-import org.helpapaw.helpapaw.data.models.backendless.repositories.*
-import org.helpapaw.helpapaw.data.user.BackendlessUserManager
-import org.helpapaw.helpapaw.data.user.UserManager
+import org.helpapaw.helpapaw.models.Comment
+import org.helpapaw.helpapaw.models.Signal
+import org.helpapaw.helpapaw.repository.CommentRepository
+import org.helpapaw.helpapaw.repository.PhotoRepository
+import org.helpapaw.helpapaw.repository.SignalRepository
+import org.helpapaw.helpapaw.user.UserManager
 import org.helpapaw.helpapaw.utils.Utils
-import javax.inject.Inject
 
+/**
+ * Created by iliyan on 7/25/16
+ */
+class SignalDetailsPresenter(
+        view: SignalDetailsContract.View,
+        private val signalRepository: SignalRepository,
+        private val commentRepository: CommentRepository,
+        private val photoRepository: PhotoRepository,
+        private val userManager: UserManager,
+        private val utils:Utils
 
-class SignalDetailsPresenter(override var view: SignalDetailsContract.View?) : Presenter<SignalDetailsContract.View>(view), SignalDetailsContract.UserActionsListener {
-
-    @Inject
-    constructor(signalDetailsFragment: SignalDetailsFragment):this(signalDetailsFragment as SignalDetailsContract.View)
+) : Presenter<SignalDetailsContract.View>(view), SignalDetailsContract.UserActionsListener {
 
     private var showProgressBar: Boolean = false
     private var commentList: MutableList<Comment>? = null
-    lateinit var signal: Signal
+    private var signal: Signal? = null
 
     private var statusChanged: Boolean = false
 
-    @Inject
-    lateinit var utils: Utils
+    private val isViewAvailable: Boolean
+        get() = view != null && view!!.isActive()
 
-    @Inject
-    lateinit var commentRepository: CommentRepository
-
-    @Inject
-    lateinit var photoRepository: BackendlessPhotoRepository
-
-    @Inject
-    lateinit var signalRepository: BackendlessSignalRepository
-
-    @Inject
-    lateinit var userManager: BackendlessUserManager
-
-    init{
+    init {
         showProgressBar = true
         statusChanged = false
     }
-
 
     override fun onInitDetailsScreen(signal: Signal?) {
         setProgressIndicator(showProgressBar)
         if (signal != null) {
             this.signal = signal
-            signal.photoUrl = (photoRepository.getPhotoUrl(signal.id))
+            signal.photoUrl = photoRepository.getPhotoUrl(signal.id)
             view?.showSignalDetails(signal)
 
             if (commentList != null) {
                 setProgressIndicator(false)
 
-                if (commentList?.size == 0) {
+                if (commentList!!.size == 0) {
                     view?.setNoCommentsTextVisibility(true)
                 } else {
-                    view?.displayComments(commentList)
+                    view?.displayComments(commentList!!)
                     view?.setNoCommentsTextVisibility(false)
                 }
             } else {
@@ -67,57 +61,58 @@ class SignalDetailsPresenter(override var view: SignalDetailsContract.View?) : P
     override fun loadCommentsForSignal(signalId: String) {
         if (utils.hasNetworkConnection()) {
             commentRepository.getAllCommentsBySignalId(signalId, object : CommentRepository.LoadCommentsCallback {
-                override fun onCommentsLoaded(comments: List<Comment>) {
-                    if (!isViewAvailable()) return
-                    commentList = comments.toMutableList()
+                override fun onCommentsLoaded(comments: MutableList<Comment>) {
+                    if (!isViewAvailable) return
+                    commentList = comments
                     setProgressIndicator(false)
 
-                    if (commentList?.size == 0) {
-                        view!!.setNoCommentsTextVisibility(true)
+                    if (commentList!!.size == 0) {
+                        view?.setNoCommentsTextVisibility(true)
                     } else {
-                        view!!.displayComments(comments)
-                        view!!.setNoCommentsTextVisibility(false)
+                        view?.displayComments(comments)
+                        view?.setNoCommentsTextVisibility(false)
                     }
                 }
 
+
                 override fun onCommentsFailure(message: String) {
-                    if (!isViewAvailable()) return
-                    view!!.showMessage(message)
+                    if (!isViewAvailable) return
+                    view?.showMessage(message)
                 }
             })
         } else {
-            if (isViewAvailable()) {
-                view!!.showNoInternetMessage()
+            if (isViewAvailable) {
+                view?.showNoInternetMessage()
             }
         }
     }
 
     override fun onAddCommentButtonClicked(comment: String?) {
         if (utils.hasNetworkConnection()) {
-            if (comment != null && comment.trim().isNotEmpty()) {
-                view!!.hideKeyboard()
+            if (comment != null && comment.trim { it <= ' ' }.length > 0) {
+                view?.hideKeyboard()
                 setProgressIndicator(true)
-                view!!.scrollToBottom()
+                view?.scrollToBottom()
 
                 userManager.isLoggedIn(object : UserManager.LoginCallback {
                     override fun onLoginSuccess() {
-                        if (!isViewAvailable()) return
-                        view!!.clearSendCommentView()
-                        saveComment(comment, signal.id)
+                        if (!isViewAvailable) return
+                        view?.clearSendCommentView()
+                        saveComment(comment, signal!!.id)
                     }
 
-                    override fun onLoginFailure(message: String) {
-                        if (!isViewAvailable()) return
+                    override fun onLoginFailure(message: String?) {
+                        if (!isViewAvailable) return
                         setProgressIndicator(false)
-                        view!!.openLoginScreen()
+                        view?.openLoginScreen()
                     }
                 })
 
             } else {
-                view!!.showCommentErrorMessage()
+                view?.showCommentErrorMessage()
             }
         } else {
-            view!!.showNoInternetMessage()
+            view?.showNoInternetMessage()
         }
     }
 
@@ -126,79 +121,74 @@ class SignalDetailsPresenter(override var view: SignalDetailsContract.View?) : P
 
             userManager.isLoggedIn(object : UserManager.LoginCallback {
                 override fun onLoginSuccess() {
-                    signalRepository.updateSignalStatus(signal.id, status, object : SignalRepository.UpdateStatusCallback {
+                    signalRepository.updateSignalStatus(signal!!.id, status, object : SignalRepository.UpdateStatusCallback {
                         override fun onStatusUpdated(status: Int) {
-                            if (!isViewAvailable()) return
+                            if (!isViewAvailable) return
                             setSignalStatus(status)
-                            view!!.showStatusUpdatedMessage()
-                            view!!.onStatusChangeRequestFinished(true, status)
+                            view?.showStatusUpdatedMessage()
+                            view?.onStatusChangeRequestFinished(true, status)
                         }
 
                         override fun onStatusFailure(message: String) {
-                            if (!isViewAvailable()) return
-                            view!!.showMessage(message)
-                            view!!.onStatusChangeRequestFinished(false, 0)
+                            if (!isViewAvailable) return
+                            view?.showMessage(message)
+                            view?.onStatusChangeRequestFinished(false, 0)
                         }
                     })
                 }
 
-                override fun onLoginFailure(message: String) {
-                    if (!isViewAvailable()) return
-                    view!!.onStatusChangeRequestFinished(false, 0)
-                    view!!.openLoginScreen()
+                override fun onLoginFailure(message: String?) {
+                    if (!isViewAvailable) return
+                    view?.onStatusChangeRequestFinished(false, 0)
+                    view?.openLoginScreen()
                 }
             })
         } else {
-            view!!.showNoInternetMessage()
+            view?.showNoInternetMessage()
         }
     }
 
     override fun onCallButtonClicked() {
-        val phoneNumber = signal.authorPhone
+        val phoneNumber = signal!!.authorPhone
         view?.openNumberDialer(phoneNumber)
-    }
-
-    override fun onSignalDetailsClosing() {
-        view?.closeScreenWithResult(signal)
-    }
-
-    override fun onBottomReached(isBottomReached: Boolean) {
-        view?.setShadowVisibility(!isBottomReached)
     }
 
     override fun onSignalPhotoClicked() {
         view?.openSignalPhotoScreen()
     }
 
-    private fun saveComment(comment: String, signalId: String) {
-        commentRepository?.saveComment(comment, signalId, object : CommentRepository.SaveCommentCallback {
+    override fun onSignalDetailsClosing() {
+        view?.closeScreenWithResult(signal!!)
+    }
+
+    override fun onBottomReached(isBottomReached: Boolean) {
+        view?.setShadowVisibility(!isBottomReached)
+    }
+
+    private fun saveComment(comment: String?, signalId: String) {
+        commentRepository.saveComment(comment!!, signalId, object : CommentRepository.SaveCommentCallback {
             override fun onCommentSaved(comment: Comment) {
-                if (!isViewAvailable()) return
+                if (!isViewAvailable) return
                 setProgressIndicator(false)
-                commentList?.add(comment)
-                view!!.setNoCommentsTextVisibility(false)
-                view!!.displayComments(commentList)
+                commentList!!.add(comment)
+                view?.setNoCommentsTextVisibility(false)
+                view?.displayComments(commentList!!)
             }
 
             override fun onCommentFailure(message: String) {
-                if (!isViewAvailable()) return
-                view!!.showMessage(message)
+                if (!isViewAvailable) return
+                view?.showMessage(message)
             }
         })
     }
 
-
     private fun setSignalStatus(status: Int) {
-        this.signal.status = status
+        this.signal!!.status = status
         statusChanged = true
     }
 
-    private fun isViewAvailable(): Boolean {
-        return view != null && view!!.isActive()
-    }
-
     private fun setProgressIndicator(active: Boolean) {
-        view!!.setProgressIndicator(active)
+        view?.setProgressIndicator(active)
         this.showProgressBar = active
     }
 }

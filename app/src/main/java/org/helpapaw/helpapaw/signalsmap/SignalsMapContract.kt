@@ -1,18 +1,22 @@
 package org.helpapaw.helpapaw.signalsmap
 
-import org.helpapaw.helpapaw.data.models.Signal
+import android.net.Uri
+import org.helpapaw.helpapaw.models.Signal
 
+/**
+ * Created by iliyan on 7/28/16
+ */
 interface SignalsMapContract {
 
     interface View {
 
-        fun isActive(): Boolean?
+        fun isActive(): Boolean
 
         fun showMessage(message: String)
 
-        fun displaySignals(signals: List<Signal>, showPopup: Boolean)
+        fun displaySignals(signals: List<Signal>?, showPopup: Boolean)
 
-        fun displaySignals(signals: MutableList<Signal>, showPopup: Boolean, focusedSignalId: String)
+        fun displaySignals(signals: List<Signal>, showPopup: Boolean, focusedSignalId: String)
 
         fun updateMapCameraPosition(latitude: Double, longitude: Double, zoom: Float?)
 
@@ -26,9 +30,11 @@ interface SignalsMapContract {
 
         fun openGallery()
 
+        fun saveImageFromURI(photoUri: Uri?)
+
         fun openLoginScreen()
 
-        fun setThumbnailImage(photoUri: String?)
+        fun setThumbnailImage(photoUri: String)
 
         fun clearSignalViewData()
 
@@ -55,7 +61,7 @@ interface SignalsMapContract {
 
         fun onInitSignalsMap()
 
-        fun onLocationChanged(latitude: Double, longitude: Double)
+        fun onLocationChanged(latitude: Double, longitude: Double, radius: Int, timeout: Int)
 
         fun onAddSignalClicked(visibility: Boolean)
 
@@ -75,13 +81,13 @@ interface SignalsMapContract {
 
         fun onStoragePermissionForGalleryGranted()
 
-        fun onSignalInfoWindowClicked(signal: Signal)
+        fun onSignalInfoWindowClicked(signal: Signal?)
 
         fun onBackButtonPressed()
 
         fun onRefreshButtonClicked()
 
-        fun onSignalStatusUpdated(signal: Signal?)
+        fun onSignalStatusUpdated(signal: Signal)
 
         fun onAuthenticationAction()
 

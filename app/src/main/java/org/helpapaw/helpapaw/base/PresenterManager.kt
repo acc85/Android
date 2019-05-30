@@ -2,18 +2,26 @@ package org.helpapaw.helpapaw.base
 
 import java.util.HashMap
 
-class PresenterManager(val presenterMap: MutableMap<String, Presenter<*>> = HashMap()) {
+/**
+ * Created by iliyan on 6/22/16
+ */
+class PresenterManager private constructor() {
 
+    private val presenterMap: MutableMap<String, Presenter<*>>
 
-    fun putPresenter(id: String, presenter: Presenter<*>) {
+    init {
+        this.presenterMap = HashMap()
+    }
+
+    fun <T> putPresenter(id: String, presenter: Presenter<T>) {
         presenterMap[id] = presenter
     }
 
-    fun <T : Presenter<*>> getPresenter(id: String): T? {
+    fun <T : Presenter<T>> getPresenter(id: String): T {
         return presenterMap[id] as T
     }
 
-    fun remove(id: String) {
+    fun remove(id: String?) {
         presenterMap.remove(id)
     }
 
@@ -22,6 +30,14 @@ class PresenterManager(val presenterMap: MutableMap<String, Presenter<*>> = Hash
     }
 
     companion object {
-        val instance: PresenterManager = PresenterManager()
+        private var instance: PresenterManager? = null
+
+        @Synchronized
+        fun getInstance(): PresenterManager {
+            if (instance == null) {
+                instance = PresenterManager()
+            }
+            return instance!!
+        }
     }
 }
