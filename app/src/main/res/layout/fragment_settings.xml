@@ -2,6 +2,12 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <data>
+        <variable
+            name="viewModel"
+            type="org.helpapaw.helpapaw.viewmodels.SettingsViewModel" />
+
+    </data>
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -12,6 +18,9 @@
             android:layout_width="match_parent"
             android:layout_height="?actionBarSize"
             android:fitsSystemWindows="true"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
             android:theme="@style/AppTheme.AppBarOverlay">
 
             <androidx.appcompat.widget.Toolbar
@@ -26,6 +35,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
                     android:textColor="@android:color/white"
+                    android:text="@{viewModel.toolbarTitle}"
                     android:textSize="20sp" />
             </androidx.appcompat.widget.Toolbar>
         </com.google.android.material.appbar.AppBarLayout>
@@ -70,7 +80,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_centerHorizontal="true"
-                        android:text="0 kilometers"
+                        android:text="@{viewModel.radiusText}"
                         android:textSize="18sp" />
                 </RelativeLayout>
 
@@ -78,6 +88,8 @@
                     android:id="@+id/radius_value"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    app:radiusProgressListener="@{viewModel}"
+                    android:progress="@{viewModel.radiusProgress}"
                     android:max="100"/>
             </LinearLayout>
 
@@ -128,7 +140,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_centerHorizontal="true"
-                        android:text="0 days"
+                        android:text="@{viewModel.timeoutText}"
                         android:textSize="18sp" />
                 </RelativeLayout>
 
@@ -136,6 +148,8 @@
                     android:id="@+id/timeout_value"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    app:timeOutProgressListener="@{viewModel}"
+                    android:progress="@{viewModel.timeoutProgress}"
                     android:max="30" />
             </LinearLayout>
 

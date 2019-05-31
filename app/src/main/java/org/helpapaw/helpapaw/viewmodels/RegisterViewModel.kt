@@ -92,6 +92,14 @@ class RegisterViewModel(
         groupVisibility = if (show) View.GONE else View.VISIBLE
     }
 
+    fun resetValues(){
+        emailAddress = ""
+        password = ""
+        confirmPassword = ""
+        name = ""
+        phone = ""
+    }
+
     fun login(view: View) {
         registerLiveData.value = RegisterResult.CloseScreen()
     }
@@ -121,6 +129,7 @@ class RegisterViewModel(
         if (utils.hasNetworkConnection()) {
             userManager.register(emailAddress, password, name, phone, object : UserManager.RegistrationCallback {
                 override fun onRegistrationSuccess() {
+                    resetValues()
                     showProgress(false)
                     registerLiveData.value = RegisterResult.Success()
                 }

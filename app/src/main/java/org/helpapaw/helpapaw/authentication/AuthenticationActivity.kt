@@ -17,21 +17,25 @@ class AuthenticationActivity : AppCompatActivity() {
 
     lateinit var binding: ActivityAuthenticationBinding
     val callbackManager: CallbackManager by inject()
+    val loginFragment: LoginFragment by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_authentication)
         if (null == savedInstanceState) {
-            initFragment(LoginFragment.newInstance())
+            val fragmentManager = supportFragmentManager
+            val transaction = fragmentManager.beginTransaction()
+            transaction.add(R.id.grp_content_frame, loginFragment)
+            transaction.commit()
         }
     }
 
-    private fun initFragment(loginFragment: LoginFragment) {
-        val fragmentManager = supportFragmentManager
-        val transaction = fragmentManager.beginTransaction()
-        transaction.add(R.id.grp_content_frame, loginFragment)
-        transaction.commit()
-    }
+//    private fun initFragment(loginFragment: LoginFragment) {
+//        val fragmentManager = supportFragmentManager
+//        val transaction = fragmentManager.beginTransaction()
+//        transaction.add(R.id.grp_content_frame, loginFragment)
+//        transaction.commit()
+//    }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)

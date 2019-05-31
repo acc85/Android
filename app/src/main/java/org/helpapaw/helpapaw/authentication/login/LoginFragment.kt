@@ -21,9 +21,11 @@ import org.helpapaw.helpapaw.viewmodels.LoginViewModel
 import org.koin.android.ext.android.inject
 
 
-class LoginFragment : BaseFragment(), LoginContract.View {
+class LoginFragment : BaseFragment() {
 
     val viewModel: LoginViewModel by inject()
+
+    val registerFragment:RegisterFragment by inject()
 
     lateinit var binding: FragmentLoginBinding
 
@@ -33,7 +35,6 @@ class LoginFragment : BaseFragment(), LoginContract.View {
         binding.viewModel = viewModel
 
         binding.btnShowRegister.setOnClickListener{
-            val registerFragment = RegisterFragment.newInstance()
             openFragment(registerFragment, true, true, true)
         }
 
@@ -68,10 +69,4 @@ class LoginFragment : BaseFragment(), LoginContract.View {
         super.hideKeyboard()
     }
 
-    companion object {
-
-        fun newInstance(): LoginFragment {
-            return LoginFragment()
-        }
-    }
 }// Required empty public constructor

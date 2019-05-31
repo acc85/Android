@@ -17,10 +17,11 @@ import org.helpapaw.helpapaw.viewmodels.RegisterViewModel
 import org.koin.android.ext.android.inject
 
 
-class RegisterFragment : BaseFragment(){
+class RegisterFragment : BaseFragment() {
 
     private lateinit var binding: FragmentRegisterBinding
     private val registerViewModel: RegisterViewModel by inject()
+    private val whyPhoneDialogFragment: WhyPhoneDialogFragment by inject()
 
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -31,6 +32,7 @@ class RegisterFragment : BaseFragment(){
         registerViewModel.registerLiveData.observe(this, Observer { registerResult ->
             when (registerResult) {
                 is RegisterResult.ShowPrivacyDialog -> {
+                    registerViewModel.registerLiveData.value = null
                     val builder = AlertDialog.Builder(activity)
                     builder.setMessage(Html.fromHtml(registerResult.messaage))
                             .setPositiveButton(R.string.accept) { _, _ -> registerViewModel.attemptToRegister() }
@@ -39,24 +41,26 @@ class RegisterFragment : BaseFragment(){
                             .show()
                 }
                 is RegisterResult.Success -> {
+                    registerViewModel.registerLiveData.value = null
                     AlertDialogFragment.showAlert(getString(R.string.txt_success), getString(R.string.txt_registration_successful), false, this.fragmentManager)
                     activity?.supportFragmentManager?.popBackStack()
                 }
                 is RegisterResult.ShowWhyDialog -> {
-                    WhyPhoneDialogFragment.newInstance().also { whyPhoneDialogFragment ->
-                        whyPhoneDialogFragment.show(activity!!.fragmentManager, whyPhoneDialogFragment.tag)
+                    registerViewModel.registerLiveData.value = null
+                    activity?.let{act->
+                        whyPhoneDialogFragment.show(act.supportFragmentManager, whyPhoneDialogFragment.tag)
                     }
                 }
                 is RegisterResult.ShowNoInternetMessage -> {
+                    registerViewModel.registerLiveData.value = null
+
                     showErrorMessage(getString(R.string.txt_no_internet))
                 }
                 is RegisterResult.CloseScreen -> {
+                    registerViewModel.registerLiveData.value = null
                     activity?.supportFragmentManager?.popBackStack()
                 }
-            }
-
-
-        })
+            } })
 
         return binding.root
     }
@@ -68,6 +72,7 @@ class RegisterFragment : BaseFragment(){
     override fun hideKeyboard() {
         super.hideKeyboard()
     }
+
     companion object {
 
         fun newInstance(): RegisterFragment {

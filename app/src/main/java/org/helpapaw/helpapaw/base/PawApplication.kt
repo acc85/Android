@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import android.os.StrictMode
 import com.backendless.Backendless
+import org.helpapaw.helpapaw.di.repositoryModule
 import org.helpapaw.helpapaw.user.UserManager
 import org.helpapaw.helpapaw.koin.testModule
 import org.helpapaw.helpapaw.repository.PushNotificationsRepository
@@ -43,7 +44,7 @@ class PawApplication:Application(){
 
     override fun onCreate() {
         super.onCreate()
-        var list = listOf(testModule)
+        var list = listOf(testModule,repositoryModule)
         startKoin{
             androidContext(this@PawApplication)
             modules(list)
