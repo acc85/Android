@@ -14,14 +14,14 @@ import org.helpapaw.helpapaw.settings.SettingsFragment
 import org.helpapaw.helpapaw.viewmodels.SettingsViewModel
 import org.helpapaw.helpapaw.signaldetails.SignalDetailsContract
 import org.helpapaw.helpapaw.signaldetails.SignalDetailsPresenter
-import org.helpapaw.helpapaw.signalphoto.SignalPhotoContract
-import org.helpapaw.helpapaw.signalphoto.SignalPhotoPresenter
+import org.helpapaw.helpapaw.signalphoto.SignalPhotoFragment
 import org.helpapaw.helpapaw.signalsmap.SignalInfoWindowAdapter
 import org.helpapaw.helpapaw.signalsmap.SignalsMapContract
 import org.helpapaw.helpapaw.signalsmap.SignalsMapPresenter
 import org.helpapaw.helpapaw.utils.Utils
 import org.helpapaw.helpapaw.viewmodels.LoginViewModel
 import org.helpapaw.helpapaw.viewmodels.RegisterViewModel
+import org.helpapaw.helpapaw.viewmodels.SignalPhotoViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
@@ -39,6 +39,8 @@ var testModule = module {
                 androidContext().getString(R.string.timeout_output), get())
     }
 
+    viewModel{ SignalPhotoViewModel(get(),get())}
+
 
     single {CallbackManager.Factory.create()}
 
@@ -50,14 +52,12 @@ var testModule = module {
 
     factory { (view: SignalsMapContract.View) -> SignalsMapPresenter(view, get(), get(), get(), get()) }
     factory { (view: SignalDetailsContract.View) -> SignalDetailsPresenter(view, get(), get(), get(), get(), get()) }
-    factory { (view: SignalPhotoContract.View) -> SignalPhotoPresenter(view, get()) }
     factory { (signalMarkers: Map<String, Signal>, inflater: LayoutInflater) -> SignalInfoWindowAdapter(signalMarkers, inflater, get()) }
-
-    factory<SignalPhotoContract.UserActionsListener>{ (view: SignalPhotoContract.View) -> SignalPhotoPresenter(view, get())}
 
 
     factory{ LoginFragment()}
     factory{ RegisterFragment()}
     factory{ WhyPhoneDialogFragment() }
     factory{ SettingsFragment() }
+    factory{ SignalPhotoFragment() }
 }

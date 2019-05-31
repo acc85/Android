@@ -11,6 +11,7 @@ import androidx.fragment.app.Fragment
 import org.helpapaw.helpapaw.R
 import org.helpapaw.helpapaw.models.Signal
 import org.helpapaw.helpapaw.databinding.ActivitySignalPhotoBinding
+import org.koin.android.ext.android.inject
 
 /**
  * Created by milen on 05/03/18.
@@ -19,6 +20,7 @@ import org.helpapaw.helpapaw.databinding.ActivitySignalPhotoBinding
 
 class SignalPhotoActivity : AppCompatActivity() {
     internal lateinit var binding: ActivitySignalPhotoBinding
+    val signalPhotoFragment:SignalPhotoFragment by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,8 +31,10 @@ class SignalPhotoActivity : AppCompatActivity() {
 
             if (intent != null) {
                 val signal = intent.getParcelableExtra<Signal>(SIGNAL_KEY)
-                val fragment = SignalPhotoFragment.newInstance(signal)
-                initFragment(fragment)
+                val bundle = Bundle()
+                bundle.putParcelable(SIGNAL_DETAILS, signal)
+                signalPhotoFragment.arguments = bundle
+                initFragment(signalPhotoFragment)
             }
         }
         hideSystemBar()

@@ -8,13 +8,10 @@ import android.view.ViewGroup
 
 import org.helpapaw.helpapaw.R
 import org.helpapaw.helpapaw.base.BaseFragment
-import org.helpapaw.helpapaw.base.Presenter
-import org.helpapaw.helpapaw.base.PresenterManager
 import org.helpapaw.helpapaw.models.Signal
 import org.helpapaw.helpapaw.databinding.FragmentSignalPhotoBinding
-import org.helpapaw.helpapaw.images.ImageLoader
+import org.helpapaw.helpapaw.viewmodels.SignalPhotoViewModel
 import org.koin.android.ext.android.inject
-import org.koin.core.parameter.parametersOf
 
 
 /**
@@ -22,58 +19,30 @@ import org.koin.core.parameter.parametersOf
  * Fragment to display a signal's photo
  */
 
-class SignalPhotoFragment : BaseFragment(), SignalPhotoContract.View {
+const val SIGNAL_DETAILS = "signalDetails"
 
-    val signalPhotoPresenter: SignalPhotoPresenter by inject{ parametersOf(this) }
-    val actionsListener: SignalPhotoContract.UserActionsListener by inject{ parametersOf(this) }
-    val imageLoader: ImageLoader by inject()
+class SignalPhotoFragment : BaseFragment(){
+    val viewModel:SignalPhotoViewModel by inject()
 
     internal lateinit var binding: FragmentSignalPhotoBinding
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         // Inflate the layout for this fragment
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_signal_photo, container, false)
-
-//        if (savedInstanceState == null || PresenterManager.getInstance().getPresenter<Presenter>(getScreenId()) == null) {
-//            signalPhotoPresenter = SignalPhotoPresenter(this)
-//        } else {
-//            signalPhotoPresenter = PresenterManager.getInstance().getPresenter(getScreenId())
-//            signalPhotoPresenter.view = this
-//        }
+        binding.viewModel = viewModel
 
         var mSignal: Signal? = null
-        if (arguments != null) {
+        arguments?.let{
             mSignal = arguments!!.getParcelable(SIGNAL_DETAILS)
         }
 
-        actionsListener.onInitPhotoScreen(mSignal!!)
-
+        viewModel.setPhotoUri(mSignal)
         return binding.root
     }
 
-//    override fun getPresenter(): Presenter<*> {
-//        return signalPhotoPresenter
-//    }
-
-    override fun showSignalPhoto(signal: Signal) {
-
-        imageLoader.load(context, signal.photoUrl, binding.imgSignalPhoto, R.drawable.no_image)
-    }
 
     fun onBackPressed() {
-        activity!!.finish()
+        activity?.finish()
     }
 
-    companion object {
-
-        private val SIGNAL_DETAILS = "signalDetails"
-
-        fun newInstance(signal: Signal): SignalPhotoFragment {
-            val fragment = SignalPhotoFragment()
-            val bundle = Bundle()
-            bundle.putParcelable(SIGNAL_DETAILS, signal)
-            fragment.arguments = bundle
-            return fragment
-        }
-    }
 }// Required empty public constructor
