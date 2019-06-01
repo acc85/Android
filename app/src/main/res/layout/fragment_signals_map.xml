@@ -4,6 +4,10 @@
 
     <data>
         <variable
+            name="view"
+            type="android.view.View" />
+
+        <variable
             name="viewModel"
             type="org.helpapaw.helpapaw.viewmodels.SignalsMapViewModel" />
     </data>
@@ -31,6 +35,7 @@
                 android:visibility="invisible"
                 app:cardCornerRadius="8dp"
                 app:cardElevation="4dp"
+                app:addSignalViewVisibility="@{viewModel.addSignalVisible}"
                 app:layout_constraintBottom_toTopOf="@+id/map_signals"/>
 
             <androidx.appcompat.widget.AppCompatImageView
@@ -45,14 +50,14 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:srcCompat="@drawable/ic_gps_fixed_black_24dp"
-                app:addSignalVisibility="@{viewModel.addSignalVisible}"/>
+                app:addSignalPinVisibility="@{viewModel.addSignalVisible}"/>
         </androidx.constraintlayout.widget.ConstraintLayout>
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/fab_add_signal"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="8dp"
-            android:src="@drawable/fab_add"
+            android:src="@{viewModel.addSignalVisible == view.INVISIBLE ? @drawable/fab_add : @drawable/ic_close}"
             app:layout_anchor="@id/grp_signals_map_container"
             app:layout_anchorGravity="bottom|right|end" />
     </androidx.coordinatorlayout.widget.CoordinatorLayout>

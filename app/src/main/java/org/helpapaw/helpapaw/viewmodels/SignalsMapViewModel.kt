@@ -64,10 +64,26 @@ class SignalsMapViewModel():BaseViewModel() {
             notifyChange(BR.addSignalVisible)
         }
 
+
+//    @Bindable
+//    var addSignalPinVisible:Int = View.INVISIBLE
+//        set(value){
+//            field = value
+//            notifyChange(BR.addSignalPinVisible)
+//        }
+//
+//    @Bindable
+//    var addSignalViewVisible:Int = View.INVISIBLE
+//        set(value){
+//            field = value
+//            notifyChange(BR.addSignalViewVisible)
+//        }
+
+
 }
 
-@BindingAdapter("addSignalVisibility")
-fun setAddSignalVisibility(view:AppCompatImageView, visibility:Int){
+@BindingAdapter("addSignalPinVisibility")
+fun setAddSignalPinVisibility(view:AppCompatImageView, visibility:Int){
     if(visibility == View.VISIBLE){
         view.visibility = View.VISIBLE
         view.alpha = 0.0f
@@ -81,6 +97,25 @@ fun setAddSignalVisibility(view:AppCompatImageView, visibility:Int){
                 .setInterpolator(AccelerateDecelerateInterpolator())
                 .setDuration(200)
                 .alpha(0.0f)
+                .withEndAction { view.visibility = View.INVISIBLE }
+    }
+}
+
+@BindingAdapter("addSignalViewVisibility")
+fun setAddSignalViewVisibility(view:SendSignalView, visibility:Int){
+    if(visibility == View.VISIBLE){
+        view.visibility = View.VISIBLE
+        view.alpha = 0.0f
+        view.animate()
+                .setInterpolator(AccelerateDecelerateInterpolator())
+                .setDuration(300)
+                .translationY(view.height.toFloat())
+                .alpha(1.0f)
+    }else{
+        view.animate()
+                .setInterpolator(AccelerateDecelerateInterpolator())
+                .setDuration(300)
+                .translationY(-view.height.toFloat())
                 .withEndAction { view.visibility = View.INVISIBLE }
     }
 }

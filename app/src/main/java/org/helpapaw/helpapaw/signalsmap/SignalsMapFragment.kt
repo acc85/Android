@@ -567,38 +567,10 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
         mVisibilityAddSignal = visibility
 
         if (visibility) {
-            showAddSignalView()
             viewModel.addSignalVisible = View.VISIBLE
-
-            binding.fabAddSignal.setImageResource(R.drawable.ic_close)
         } else {
-            hideAddSignalView()
             viewModel.addSignalVisible = View.INVISIBLE
-
-            binding.fabAddSignal.setImageResource(R.drawable.fab_add)
         }
-    }
-
-    private fun showAddSignalView() {
-        binding.viewSendSignal.visibility = View.VISIBLE
-        binding.viewSendSignal.alpha = 0.0f
-
-        val height = (activity as SignalsMapActivity).supportActionBar?.height?.toFloat() ?: 0f
-        binding.viewSendSignal
-                .animate()
-                .setInterpolator(AccelerateDecelerateInterpolator())
-                .setDuration(300)
-                .translationY(binding.viewSendSignal.height.toFloat())
-                .alpha(1.0f)
-    }
-
-    private fun hideAddSignalView() {
-        binding.viewSendSignal
-                .animate()
-                .setInterpolator(AccelerateDecelerateInterpolator())
-                .setDuration(300)
-                .translationY(-(binding.viewSendSignal.height).toFloat())
-                .withEndAction { binding.viewSendSignal.visibility = View.INVISIBLE }
     }
 
     override fun hideKeyboard() {
