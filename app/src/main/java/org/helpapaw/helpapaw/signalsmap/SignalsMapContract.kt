@@ -16,8 +16,6 @@ interface SignalsMapContract {
 
         fun displaySignals(signals: List<Signal>?, showPopup: Boolean)
 
-        fun displaySignals(signals: List<Signal>, showPopup: Boolean, focusedSignalId: String)
-
         fun updateMapCameraPosition(latitude: Double, longitude: Double, zoom: Float?)
 
         fun hideKeyboard()

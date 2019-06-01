@@ -45,12 +45,16 @@ enum class ERROR_TYPE{
     NO_INTERNET
 }
 
+enum class MESSAGE_TYPE{
+    ADD_SIGNAL
+}
 
 sealed class SignalsMapResult {
     data class AnimateAddSignalView(val visibility: Boolean) : SignalsMapResult()
     data class SetThumbnailImage(val uri: String?) : SignalsMapResult()
     data class SetProgressVisibility(val visibility: Boolean) : SignalsMapResult()
     data class ShowMessage(val message: String) : SignalsMapResult()
+    data class ShowMessageOfType(val type:MESSAGE_TYPE):SignalsMapResult()
     data class ShowError(val errorType:ERROR_TYPE):SignalsMapResult()
     data class OpenSignalDetailsScreen(val signals:Signal?):SignalsMapResult()
     data class StartResolutionForResult(val requestL:Int):SignalsMapResult()

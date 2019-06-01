@@ -20,6 +20,7 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.view.MenuItemCompat
 import androidx.databinding.DataBindingUtil
+import androidx.lifecycle.Observer
 import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.location.*
 import com.google.android.gms.location.places.Places
@@ -47,6 +48,9 @@ import org.helpapaw.helpapaw.signaldetails.SignalDetailsActivity
 import org.helpapaw.helpapaw.user.UserManager
 import org.helpapaw.helpapaw.utils.StatusUtils
 import org.helpapaw.helpapaw.utils.Utils
+import org.helpapaw.helpapaw.viewmodels.ERROR_TYPE
+import org.helpapaw.helpapaw.viewmodels.MESSAGE_TYPE
+import org.helpapaw.helpapaw.viewmodels.SignalsMapResult
 import org.helpapaw.helpapaw.viewmodels.SignalsMapViewModel
 import org.koin.android.ext.android.inject
 import org.koin.core.parameter.parametersOf
@@ -69,8 +73,12 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
         parametersOf(mSignalMarkers, activity!!.layoutInflater)
     }
 
-    private var googleApiClient: GoogleApiClient? = null
     private val locationRequest: LocationRequest by inject()
+
+    val settingsRepository: ISettingsRepository by inject()
+
+
+    private var googleApiClient: GoogleApiClient? = null
     private var signalsGoogleMap: GoogleMap? = null
     private val mDisplayedSignals = ArrayList<Signal>()
     private val mSignalMarkers = HashMap<String, Signal>()
@@ -85,7 +93,6 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
 
     private var mFocusedSignalId: String? = null
 
-    val settingsRepository: ISettingsRepository by inject()
 
     val locationListener:LocationListener = LocationListener { location -> handleNewLocation(location) }
 
@@ -149,22 +156,6 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
 
     lateinit var imageFileName: String
 
-    /* Google Maps */
-
-    private val mapReadyCallback: OnMapReadyCallback
-        get() = OnMapReadyCallback { googleMap ->
-            signalsGoogleMap = googleMap
-            //actionsListener
-            if (signalsList != null && signalsList!!.size > 0) {
-                displaySignals(signalsList!!, false)
-            }
-            ///
-            signalsGoogleMap!!.setPadding(0, PADDING_TOP, 0, PADDING_BOTTOM)
-            signalsGoogleMap!!.setOnMapClickListener(mapClickListener)
-            signalsGoogleMap!!.setOnMarkerClickListener(mapMarkerClickListener)
-            signalsGoogleMap!!.setOnCameraIdleListener(mapCameraIdleListener)
-        }
-
     private val mapClickListener = GoogleMap.OnMapClickListener {
         // Clicking on the map closes any open info window
         mCurrentlyShownInfoWindowSignal = null
@@ -217,7 +208,8 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
                                         override fun onPhotoSaved() {
                                             if (!isViewAvailable) return
                                             signalsList!!.add(signal)
-                                            displaySignals(signalsList!!, true, signal.id)
+                                            mFocusedSignalId = signal.id
+                                            displaySignals(signalsList!!, true)
                                             viewModel.addSignalVisible = View.INVISIBLE
                                             viewModel.photoUri = ""
 
@@ -235,7 +227,9 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
                                 } else {
                                     signalsList!!.add(signal)
 
-                                    displaySignals(signalsList!!, true, signal.id)
+                                    mFocusedSignalId = signal.id
+                                    displaySignals(signalsList!!, true)
+
                                     viewModel.addSignalVisible = View.INVISIBLE
                                     viewModel.photoUri = ""
                                 }
@@ -288,8 +282,41 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
         binding.viewModel = viewModel
         binding.mapSignals.onCreate(mapViewSavedInstanceState)
 
+        viewModel.liveData.observe(this, Observer{signalMapResult->
+            when(signalMapResult){
+                is SignalsMapResult.ShowMessageOfType->{
+                    when(signalMapResult.type){
+                        MESSAGE_TYPE.ADD_SIGNAL ->{
+                            showAddedSignalMessage()
+                        }
+                    }
+                }
+
+                is SignalsMapResult.ShowError->{
+                    when(signalMapResult.errorType){
+                        ERROR_TYPE.NO_INTERNET->{
+                            showNoInternetMessage()
+                        }
+                    }
+                }
+
+            }
+
+        })
+
         if (binding.mapSignals != null) {
-            binding.mapSignals.getMapAsync(mapReadyCallback)
+            binding.mapSignals.getMapAsync{ googleMap ->
+                signalsGoogleMap = googleMap
+                //actionsListener
+                if (signalsList != null && signalsList!!.size > 0) {
+                    displaySignals(signalsList!!, false)
+                }
+                ///
+                signalsGoogleMap!!.setPadding(0, PADDING_TOP, 0, PADDING_BOTTOM)
+                signalsGoogleMap!!.setOnMapClickListener(mapClickListener)
+                signalsGoogleMap!!.setOnMarkerClickListener(mapMarkerClickListener)
+                signalsGoogleMap!!.setOnCameraIdleListener(mapCameraIdleListener)
+            }
         }
 
 //        if (savedInstanceState == null) {
@@ -386,11 +413,6 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
         signalsGoogleMap!!.animateCamera(cameraUpdate)
     }
 
-    override fun displaySignals(signals: List<Signal>, showPopup: Boolean, focusedSignalId: String) {
-        mFocusedSignalId = focusedSignalId
-        displaySignals(signals, showPopup)
-    }
-
     override fun displaySignals(signals: List<Signal>?, showPopup: Boolean) {
         var showPopup = showPopup
 
@@ -447,8 +469,6 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
                     }
                 }
             }
-
-//            val infoWindowAdapter = SignalInfoWindowAdapter(mSignalMarkers, activity!!.layoutInflater)
 
             signalsGoogleMap!!.setInfoWindowAdapter(infoWindowAdapter)
 
