@@ -2,6 +2,7 @@ package org.helpapaw.helpapaw.koin
 
 import android.view.LayoutInflater
 import com.facebook.CallbackManager
+import com.google.android.gms.location.LocationRequest
 import org.helpapaw.helpapaw.R
 import org.helpapaw.helpapaw.authentication.login.LoginFragment
 import org.helpapaw.helpapaw.authentication.register.RegisterFragment
@@ -40,6 +41,12 @@ var testModule = module {
 
     viewModel{ SignalsMapViewModel() }
 
+
+    single { LocationRequest.create()
+            .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+            .setInterval((30 * 1000).toLong())
+            .fastestInterval = (10 * 1000).toLong() // 10 seconds, in milliseconds
+        }
 
     single {CallbackManager.Factory.create()}
 

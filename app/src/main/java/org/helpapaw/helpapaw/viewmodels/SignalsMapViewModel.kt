@@ -53,10 +53,8 @@ sealed class SignalsMapResult {
 
 }
 
-class SignalsMapViewModel(
-):BaseViewModel() {
+class SignalsMapViewModel():BaseViewModel() {
 
     var liveData: MutableLiveData<SignalsMapResult> = MutableLiveData()
-
 
 }

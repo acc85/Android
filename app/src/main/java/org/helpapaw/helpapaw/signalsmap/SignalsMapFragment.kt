@@ -66,8 +66,12 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
     val signalRepository:SignalRepository by inject()
     val photoRepository:PhotoRepository by inject()
 
+    val infoWindowAdapter: SignalInfoWindowAdapter by inject {
+        parametersOf(mSignalMarkers, activity!!.layoutInflater)
+    }
+
     private var googleApiClient: GoogleApiClient? = null
-    private var locationRequest: LocationRequest? = null
+    private val locationRequest: LocationRequest by inject()
     private var signalsGoogleMap: GoogleMap? = null
     private val mDisplayedSignals = ArrayList<Signal>()
     private val mSignalMarkers = HashMap<String, Signal>()
@@ -124,22 +128,23 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
                 // Location settings are not satisfied. However, we have no way
                 // to fix the settings so we won't show the dialog.
             }
-            val cont = context
             //Protection for the case when activity is destroyed (e.g. when rotating)
             //Probably there is a better fix in the actual workflow but we need a quick fix as users experience a lot of crashes
-            if (cont == null) {
+            context?.let{ctx->
+                if (ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    showPermissionDialog(activity, Manifest.permission.ACCESS_FINE_LOCATION, LOCATION_PERMISSIONS_REQUEST)
+                } else {
+                    setAddSignalViewVisibility(mVisibilityAddSignal)
+                    if (signalsGoogleMap != null) {
+                        signalsGoogleMap!!.isMyLocationEnabled = true
+                    }
+                    setLastLocation()
+                }
+            }?:run{
                 Log.e(TAG, "Context is null, exiting...")
                 return
             }
-            if (ContextCompat.checkSelfPermission(cont, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                showPermissionDialog(activity, Manifest.permission.ACCESS_FINE_LOCATION, LOCATION_PERMISSIONS_REQUEST)
-            } else {
-                setAddSignalViewVisibility(mVisibilityAddSignal)
-                if (signalsGoogleMap != null) {
-                    signalsGoogleMap!!.isMyLocationEnabled = true
-                }
-                setLastLocation()
-            }
+
         }
     }
 
@@ -225,6 +230,8 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
                                             displaySignals(signalsList!!, true, signal.id)
                                             setSendSignalViewVisibility(false)
                                             clearSignalViewData()
+
+                                            //UI
                                             showAddedSignalMessage()
                                         }
 
@@ -284,11 +291,6 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
                 .addApi(Places.GEO_DATA_API)
                 .build()
 
-        // Create the LocationRequest object
-        locationRequest = LocationRequest.create()
-                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-                .setInterval((30 * 1000).toLong())        // 30 seconds, in milliseconds
-                .setFastestInterval((10 * 1000).toLong()) // 10 seconds, in milliseconds
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -320,7 +322,12 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
 
         binding.fabAddSignal.setOnClickListener(fabAddSignalClickListener)
         binding.viewSendSignal.setOnSignalSendClickListener(onSignalSendClickListener)
-        binding.viewSendSignal.setOnSignalPhotoClickListener(onSignalPhotoClickListener)
+        binding.viewSendSignal.setOnSignalPhotoClickListener(object:View.OnClickListener{
+            override fun onClick(v: View?) {
+                hideKeyboard()
+                showSendPhotoBottomSheet()
+            }
+        })
 
         return binding.root
     }
@@ -462,9 +469,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
             }
 
 //            val infoWindowAdapter = SignalInfoWindowAdapter(mSignalMarkers, activity!!.layoutInflater)
-            val infoWindowAdapter: SignalInfoWindowAdapter by inject {
-                parametersOf(mSignalMarkers, activity!!.layoutInflater)
-            }
+
             signalsGoogleMap!!.setInfoWindowAdapter(infoWindowAdapter)
 
             //actionsListener
