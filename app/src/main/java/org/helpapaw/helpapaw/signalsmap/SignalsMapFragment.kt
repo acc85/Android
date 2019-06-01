@@ -5,7 +5,6 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
-import androidx.databinding.DataBindingUtil
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.PorterDuff
@@ -14,14 +13,15 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
-import androidx.core.content.ContextCompat
-import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
-import androidx.core.view.MenuItemCompat
 import android.util.Log
 import android.view.*
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.ProgressBar
 import android.widget.Toast
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
+import androidx.core.view.MenuItemCompat
+import androidx.databinding.DataBindingUtil
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.location.*
@@ -38,15 +38,15 @@ import com.google.android.material.snackbar.Snackbar
 import org.helpapaw.helpapaw.R
 import org.helpapaw.helpapaw.authentication.AuthenticationActivity
 import org.helpapaw.helpapaw.base.BaseFragment
+import org.helpapaw.helpapaw.databinding.FragmentSignalsMapBinding
+import org.helpapaw.helpapaw.images.ImageUtils
 import org.helpapaw.helpapaw.models.Signal
 import org.helpapaw.helpapaw.repository.ISettingsRepository
-import org.helpapaw.helpapaw.user.UserManager
-import org.helpapaw.helpapaw.databinding.FragmentSignalsMapBinding
+import org.helpapaw.helpapaw.repository.PushNotificationsRepository
 import org.helpapaw.helpapaw.reusable.AlertDialogFragment
 import org.helpapaw.helpapaw.sendsignal.SendPhotoBottomSheet
 import org.helpapaw.helpapaw.signaldetails.SignalDetailsActivity
-import org.helpapaw.helpapaw.images.ImageUtils
-import org.helpapaw.helpapaw.repository.PushNotificationsRepository
+import org.helpapaw.helpapaw.user.UserManager
 import org.helpapaw.helpapaw.utils.StatusUtils
 import org.koin.android.ext.android.inject
 import org.koin.core.parameter.parametersOf
@@ -54,10 +54,11 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
-class SignalsMapFragment : BaseFragment(), SignalsMapContract.View, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
+class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
 
-    val userManager:UserManager by inject()
-    val pushNotificationsRepository:PushNotificationsRepository by inject()
+    val userManager: UserManager by inject()
+    val pushNotificationsRepository: PushNotificationsRepository by inject()
+    val imageUtils:ImageUtils by inject()
 
     private var googleApiClient: GoogleApiClient? = null
     private var locationRequest: LocationRequest? = null
@@ -80,7 +81,67 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View, GoogleApiCli
 
     val settingsRepository: ISettingsRepository by inject()
 
-    val signalsMapPresenter by inject<SignalsMapPresenter>{ parametersOf(this)}
+    val signalsMapPresenter by inject<SignalsMapPresenter> { parametersOf(this) }
+
+    val locationListener:LocationListener = getLocationChangeListener()
+
+    val connectionCallback:GoogleApiClient.ConnectionCallbacks = object : GoogleApiClient.ConnectionCallbacks {
+        override fun onConnectionSuspended(i: Int) {
+            Log.i(TAG, "Connection suspended")
+            googleApiClient!!.connect()
+        }
+
+        override fun onConnected(bundle: Bundle?) {
+            val builder = LocationSettingsRequest.Builder().addLocationRequest(LocationRequest())
+
+            val result = LocationServices.SettingsApi.checkLocationSettings(googleApiClient, builder.build())
+
+            result.setResultCallback { locationSettingsResult ->
+                val status = locationSettingsResult.status
+                val states = locationSettingsResult.locationSettingsStates
+                when (status.statusCode) {
+                    LocationSettingsStatusCodes.SUCCESS -> {
+                    }
+                    LocationSettingsStatusCodes.RESOLUTION_REQUIRED ->
+                        // Location settings are not satisfied, but this can be fixed
+                        // by showing the user a dialog.
+                        try {
+                            // Show the dialog by calling startResolutionForResult(),
+                            // and check the result in onActivityResult().
+                            status.startResolutionForResult(activity, REQUEST_CHECK_SETTINGS)
+                        } catch (e: Exception) {
+                            // Ignore the error.
+                        }
+
+                    LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE -> {
+                    }
+                }// All location settings are satisfied. The client can
+                // initialize location requests here.
+                // Location settings are not satisfied. However, we have no way
+                // to fix the settings so we won't show the dialog.
+            }
+            val cont = context
+            //Protection for the case when activity is destroyed (e.g. when rotating)
+            //Probably there is a better fix in the actual workflow but we need a quick fix as users experience a lot of crashes
+            if (cont == null) {
+                Log.e(TAG, "Context is null, exiting...")
+                return
+            }
+            if (ContextCompat.checkSelfPermission(cont, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                showPermissionDialog(activity, Manifest.permission.ACCESS_FINE_LOCATION, LOCATION_PERMISSIONS_REQUEST)
+            } else {
+                setAddSignalViewVisibility(mVisibilityAddSignal)
+                if (signalsGoogleMap != null) {
+                    signalsGoogleMap!!.isMyLocationEnabled = true
+                }
+                setLastLocation()
+            }
+        }
+    }
+
+    val connectionFailedListener = GoogleApiClient.OnConnectionFailedListener {
+        connectionResult -> Log.i(TAG, "Connection failed with error code: " + connectionResult.errorCode)
+    }
 
     lateinit var imageFileName: String
 
@@ -206,7 +267,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View, GoogleApiCli
         binding.mapSignals.onStop()
 
         if (googleApiClient!!.isConnected) {
-            LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this)
+            LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, locationListener)
             googleApiClient!!.disconnect()
         }
     }
@@ -272,7 +333,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View, GoogleApiCli
         var signalToFocus: Signal? = null
         var markerToReShow: Marker? = null
 
-        signals?.let{
+        signals?.let {
             // Add new signals to the currently displayed ones
             for (newSignal in signals) {
                 var alreadyPresent: Signal? = null
@@ -322,7 +383,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View, GoogleApiCli
             }
 
 //            val infoWindowAdapter = SignalInfoWindowAdapter(mSignalMarkers, activity!!.layoutInflater)
-            val infoWindowAdapter : SignalInfoWindowAdapter by inject{
+            val infoWindowAdapter: SignalInfoWindowAdapter by inject {
                 parametersOf(mSignalMarkers, activity!!.layoutInflater)
             }
             signalsGoogleMap!!.setInfoWindowAdapter(infoWindowAdapter)
@@ -338,14 +399,14 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View, GoogleApiCli
 
     /* Location API */
 
-    override fun onLocationChanged(location: Location) {
-        handleNewLocation(location)
+    fun getLocationChangeListener():LocationListener{
+        return LocationListener { location -> handleNewLocation(location) }
     }
 
     private fun initLocationApi() {
         googleApiClient = GoogleApiClient.Builder(context!!)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
+                .addConnectionCallbacks(connectionCallback)
+                .addOnConnectionFailedListener(connectionFailedListener)
                 .addApi(LocationServices.API)
                 .addApi(Places.GEO_DATA_API)
                 .build()
@@ -357,59 +418,13 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View, GoogleApiCli
                 .setFastestInterval((10 * 1000).toLong()) // 10 seconds, in milliseconds
     }
 
-    override fun onConnected(bundle: Bundle?) {
-        val builder = LocationSettingsRequest.Builder().addLocationRequest(LocationRequest())
-
-        val result = LocationServices.SettingsApi.checkLocationSettings(googleApiClient, builder.build())
-
-        result.setResultCallback { locationSettingsResult ->
-            val status = locationSettingsResult.status
-            val states = locationSettingsResult.locationSettingsStates
-            when (status.statusCode) {
-                LocationSettingsStatusCodes.SUCCESS -> {
-                }
-                LocationSettingsStatusCodes.RESOLUTION_REQUIRED ->
-                    // Location settings are not satisfied, but this can be fixed
-                    // by showing the user a dialog.
-                    try {
-                        // Show the dialog by calling startResolutionForResult(),
-                        // and check the result in onActivityResult().
-                        status.startResolutionForResult(activity, REQUEST_CHECK_SETTINGS)
-                    } catch (e: Exception) {
-                        // Ignore the error.
-                    }
-
-                LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE -> {
-                }
-            }// All location settings are satisfied. The client can
-            // initialize location requests here.
-            // Location settings are not satisfied. However, we have no way
-            // to fix the settings so we won't show the dialog.
-        }
-        val cont = context
-        //Protection for the case when activity is destroyed (e.g. when rotating)
-        //Probably there is a better fix in the actual workflow but we need a quick fix as users experience a lot of crashes
-        if (cont == null) {
-            Log.e(TAG, "Context is null, exiting...")
-            return
-        }
-        if (ContextCompat.checkSelfPermission(cont, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            showPermissionDialog(activity, Manifest.permission.ACCESS_FINE_LOCATION, LOCATION_PERMISSIONS_REQUEST)
-        } else {
-            setAddSignalViewVisibility(mVisibilityAddSignal)
-            if (signalsGoogleMap != null) {
-                signalsGoogleMap!!.isMyLocationEnabled = true
-            }
-            setLastLocation()
-        }
-    }
 
     @SuppressLint("MissingPermission")
     private fun setLastLocation() {
         if (!mVisibilityAddSignal) {
             val location = LocationServices.FusedLocationApi.getLastLocation(googleApiClient)
             location?.let { handleNewLocation(it) }
-                    ?: LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, locationRequest, this)
+                    ?: LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, locationRequest, locationListener)
         }
     }
 
@@ -426,14 +441,6 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View, GoogleApiCli
         pushNotificationsRepository.saveNewDeviceLocation(location)
     }
 
-    override fun onConnectionSuspended(i: Int) {
-        Log.i(TAG, "Connection suspended")
-        googleApiClient!!.connect()
-    }
-
-    override fun onConnectionFailed(connectionResult: ConnectionResult) {
-        Log.i(TAG, "Connection failed with error code: " + connectionResult.errorCode)
-    }
 
     private fun calculateZoomToMeters(): Int {
         val visibleRegion = signalsGoogleMap!!.projection.visibleRegion
@@ -498,7 +505,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View, GoogleApiCli
         binding.viewSendSignal.visibility = View.VISIBLE
         binding.viewSendSignal.alpha = 0.0f
 
-        val height = (activity as SignalsMapActivity).supportActionBar?.height?.toFloat()?:0f
+        val height = (activity as SignalsMapActivity).supportActionBar?.height?.toFloat() ?: 0f
         binding.viewSendSignal
                 .animate()
                 .setInterpolator(AccelerateDecelerateInterpolator())
@@ -544,7 +551,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View, GoogleApiCli
 
     override fun showSendPhotoBottomSheet() {
         val sendPhotoBottomSheet = SendPhotoBottomSheet()
-        sendPhotoBottomSheet.setListener(object:SendPhotoBottomSheet.PhotoTypeSelectListener{
+        sendPhotoBottomSheet.setListener(object : SendPhotoBottomSheet.PhotoTypeSelectListener {
             override fun onPhotoTypeSelected(photoType: Long) {
                 if (photoType == SendPhotoBottomSheet.PhotoType.CAMERA) {
                     actionsListener!!.onCameraOptionSelected()
@@ -564,7 +571,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View, GoogleApiCli
             if (intent.resolveActivity(context!!.packageManager) != null) {
                 val timeStamp = SimpleDateFormat(DATE_TIME_FORMAT, Locale.getDefault()).format(Date())
                 imageFileName = PHOTO_PREFIX + timeStamp + PHOTO_EXTENSION
-                intent.putExtra(MediaStore.EXTRA_OUTPUT, ImageUtils.getInstance().getPhotoFileUri(context, imageFileName))
+                intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUtils.getPhotoFileUri(context, imageFileName))
                 startActivityForResult(intent, REQUEST_CAMERA)
             }
         }
@@ -591,7 +598,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View, GoogleApiCli
             val fileDesc = parcelFileDesc!!.fileDescriptor
             val photo = BitmapFactory.decodeFileDescriptor(fileDesc)
             path = MediaStore.Images.Media.insertImage(context!!.contentResolver, photo, "temp", null)
-            val photoFile = ImageUtils.getInstance().getFromMediaUri(context, context!!.contentResolver, Uri.parse(path))
+            val photoFile = imageUtils.getFromMediaUri(context, context!!.contentResolver, Uri.parse(path))
 
             if (photoFile != null) {
                 actionsListener!!.onSignalPhotoSelected(Uri.fromFile(photoFile).path)
@@ -618,7 +625,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View, GoogleApiCli
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_CAMERA) {
             if (resultCode == Activity.RESULT_OK) {
-                val takenPhotoUri = ImageUtils.getInstance().getPhotoFileUri(context, imageFileName)
+                val takenPhotoUri = imageUtils.getPhotoFileUri(context, imageFileName)
                 actionsListener!!.onSignalPhotoSelected(takenPhotoUri!!.path)
             }
         }
@@ -629,7 +636,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View, GoogleApiCli
                 saveImageFromURI(data.data)
             } else {
                 // DRY!!
-                val photoFile = ImageUtils.getInstance().getFromMediaUri(context, context!!.contentResolver, data.data)
+                val photoFile = imageUtils.getFromMediaUri(context, context!!.contentResolver, data.data)
                 if (photoFile != null) {
                     actionsListener!!.onSignalPhotoSelected(Uri.fromFile(photoFile).path)
                 }
@@ -649,7 +656,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View, GoogleApiCli
 
     override fun setThumbnailImage(photoUri: String) {
         val res = resources
-        val drawable = RoundedBitmapDrawableFactory.create(res, ImageUtils.getInstance().getRotatedBitmap(File(photoUri)))
+        val drawable = RoundedBitmapDrawableFactory.create(res, imageUtils.getRotatedBitmap(File(photoUri)))
         drawable.cornerRadius = 10f
         binding.viewSendSignal.setSignalPhoto(drawable)
     }

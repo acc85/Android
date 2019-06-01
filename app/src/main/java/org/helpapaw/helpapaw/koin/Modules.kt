@@ -9,6 +9,7 @@ import org.helpapaw.helpapaw.authentication.register.WhyPhoneDialogFragment
 import org.helpapaw.helpapaw.user.BackendlessUserManager
 import org.helpapaw.helpapaw.user.UserManager
 import org.helpapaw.helpapaw.db.SignalsDatabase
+import org.helpapaw.helpapaw.images.ImageUtils
 import org.helpapaw.helpapaw.models.Signal
 import org.helpapaw.helpapaw.settings.SettingsFragment
 import org.helpapaw.helpapaw.viewmodels.SettingsViewModel
@@ -49,6 +50,8 @@ var testModule = module {
     single<UserManager> { BackendlessUserManager() }
 
     single { Utils(androidContext()) }
+    single { ImageUtils() }
+
 
     factory { (view: SignalsMapContract.View) -> SignalsMapPresenter(view, get(), get(), get(), get()) }
     factory { (view: SignalDetailsContract.View) -> SignalDetailsPresenter(view, get(), get(), get(), get(), get()) }

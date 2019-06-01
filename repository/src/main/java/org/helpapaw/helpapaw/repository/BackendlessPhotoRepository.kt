@@ -12,10 +12,13 @@ import java.io.File
 /**
  * Created by iliyan on 8/1/16
  */
-class BackendlessPhotoRepository : PhotoRepository {
+class BackendlessPhotoRepository(
+
+        val imageUtils:ImageUtils
+) : PhotoRepository {
 
     override fun savePhoto(photoUri: String?, photoName: String, callback: PhotoRepository.SavePhotoCallback) {
-        val photo = ImageUtils.getInstance().getRotatedBitmap(File(photoUri))
+        val photo = imageUtils.getRotatedBitmap(File(photoUri))
         Backendless.Files.Android.upload(photo,
                 Bitmap.CompressFormat.JPEG, PHOTO_QUALITY, photoName + PHOTO_EXTENSION,
                 PHOTOS_DIRECTORY, true, object : AsyncCallback<BackendlessFile> {

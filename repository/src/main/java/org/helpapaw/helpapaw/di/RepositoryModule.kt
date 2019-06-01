@@ -10,7 +10,7 @@ import org.koin.dsl.module
 var repositoryModule = module {
 
     single<CommentRepository> { BackendlessCommentRepository() }
-    single<PhotoRepository> { BackendlessPhotoRepository() }
+    single<PhotoRepository> { BackendlessPhotoRepository(get()) }
     single<SignalRepository> { BackendlessSignalRepository(get(), get(),get()) }
     single<ImageLoader> { PicassoImageLoader() }
     single<ISettingsRepository> { SettingsRepository(androidContext().getSharedPreferences("HelpAPawSettings", Context.MODE_PRIVATE)) }
