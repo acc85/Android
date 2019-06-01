@@ -20,7 +20,7 @@ interface SignalsMapContract {
 
         fun updateMapCameraPosition(latitude: Double, longitude: Double, zoom: Float?)
 
-        fun setAddSignalViewVisibility(visibility: Boolean)
+//        fun setAddSignalViewVisibility(visibility: Int)
 
         fun hideKeyboard()
 

@@ -84,12 +84,10 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
     private var mCurrentLong: Double = 0.toDouble()
     private var mZoom: Float = 0.toFloat()
 
-//    private var actionsListener: SignalsMapContract.UserActionsListener? = null
-
     lateinit var binding: FragmentSignalsMapBinding
     private var optionsMenu: Menu? = null
 
-    private var mVisibilityAddSignal = false
+    private var mVisibilityAddSignal = View.INVISIBLE
     private var mFocusedSignalId: String? = null
 
     val settingsRepository: ISettingsRepository by inject()
@@ -137,7 +135,6 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
                 if (ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                     showPermissionDialog(activity, Manifest.permission.ACCESS_FINE_LOCATION, LOCATION_PERMISSIONS_REQUEST)
                 } else {
-                    setAddSignalViewVisibility(mVisibilityAddSignal)
                     if (signalsGoogleMap != null) {
                         signalsGoogleMap!!.isMyLocationEnabled = true
                     }
@@ -163,7 +160,6 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
         get() = OnMapReadyCallback { googleMap ->
             signalsGoogleMap = googleMap
             //actionsListener
-            setAddSignalViewVisibility(sendSignalViewVisibility)
             if (!isEmpty(photoUri)) {
                 setThumbnailImage(photoUri!!)
             }
@@ -201,9 +197,8 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
 
     val fabAddSignalClickListener: View.OnClickListener
         get() = View.OnClickListener {
-            val visibility = binding.viewSendSignal.visibility == View.VISIBLE
             //actionsListener
-            setSendSignalViewVisibility(!visibility)
+            setSendSignalViewVisibility(if(viewModel.addSignalVisible == View.VISIBLE){ View.INVISIBLE}else{ View.VISIBLE })
         }
 
 
@@ -231,7 +226,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
                                             if (!isViewAvailable) return
                                             signalsList!!.add(signal)
                                             displaySignals(signalsList!!, true, signal.id)
-                                            setSendSignalViewVisibility(false)
+                                            setSendSignalViewVisibility(View.INVISIBLE)
                                             clearSignalViewData()
 
                                             //UI
@@ -249,7 +244,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
                                     signalsList!!.add(signal)
 
                                     displaySignals(signalsList!!, true, signal.id)
-                                    setSendSignalViewVisibility(false)
+                                    setSendSignalViewVisibility(View.INVISIBLE)
                                     clearSignalViewData()
                                 }
                             }
@@ -309,7 +304,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
         binding.mapSignals.onCreate(mapViewSavedInstanceState)
 
 
-        mVisibilityAddSignal = savedInstanceState?.getBoolean(VIEW_ADD_SIGNAL) ?: false
+        mVisibilityAddSignal = savedInstanceState?.getInt(VIEW_ADD_SIGNAL) ?: View.INVISIBLE
 
         //        setAddSignalViewVisibility(mVisibilityAddSignal);
         if (binding.mapSignals != null) {
@@ -374,7 +369,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
         val mapViewSaveState = Bundle(outState)
         binding.mapSignals.onSaveInstanceState(mapViewSaveState)
         outState.putBundle(MAP_VIEW_STATE, mapViewSaveState)
-        outState.putBoolean(VIEW_ADD_SIGNAL, mVisibilityAddSignal)
+        outState.putInt(VIEW_ADD_SIGNAL, mVisibilityAddSignal)
         super.onSaveInstanceState(outState)
     }
 
@@ -498,7 +493,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
 
     @SuppressLint("MissingPermission")
     private fun setLastLocation() {
-        if (!mVisibilityAddSignal) {
+        if (viewModel.addSignalVisible == View.INVISIBLE) {
             val location = LocationServices.FusedLocationApi.getLastLocation(googleApiClient)
             location?.let { handleNewLocation(it) }
                     ?: LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, locationRequest, locationListener)
@@ -562,16 +557,11 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
         Snackbar.make(binding.fabAddSignal, message, Snackbar.LENGTH_LONG).show()
     }
 
-    override fun setAddSignalViewVisibility(visibility: Boolean) {
-
-        mVisibilityAddSignal = visibility
-
-        if (visibility) {
-            viewModel.addSignalVisible = View.VISIBLE
-        } else {
-            viewModel.addSignalVisible = View.INVISIBLE
-        }
-    }
+//    override fun setAddSignalViewVisibility(visibility: Int) {
+//
+//        mVisibilityAddSignal = visibility
+//        viewModel.addSignalVisible = visibility
+//    }
 
     override fun hideKeyboard() {
         super.hideKeyboard()
@@ -796,8 +786,8 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
 
     fun onBackPressed() {
         //actionsListener
-        if (sendSignalViewVisibility) {
-            setSendSignalViewVisibility(false)
+        if (viewModel.addSignalVisible == View.VISIBLE) {
+            setSendSignalViewVisibility(View.INVISIBLE)
         } else {
             closeSignalsMapScreen()
         }
@@ -815,14 +805,14 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
     private var currentMapLongitude: Double = 0.toDouble()
 
     private var photoUri: String? = null
-    private var sendSignalViewVisibility: Boolean = false
+//    private var sendSignalViewVisibility: Int = View.INVISIBLE
     private var signalsList: MutableList<Signal>? = null
 
     private val isViewAvailable: Boolean
         get() = view != null && isActive()
 
     init {
-        sendSignalViewVisibility = false
+        viewModel.addSignalVisible = View.INVISIBLE
         signalsList = ArrayList()
     }
 
@@ -876,9 +866,8 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
         photoUri = null
     }
 
-    private fun setSendSignalViewVisibility(visibility: Boolean) {
-        sendSignalViewVisibility = visibility
-        setAddSignalViewVisibility(visibility)
+    private fun setSendSignalViewVisibility(visibility: Int) {
+        viewModel.addSignalVisible = visibility
     }
 
     private fun isEmpty(value: String?): Boolean {
