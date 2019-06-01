@@ -457,7 +457,15 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
             signalsGoogleMap!!.setInfoWindowAdapter(infoWindowAdapter)
 
             //actionsListener
-            signalsGoogleMap!!.setOnInfoWindowClickListener { marker -> openSignalDetailsScreen(mSignalMarkers[marker.id]!!) }
+            signalsGoogleMap!!.setOnInfoWindowClickListener { marker ->
+                val intent = Intent(context, SignalDetailsActivity::class.java)
+                intent.putExtra(SignalDetailsActivity.SIGNAL_KEY, mSignalMarkers[marker.id]!!)
+                startActivityForResult(intent, REQUEST_SIGNAL_DETAILS)
+
+                settingsRepository!!.setLastShownLatitude(mCurrentLat)
+                settingsRepository!!.setLastShownLongitude(mCurrentLong)
+                settingsRepository!!.setLastShownZoom(mZoom)
+            }
 
             if (showPopup && markerToFocus != null) {
                 markerToFocus.showInfoWindow()
@@ -752,16 +760,6 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
 
     override fun setSignalViewProgressVisibility(visibility: Boolean) {
         binding.viewSendSignal.setProgressVisibility(visibility)
-    }
-
-    override fun openSignalDetailsScreen(signal: Signal) {
-        val intent = Intent(context, SignalDetailsActivity::class.java)
-        intent.putExtra(SignalDetailsActivity.SIGNAL_KEY, signal)
-        startActivityForResult(intent, REQUEST_SIGNAL_DETAILS)
-
-        settingsRepository!!.setLastShownLatitude(mCurrentLat)
-        settingsRepository!!.setLastShownLongitude(mCurrentLong)
-        settingsRepository!!.setLastShownZoom(mZoom)
     }
 
     override fun closeSignalsMapScreen() {

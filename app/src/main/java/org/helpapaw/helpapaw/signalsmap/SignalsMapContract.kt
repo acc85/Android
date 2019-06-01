@@ -40,8 +40,6 @@ interface SignalsMapContract {
 
         fun setSignalViewProgressVisibility(visibility: Boolean)
 
-        fun openSignalDetailsScreen(signal: Signal)
-
         fun closeSignalsMapScreen()
 
         fun showDescriptionErrorMessage()
