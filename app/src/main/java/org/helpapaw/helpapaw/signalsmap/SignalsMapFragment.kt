@@ -87,7 +87,6 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
     lateinit var binding: FragmentSignalsMapBinding
     private var optionsMenu: Menu? = null
 
-    private var mVisibilityAddSignal = View.INVISIBLE
     private var mFocusedSignalId: String? = null
 
     val settingsRepository: ISettingsRepository by inject()
@@ -266,13 +265,6 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
             })
         }
 
-    val onSignalPhotoClickListener: View.OnClickListener
-        //actionsListener
-        get() = View.OnClickListener {
-            hideKeyboard()
-            showSendPhotoBottomSheet()
-        }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         retainInstance = true
@@ -303,10 +295,6 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
         binding.viewModel = viewModel
         binding.mapSignals.onCreate(mapViewSavedInstanceState)
 
-
-        mVisibilityAddSignal = savedInstanceState?.getInt(VIEW_ADD_SIGNAL) ?: View.INVISIBLE
-
-        //        setAddSignalViewVisibility(mVisibilityAddSignal);
         if (binding.mapSignals != null) {
             binding.mapSignals.getMapAsync(mapReadyCallback)
         }
@@ -369,7 +357,6 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
         val mapViewSaveState = Bundle(outState)
         binding.mapSignals.onSaveInstanceState(mapViewSaveState)
         outState.putBundle(MAP_VIEW_STATE, mapViewSaveState)
-        outState.putInt(VIEW_ADD_SIGNAL, mVisibilityAddSignal)
         super.onSaveInstanceState(outState)
     }
 
