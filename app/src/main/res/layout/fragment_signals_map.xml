@@ -2,6 +2,12 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <data>
+        <variable
+            name="viewModel"
+            type="org.helpapaw.helpapaw.viewmodels.SignalsMapViewModel" />
+    </data>
+
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:id="@+id/grp_signals_map_coordinator"
         android:layout_width="match_parent"
@@ -38,7 +44,8 @@
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:srcCompat="@drawable/ic_gps_fixed_black_24dp" />
+                app:srcCompat="@drawable/ic_gps_fixed_black_24dp"
+                app:addSignalVisibility="@{viewModel.addSignalVisible}"/>
         </androidx.constraintlayout.widget.ConstraintLayout>
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/fab_add_signal"

@@ -57,4 +57,30 @@ class SignalsMapViewModel():BaseViewModel() {
 
     var liveData: MutableLiveData<SignalsMapResult> = MutableLiveData()
 
+    @Bindable
+    var addSignalVisible:Int = View.INVISIBLE
+        set(value){
+            field = value
+            notifyChange(BR.addSignalVisible)
+        }
+
+}
+
+@BindingAdapter("addSignalVisibility")
+fun setAddSignalVisibility(view:AppCompatImageView, visibility:Int){
+    if(visibility == View.VISIBLE){
+        view.visibility = View.VISIBLE
+        view.alpha = 0.0f
+        view.animate()
+                .setInterpolator(AccelerateDecelerateInterpolator())
+                .setDuration(200)
+                .translationY(0f)
+                .alpha(1.0f)
+    }else{
+        view.animate()
+                .setInterpolator(AccelerateDecelerateInterpolator())
+                .setDuration(200)
+                .alpha(0.0f)
+                .withEndAction { view.visibility = View.INVISIBLE }
+    }
 }

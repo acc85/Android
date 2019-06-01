@@ -50,6 +50,7 @@ import org.helpapaw.helpapaw.signaldetails.SignalDetailsActivity
 import org.helpapaw.helpapaw.user.UserManager
 import org.helpapaw.helpapaw.utils.StatusUtils
 import org.helpapaw.helpapaw.utils.Utils
+import org.helpapaw.helpapaw.viewmodels.SignalsMapViewModel
 import org.koin.android.ext.android.inject
 import org.koin.core.parameter.parametersOf
 import java.io.File
@@ -65,6 +66,8 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
     val utils: Utils by inject()
     val signalRepository:SignalRepository by inject()
     val photoRepository:PhotoRepository by inject()
+
+    val viewModel:SignalsMapViewModel by inject()
 
     val infoWindowAdapter: SignalInfoWindowAdapter by inject {
         parametersOf(mSignalMarkers, activity!!.layoutInflater)
@@ -301,6 +304,8 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
         // Inflate the layout for this fragment
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_signals_map, container, false)
         val mapViewSavedInstanceState = savedInstanceState?.getBundle(MAP_VIEW_STATE)
+
+        binding.viewModel = viewModel
         binding.mapSignals.onCreate(mapViewSavedInstanceState)
 
 
@@ -563,12 +568,12 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
 
         if (visibility) {
             showAddSignalView()
-            showAddSignalPin()
+            viewModel.addSignalVisible = View.VISIBLE
 
             binding.fabAddSignal.setImageResource(R.drawable.ic_close)
         } else {
             hideAddSignalView()
-            hideAddSignalPin()
+            viewModel.addSignalVisible = View.INVISIBLE
 
             binding.fabAddSignal.setImageResource(R.drawable.fab_add)
         }
@@ -583,7 +588,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
                 .animate()
                 .setInterpolator(AccelerateDecelerateInterpolator())
                 .setDuration(300)
-                .translationY(binding.viewSendSignal.height + height)
+                .translationY(binding.viewSendSignal.height.toFloat())
                 .alpha(1.0f)
     }
 
@@ -592,30 +597,8 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
                 .animate()
                 .setInterpolator(AccelerateDecelerateInterpolator())
                 .setDuration(300)
-                .translationY(-(binding.viewSendSignal.height * 1.2f))
+                .translationY(-(binding.viewSendSignal.height).toFloat())
                 .withEndAction { binding.viewSendSignal.visibility = View.INVISIBLE }
-    }
-
-    private fun showAddSignalPin() {
-        binding.addSignalPin.visibility = View.VISIBLE
-        binding.addSignalPin.alpha = 0.0f
-
-        binding.addSignalPin
-                .animate()
-                .setInterpolator(AccelerateDecelerateInterpolator())
-                .setDuration(200)
-                .translationY(0f)
-                .alpha(1.0f)
-    }
-
-    private fun hideAddSignalPin() {
-
-        binding.addSignalPin
-                .animate()
-                .setInterpolator(AccelerateDecelerateInterpolator())
-                .setDuration(200)
-                .alpha(0.0f)
-                .withEndAction { binding.addSignalPin.visibility = View.INVISIBLE }
     }
 
     override fun hideKeyboard() {
