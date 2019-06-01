@@ -15,11 +15,9 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
 import android.view.*
-import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.core.content.ContextCompat
-import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
 import androidx.core.view.MenuItemCompat
 import androidx.databinding.DataBindingUtil
 import com.google.android.gms.common.api.GoogleApiClient
@@ -44,7 +42,6 @@ import org.helpapaw.helpapaw.repository.ISettingsRepository
 import org.helpapaw.helpapaw.repository.PhotoRepository
 import org.helpapaw.helpapaw.repository.PushNotificationsRepository
 import org.helpapaw.helpapaw.repository.SignalRepository
-import org.helpapaw.helpapaw.reusable.AlertDialogFragment
 import org.helpapaw.helpapaw.sendsignal.SendPhotoBottomSheet
 import org.helpapaw.helpapaw.signaldetails.SignalDetailsActivity
 import org.helpapaw.helpapaw.user.UserManager
@@ -53,7 +50,6 @@ import org.helpapaw.helpapaw.utils.Utils
 import org.helpapaw.helpapaw.viewmodels.SignalsMapViewModel
 import org.koin.android.ext.android.inject
 import org.koin.core.parameter.parametersOf
-import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -159,9 +155,6 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
         get() = OnMapReadyCallback { googleMap ->
             signalsGoogleMap = googleMap
             //actionsListener
-            if (!isEmpty(photoUri)) {
-                setThumbnailImage(photoUri!!)
-            }
             if (signalsList != null && signalsList!!.size > 0) {
                 displaySignals(signalsList!!, false)
             }
@@ -197,7 +190,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
     val fabAddSignalClickListener: View.OnClickListener
         get() = View.OnClickListener {
             //actionsListener
-            setSendSignalViewVisibility(if(viewModel.addSignalVisible == View.VISIBLE){ View.INVISIBLE}else{ View.VISIBLE })
+            viewModel.addSignalVisible  = if(viewModel.addSignalVisible == View.VISIBLE){ View.INVISIBLE}else{ View.VISIBLE }
         }
 
 
@@ -219,14 +212,14 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
                         signalRepository.saveSignal(Signal(description,  Date(), 0, latitude, longitude), object : SignalRepository.SaveSignalCallback {
                             override fun onSignalSaved(signal: Signal) {
                                 if (!isViewAvailable) return
-                                if (!isEmpty(photoUri)) {
-                                    photoRepository.savePhoto(photoUri, signal.id, object : PhotoRepository.SavePhotoCallback {
+                                if (!isEmpty(viewModel.photoUri)) {
+                                    photoRepository.savePhoto(viewModel.photoUri, signal.id, object : PhotoRepository.SavePhotoCallback {
                                         override fun onPhotoSaved() {
                                             if (!isViewAvailable) return
                                             signalsList!!.add(signal)
                                             displaySignals(signalsList!!, true, signal.id)
-                                            setSendSignalViewVisibility(View.INVISIBLE)
-                                            clearSignalViewData()
+                                            viewModel.addSignalVisible = View.INVISIBLE
+                                            viewModel.photoUri = ""
 
                                             //UI
                                             showAddedSignalMessage()
@@ -243,8 +236,8 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
                                     signalsList!!.add(signal)
 
                                     displaySignals(signalsList!!, true, signal.id)
-                                    setSendSignalViewVisibility(View.INVISIBLE)
-                                    clearSignalViewData()
+                                    viewModel.addSignalVisible = View.INVISIBLE
+                                    viewModel.photoUri = ""
                                 }
                             }
 
@@ -544,12 +537,6 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
         Snackbar.make(binding.fabAddSignal, message, Snackbar.LENGTH_LONG).show()
     }
 
-//    override fun setAddSignalViewVisibility(visibility: Int) {
-//
-//        mVisibilityAddSignal = visibility
-//        viewModel.addSignalVisible = visibility
-//    }
-
     override fun hideKeyboard() {
         super.hideKeyboard()
     }
@@ -609,7 +596,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
 
             if (photoFile != null) {
                 //actionsListener
-                onSignalPhotoSelected(Uri.fromFile(photoFile).path)
+                viewModel.photoUri = Uri.fromFile(photoFile).path
             }
 
             parcelFileDesc.close()
@@ -634,8 +621,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
         if (requestCode == REQUEST_CAMERA) {
             if (resultCode == Activity.RESULT_OK) {
                 val takenPhotoUri = imageUtils.getPhotoFileUri(context, imageFileName)
-                //actionsListener
-                onSignalPhotoSelected(takenPhotoUri!!.path)
+                viewModel.photoUri = takenPhotoUri!!.path
             }
         }
 
@@ -647,8 +633,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
                 // DRY!!
                 val photoFile = imageUtils.getFromMediaUri(context, context!!.contentResolver, data.data)
                 if (photoFile != null) {
-                    //actionsListener
-                    onSignalPhotoSelected(Uri.fromFile(photoFile).path)
+                    viewModel.photoUri = Uri.fromFile(photoFile).path
                 }
             }
 
@@ -672,17 +657,6 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
                 }
             }
         }
-    }
-
-    override fun setThumbnailImage(photoUri: String) {
-        val res = resources
-        val drawable = RoundedBitmapDrawableFactory.create(res, imageUtils.getRotatedBitmap(File(photoUri)))
-        drawable.cornerRadius = 10f
-        binding.viewSendSignal.setSignalPhoto(drawable)
-    }
-
-    override fun clearSignalViewDataView() {
-        binding.viewSendSignal.clearData()
     }
 
     override fun setSignalViewProgressVisibility(visibility: Boolean) {
@@ -774,7 +748,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
     fun onBackPressed() {
         //actionsListener
         if (viewModel.addSignalVisible == View.VISIBLE) {
-            setSendSignalViewVisibility(View.INVISIBLE)
+            viewModel.addSignalVisible = View.INVISIBLE
         } else {
             closeSignalsMapScreen()
         }
@@ -791,8 +765,6 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
     private var currentMapLatitude: Double = 0.toDouble()
     private var currentMapLongitude: Double = 0.toDouble()
 
-    private var photoUri: String? = null
-//    private var sendSignalViewVisibility: Int = View.INVISIBLE
     private var signalsList: MutableList<Signal>? = null
 
     private val isViewAvailable: Boolean
@@ -842,25 +814,9 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
         }
     }
 
-
-    fun onSignalPhotoSelected(photoUri: String) {
-        this.photoUri = photoUri
-        setThumbnailImage(photoUri)
-    }
-
-    fun clearSignalViewData() {
-        clearSignalViewDataView()
-        photoUri = null
-    }
-
-    private fun setSendSignalViewVisibility(visibility: Int) {
-        viewModel.addSignalVisible = visibility
-    }
-
     private fun isEmpty(value: String?): Boolean {
         return !(value != null && value.length > 0)
     }
-
 
     companion object {
         //saction listener

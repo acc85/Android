@@ -2,6 +2,8 @@ package org.helpapaw.helpapaw.viewmodels
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
 import android.location.Location
 import android.os.Bundle
 import android.util.Log
@@ -9,6 +11,7 @@ import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.graphics.drawable.RoundedBitmapDrawable
+import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
 import androidx.databinding.Bindable
 import androidx.databinding.BindingAdapter
 import androidx.lifecycle.MutableLiveData
@@ -21,6 +24,7 @@ import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import org.helpapaw.helpapaw.BR
 import org.helpapaw.helpapaw.R
+import org.helpapaw.helpapaw.images.ImageUtils
 import org.helpapaw.helpapaw.models.Signal
 import org.helpapaw.helpapaw.repository.*
 import org.helpapaw.helpapaw.sendsignal.SendSignalView
@@ -28,6 +32,7 @@ import org.helpapaw.helpapaw.signalsmap.SignalInfoWindowAdapter
 import org.helpapaw.helpapaw.signalsmap.SignalsMapFragment
 import org.helpapaw.helpapaw.utils.StatusUtils
 import org.helpapaw.helpapaw.utils.Utils
+import java.io.File
 import java.util.ArrayList
 import java.util.HashMap
 
@@ -53,7 +58,11 @@ sealed class SignalsMapResult {
 
 }
 
-class SignalsMapViewModel():BaseViewModel() {
+class SignalsMapViewModel(
+
+        val imageUtils:ImageUtils
+
+):BaseViewModel() {
 
     var liveData: MutableLiveData<SignalsMapResult> = MutableLiveData()
 
@@ -64,6 +73,19 @@ class SignalsMapViewModel():BaseViewModel() {
             notifyChange(BR.addSignalVisible)
         }
 
+    @Bindable
+    var photoUri:String = ""
+        set(value){
+            field = value
+            sendSignalBitmap = imageUtils.getRotatedBitmap(File(photoUri))
+        }
+
+    @Bindable
+    var sendSignalBitmap: Bitmap? = null
+        set(value){
+            field = value
+            notifyChange(BR.sendSignalBitmap)
+        }
 
 //    @Bindable
 //    var addSignalPinVisible:Int = View.INVISIBLE
@@ -117,5 +139,21 @@ fun setAddSignalViewVisibility(view:SendSignalView, visibility:Int){
                 .setDuration(300)
                 .translationY(-view.height.toFloat())
                 .withEndAction { view.visibility = View.INVISIBLE }
+    }
+}
+
+@BindingAdapter("bitmap")
+fun setRoundedBitmap(view:SendSignalView, bitmap:Bitmap?) {
+    bitmap?.let{
+        val drawable = RoundedBitmapDrawableFactory.create(view.resources, bitmap)
+        drawable.cornerRadius = 10f
+        view.setSignalPhoto(drawable)
+    }
+}
+
+@BindingAdapter("clearData")
+fun clearSendSignalData(view:SendSignalView, data:String){
+    if(data.isEmpty()){
+        view.clearData()
     }
 }

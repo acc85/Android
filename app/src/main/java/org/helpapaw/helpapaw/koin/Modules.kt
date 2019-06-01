@@ -39,7 +39,7 @@ var testModule = module {
 
     viewModel{ SignalPhotoViewModel(get(),get())}
 
-    viewModel{ SignalsMapViewModel() }
+    viewModel{ SignalsMapViewModel(get()) }
 
 
     single { LocationRequest.create()

@@ -36,6 +36,8 @@
                 app:cardCornerRadius="8dp"
                 app:cardElevation="4dp"
                 app:addSignalViewVisibility="@{viewModel.addSignalVisible}"
+                app:bitmap="@{viewModel.sendSignalBitmap}"
+                app:clearData="@{viewModel.photoUri}"
                 app:layout_constraintBottom_toTopOf="@+id/map_signals"/>
 
             <androidx.appcompat.widget.AppCompatImageView

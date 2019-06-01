@@ -20,8 +20,6 @@ interface SignalsMapContract {
 
         fun updateMapCameraPosition(latitude: Double, longitude: Double, zoom: Float?)
 
-//        fun setAddSignalViewVisibility(visibility: Int)
-
         fun hideKeyboard()
 
         fun showSendPhotoBottomSheet()
@@ -33,10 +31,6 @@ interface SignalsMapContract {
         fun saveImageFromURI(photoUri: Uri?)
 
         fun openLoginScreen()
-
-        fun setThumbnailImage(photoUri: String)
-
-        fun clearSignalViewDataView()
 
         fun setSignalViewProgressVisibility(visibility: Boolean)
 
