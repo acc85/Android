@@ -87,7 +87,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
 
     val settingsRepository: ISettingsRepository by inject()
 
-    val locationListener:LocationListener = getLocationChangeListener()
+    val locationListener:LocationListener = LocationListener { location -> handleNewLocation(location) }
 
     val connectionCallback:GoogleApiClient.ConnectionCallbacks = object : GoogleApiClient.ConnectionCallbacks {
         override fun onConnectionSuspended(i: Int) {
@@ -277,7 +277,18 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
             mFocusedSignalId = arguments.getString(Signal.KEY_FOCUSED_SIGNAL_ID)
             arguments.remove(Signal.KEY_FOCUSED_SIGNAL_ID)
         }
-        initLocationApi()
+        googleApiClient = GoogleApiClient.Builder(context!!)
+                .addConnectionCallbacks(connectionCallback)
+                .addOnConnectionFailedListener(connectionFailedListener)
+                .addApi(LocationServices.API)
+                .addApi(Places.GEO_DATA_API)
+                .build()
+
+        // Create the LocationRequest object
+        locationRequest = LocationRequest.create()
+                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+                .setInterval((30 * 1000).toLong())        // 30 seconds, in milliseconds
+                .setFastestInterval((10 * 1000).toLong()) // 10 seconds, in milliseconds
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -472,27 +483,6 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
                 updateMapCameraPosition(signalToFocus!!.latitude, signalToFocus.longitude, null)
             } else markerToReShow?.showInfoWindow()
         }
-    }
-
-    /* Location API */
-
-    fun getLocationChangeListener():LocationListener{
-        return LocationListener { location -> handleNewLocation(location) }
-    }
-
-    private fun initLocationApi() {
-        googleApiClient = GoogleApiClient.Builder(context!!)
-                .addConnectionCallbacks(connectionCallback)
-                .addOnConnectionFailedListener(connectionFailedListener)
-                .addApi(LocationServices.API)
-                .addApi(Places.GEO_DATA_API)
-                .build()
-
-        // Create the LocationRequest object
-        locationRequest = LocationRequest.create()
-                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-                .setInterval((30 * 1000).toLong())        // 30 seconds, in milliseconds
-                .setFastestInterval((10 * 1000).toLong()) // 10 seconds, in milliseconds
     }
 
 
@@ -803,13 +793,6 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
         return isAdded
     }
 
-    override fun onLogoutSuccess() {
-        Snackbar.make(binding.root.findViewById(R.id.fab_add_signal), R.string.txt_logout_succeeded, Snackbar.LENGTH_LONG).show()
-    }
-
-    override fun onLogoutFailure(message: String) {
-        AlertDialogFragment.showAlert(getString(R.string.txt_logout_failed), message, true, this.fragmentManager)
-    }
 
     @SuppressLint("MissingPermission")
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {

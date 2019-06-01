@@ -50,9 +50,6 @@ interface SignalsMapContract {
 
         fun setProgressVisibility(visibility: Boolean)
 
-        fun onLogoutSuccess()
-        fun onLogoutFailure(message: String)
-
     }
 
 }
