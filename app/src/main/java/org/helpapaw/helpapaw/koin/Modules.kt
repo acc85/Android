@@ -18,7 +18,6 @@ import org.helpapaw.helpapaw.signaldetails.SignalDetailsPresenter
 import org.helpapaw.helpapaw.signalphoto.SignalPhotoFragment
 import org.helpapaw.helpapaw.signalsmap.SignalInfoWindowAdapter
 import org.helpapaw.helpapaw.signalsmap.SignalsMapContract
-import org.helpapaw.helpapaw.signalsmap.SignalsMapPresenter
 import org.helpapaw.helpapaw.utils.Utils
 import org.helpapaw.helpapaw.viewmodels.LoginViewModel
 import org.helpapaw.helpapaw.viewmodels.RegisterViewModel
@@ -52,8 +51,6 @@ var testModule = module {
     single { Utils(androidContext()) }
     single { ImageUtils() }
 
-
-    factory { (view: SignalsMapContract.View) -> SignalsMapPresenter(view, get(), get(), get(), get()) }
     factory { (view: SignalDetailsContract.View) -> SignalDetailsPresenter(view, get(), get(), get(), get(), get()) }
     factory { (signalMarkers: Map<String, Signal>, inflater: LayoutInflater) -> SignalInfoWindowAdapter(signalMarkers, inflater, get()) }
 

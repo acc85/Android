@@ -22,7 +22,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
 import androidx.core.view.MenuItemCompat
 import androidx.databinding.DataBindingUtil
-import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.location.*
 import com.google.android.gms.location.places.Places
@@ -42,12 +41,15 @@ import org.helpapaw.helpapaw.databinding.FragmentSignalsMapBinding
 import org.helpapaw.helpapaw.images.ImageUtils
 import org.helpapaw.helpapaw.models.Signal
 import org.helpapaw.helpapaw.repository.ISettingsRepository
+import org.helpapaw.helpapaw.repository.PhotoRepository
 import org.helpapaw.helpapaw.repository.PushNotificationsRepository
+import org.helpapaw.helpapaw.repository.SignalRepository
 import org.helpapaw.helpapaw.reusable.AlertDialogFragment
 import org.helpapaw.helpapaw.sendsignal.SendPhotoBottomSheet
 import org.helpapaw.helpapaw.signaldetails.SignalDetailsActivity
 import org.helpapaw.helpapaw.user.UserManager
 import org.helpapaw.helpapaw.utils.StatusUtils
+import org.helpapaw.helpapaw.utils.Utils
 import org.koin.android.ext.android.inject
 import org.koin.core.parameter.parametersOf
 import java.io.File
@@ -60,6 +62,10 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
     val pushNotificationsRepository: PushNotificationsRepository by inject()
     val imageUtils:ImageUtils by inject()
 
+    val utils: Utils by inject()
+    val signalRepository:SignalRepository by inject()
+    val photoRepository:PhotoRepository by inject()
+
     private var googleApiClient: GoogleApiClient? = null
     private var locationRequest: LocationRequest? = null
     private var signalsGoogleMap: GoogleMap? = null
@@ -71,7 +77,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
     private var mCurrentLong: Double = 0.toDouble()
     private var mZoom: Float = 0.toFloat()
 
-    private var actionsListener: SignalsMapContract.UserActionsListener? = null
+//    private var actionsListener: SignalsMapContract.UserActionsListener? = null
 
     lateinit var binding: FragmentSignalsMapBinding
     private var optionsMenu: Menu? = null
@@ -80,8 +86,6 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
     private var mFocusedSignalId: String? = null
 
     val settingsRepository: ISettingsRepository by inject()
-
-    val signalsMapPresenter by inject<SignalsMapPresenter> { parametersOf(this) }
 
     val locationListener:LocationListener = getLocationChangeListener()
 
@@ -150,7 +154,9 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
     private val mapReadyCallback: OnMapReadyCallback
         get() = OnMapReadyCallback { googleMap ->
             signalsGoogleMap = googleMap
-            actionsListener!!.onInitSignalsMap()
+            //actionsListener
+            onInitSignalsMap()
+            ///
             signalsGoogleMap!!.setPadding(0, PADDING_TOP, 0, PADDING_BOTTOM)
             signalsGoogleMap!!.setOnMapClickListener(mapClickListener)
             signalsGoogleMap!!.setOnMarkerClickListener(mapMarkerClickListener)
@@ -175,25 +181,28 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
         mCurrentLat = cameraTarget.latitude
         mZoom = cameraPosition.zoom
         val radius = calculateZoomToMeters()
-        actionsListener!!.onLocationChanged(cameraTarget.latitude, cameraTarget.longitude, radius, settingsRepository!!.getTimeout())
+        //actionsListener
+        onLocationChanged(cameraTarget.latitude, cameraTarget.longitude, radius, settingsRepository!!.getTimeout())
     }
 
     val fabAddSignalClickListener: View.OnClickListener
         get() = View.OnClickListener {
             val visibility = binding.viewSendSignal.visibility == View.VISIBLE
-            actionsListener!!.onAddSignalClicked(visibility)
+            //actionsListener
+            onAddSignalClicked(visibility)
         }
 
 
     val onSignalSendClickListener: View.OnClickListener
         get() = View.OnClickListener {
             val description = binding.viewSendSignal.signalDescription
-
-            actionsListener!!.onSendSignalClicked(description)
+            //actionsListener
+            onSendSignalClicked(description)
         }
 
     val onSignalPhotoClickListener: View.OnClickListener
-        get() = View.OnClickListener { actionsListener!!.onChoosePhotoIconClicked() }
+        //actionsListener
+        get() = View.OnClickListener { onChoosePhotoIconClicked() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -232,11 +241,6 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
 //            signalsMapPresenter!!.view = this
 //        }
 
-        if (savedInstanceState != null) {
-            signalsMapPresenter.view = this
-        }
-
-        actionsListener = signalsMapPresenter
         setHasOptionsMenu(true)
 
         binding.fabAddSignal.setOnClickListener(fabAddSignalClickListener)
@@ -302,7 +306,8 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         if (item!!.itemId == R.id.menu_item_refresh) {
-            actionsListener!!.onRefreshButtonClicked()
+            //actionsListener
+            onRefreshButtonClicked()
             return true
         }
         return super.onOptionsItemSelected(item)
@@ -388,7 +393,8 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
             }
             signalsGoogleMap!!.setInfoWindowAdapter(infoWindowAdapter)
 
-            signalsGoogleMap!!.setOnInfoWindowClickListener { marker -> actionsListener!!.onSignalInfoWindowClicked(mSignalMarkers[marker.id]) }
+            //actionsListener
+            signalsGoogleMap!!.setOnInfoWindowClickListener { marker -> onSignalInfoWindowClicked(mSignalMarkers[marker.id]) }
 
             if (showPopup && markerToFocus != null) {
                 markerToFocus.showInfoWindow()
@@ -437,7 +443,8 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
         mCurrentLong = if (longitude == 0.0) location.longitude else longitude
         val zoom = if (newZoom == 0f) calculateMetersToZoom() else newZoom
         updateMapCameraPosition(mCurrentLat, mCurrentLong, zoom)
-        actionsListener!!.onLocationChanged(mCurrentLat, mCurrentLong, settingsRepository!!.getRadius(), settingsRepository!!.getTimeout())
+        //actionsListener
+        onLocationChanged(mCurrentLat, mCurrentLong, settingsRepository!!.getRadius(), settingsRepository!!.getTimeout())
         pushNotificationsRepository.saveNewDeviceLocation(location)
     }
 
@@ -554,9 +561,11 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
         sendPhotoBottomSheet.setListener(object : SendPhotoBottomSheet.PhotoTypeSelectListener {
             override fun onPhotoTypeSelected(photoType: Long) {
                 if (photoType == SendPhotoBottomSheet.PhotoType.CAMERA) {
-                    actionsListener!!.onCameraOptionSelected()
+                    //actionsListener
+                    onCameraOptionSelected()
                 } else if (photoType == SendPhotoBottomSheet.PhotoType.GALLERY) {
-                    actionsListener!!.onGalleryOptionSelected()
+                    //actionsListener
+                    onGalleryOptionSelected()
                 }
             }
         })
@@ -569,7 +578,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
         } else {
             val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
             if (intent.resolveActivity(context!!.packageManager) != null) {
-                val timeStamp = SimpleDateFormat(DATE_TIME_FORMAT, Locale.getDefault()).format(Date())
+                val timeStamp = SimpleDateFormat(DATE_TIME_FORMAT_VIEW, Locale.getDefault()).format(Date())
                 imageFileName = PHOTO_PREFIX + timeStamp + PHOTO_EXTENSION
                 intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUtils.getPhotoFileUri(context, imageFileName))
                 startActivityForResult(intent, REQUEST_CAMERA)
@@ -601,7 +610,8 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
             val photoFile = imageUtils.getFromMediaUri(context, context!!.contentResolver, Uri.parse(path))
 
             if (photoFile != null) {
-                actionsListener!!.onSignalPhotoSelected(Uri.fromFile(photoFile).path)
+                //actionsListener
+                onSignalPhotoSelected(Uri.fromFile(photoFile).path)
             }
 
             parcelFileDesc.close()
@@ -626,7 +636,8 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
         if (requestCode == REQUEST_CAMERA) {
             if (resultCode == Activity.RESULT_OK) {
                 val takenPhotoUri = imageUtils.getPhotoFileUri(context, imageFileName)
-                actionsListener!!.onSignalPhotoSelected(takenPhotoUri!!.path)
+                //actionsListener
+                onSignalPhotoSelected(takenPhotoUri!!.path)
             }
         }
 
@@ -638,7 +649,8 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
                 // DRY!!
                 val photoFile = imageUtils.getFromMediaUri(context, context!!.contentResolver, data.data)
                 if (photoFile != null) {
-                    actionsListener!!.onSignalPhotoSelected(Uri.fromFile(photoFile).path)
+                    //actionsListener
+                    onSignalPhotoSelected(Uri.fromFile(photoFile).path)
                 }
             }
 
@@ -648,7 +660,8 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
             if (resultCode == Activity.RESULT_OK) {
                 val signal = data!!.getParcelableExtra<Signal>("signal")
                 if (signal != null) {
-                    actionsListener!!.onSignalStatusUpdated(signal)
+                    //actionsListener
+                    onSignalStatusUpdated(signal)
                 }
             }
         }
@@ -661,7 +674,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
         binding.viewSendSignal.setSignalPhoto(drawable)
     }
 
-    override fun clearSignalViewData() {
+    override fun clearSignalViewDataView() {
         binding.viewSendSignal.clearData()
     }
 
@@ -740,7 +753,8 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
                         .show()
             }
             READ_EXTERNAL_STORAGE_FOR_CAMERA -> if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                actionsListener!!.onStoragePermissionForCameraGranted()
+                //actionsListener
+                onStoragePermissionForCameraGranted()
             } else {
                 // Permission Denied
                 Toast.makeText(context, R.string.txt_storage_permissions_for_camera, Toast.LENGTH_SHORT)
@@ -748,7 +762,8 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
             }
 
             READ_WRITE_EXTERNAL_STORAGE_FOR_GALLERY -> if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                actionsListener!!.onStoragePermissionForGalleryGranted()
+                //actionsListener
+                onStoragePermissionForGalleryGranted()
             } else {
                 // Permission Denied
                 Toast.makeText(context, R.string.txt_storage_permissions_for_gallery, Toast.LENGTH_SHORT)
@@ -767,14 +782,267 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
     /* OnClick Listeners */
 
     fun onBackPressed() {
-        actionsListener!!.onBackButtonPressed()
+        //actionsListener
+        onBackButtonPressed()
     }
 
+
+
+    //Action listener
+    private var latitude: Double = 0.toDouble()
+    private var longitude: Double = 0.toDouble()
+    private var radius: Int = 0
+    private var timeout: Int = 0
+
+    private var currentMapLatitude: Double = 0.toDouble()
+    private var currentMapLongitude: Double = 0.toDouble()
+
+    private var photoUri: String? = null
+    private var sendSignalViewVisibility: Boolean = false
+    private var signalsList: MutableList<Signal>? = null
+
+    private val isViewAvailable: Boolean
+        get() = view != null && isActive()
+
+    init {
+        sendSignalViewVisibility = false
+        signalsList = ArrayList()
+    }
+
+    fun onInitSignalsMap() {
+        setAddSignalViewVisibility(sendSignalViewVisibility)
+        if (!isEmpty(photoUri)) {
+            setThumbnailImage(photoUri!!)
+        }
+        if (signalsList != null && signalsList!!.size > 0) {
+            displaySignals(signalsList!!, false)
+        }
+    }
+
+    private fun getAllSignals(latitude: Double, longitude: Double, radius: Int, timeout: Int, showPopup: Boolean) {
+        if (utils.hasNetworkConnection()) {
+            setProgressVisibility(true)
+
+            signalRepository.getAllSignals(latitude, longitude, radius.toDouble(), timeout,
+                    object : SignalRepository.LoadSignalsCallback {
+                        override fun onSignalsLoaded(signals: MutableList<Signal>?) {
+                            if (!isViewAvailable) return
+                            signalsList = signals
+                            signalRepository.markSignalsAsSeen(signals)
+                            displaySignals(signals, showPopup)
+                            setProgressVisibility(false)
+                        }
+
+                        override fun onSignalsFailure(message: String) {
+                            if (!isViewAvailable) return
+                            showMessage(message)
+                            setProgressVisibility(false)
+                        }
+                    })
+        } else {
+            showNoInternetMessage()
+        }
+    }
+
+    fun onLocationChanged(latitude: Double, longitude: Double, radius: Int, timeout: Int) {
+        currentMapLatitude = latitude
+        currentMapLongitude = longitude
+
+        if (utils.getDistanceBetween(latitude, longitude, this.latitude, this.longitude) > 300 || this.radius != radius) {
+            getAllSignals(latitude, longitude, radius, timeout, false)
+
+            this.latitude = latitude
+            this.longitude = longitude
+            this.radius = radius
+            this.timeout = timeout
+        }
+    }
+
+    fun onAddSignalClicked(visibility: Boolean) {
+        setSendSignalViewVisibility(!visibility)
+    }
+
+    fun onCancelAddSignal() {
+        displaySignals(signalsList!!, false)
+    }
+
+    fun onSendSignalClicked(description: String) {
+        hideKeyboard()
+        setSignalViewProgressVisibility(true)
+
+        userManager.isLoggedIn(object : UserManager.LoginCallback {
+            override fun onLoginSuccess() {
+                if (!isViewAvailable) return
+
+                if (isEmpty(description)) {
+                    showDescriptionErrorMessage()
+                    setSignalViewProgressVisibility(false)
+                } else {
+                    saveSignal(description, Date(), 0, currentMapLatitude, currentMapLongitude)
+                }
+            }
+
+            override fun onLoginFailure(message: String?) {
+                if (!isViewAvailable) return
+                setSignalViewProgressVisibility(false)
+                openLoginScreen()
+            }
+        })
+    }
+
+    private fun saveSignal(description: String, dateSubmitted: Date, status: Int, latitude: Double, longitude: Double) {
+        signalRepository.saveSignal(Signal(description, dateSubmitted, status, latitude, longitude), object : SignalRepository.SaveSignalCallback {
+            override fun onSignalSaved(signal: Signal) {
+                if (!isViewAvailable) return
+                if (!isEmpty(photoUri)) {
+                    savePhoto(photoUri, signal)
+                } else {
+                    signalsList!!.add(signal)
+
+                    displaySignals(signalsList!!, true, signal.id)
+                    setSendSignalViewVisibility(false)
+                    clearSignalViewData()
+                }
+            }
+
+            override fun onSignalFailure(message: String) {
+                if (!isViewAvailable) return
+                showMessage(message)
+            }
+        })
+    }
+
+    private fun savePhoto(photoUri: String?, signal: Signal) {
+        photoRepository.savePhoto(photoUri, signal.id, object : PhotoRepository.SavePhotoCallback {
+            override fun onPhotoSaved() {
+                if (!isViewAvailable) return
+                signalsList!!.add(signal)
+                displaySignals(signalsList!!, true, signal.id)
+                setSendSignalViewVisibility(false)
+                clearSignalViewData()
+                showAddedSignalMessage()
+            }
+
+            override fun onPhotoFailure(message: String) {
+                if (!isViewAvailable) return
+                showMessage(message)
+            }
+        })
+    }
+
+    fun onChoosePhotoIconClicked() {
+        hideKeyboard()
+        showSendPhotoBottomSheet()
+    }
+
+    fun onCameraOptionSelected() {
+        openCamera()
+    }
+
+    fun onGalleryOptionSelected() {
+        openGallery()
+    }
+
+    fun onSignalPhotoSelected(photoUri: String) {
+        this.photoUri = photoUri
+        setThumbnailImage(photoUri)
+    }
+
+    fun onStoragePermissionForCameraGranted() {
+        openCamera()
+    }
+
+    fun onStoragePermissionForGalleryGranted() {
+        openGallery()
+    }
+
+    fun onSignalInfoWindowClicked(signal: Signal?) {
+        openSignalDetailsScreen(signal!!)
+    }
+
+    fun onBackButtonPressed() {
+        if (sendSignalViewVisibility) {
+            setSendSignalViewVisibility(false)
+        } else {
+            closeSignalsMapScreen()
+        }
+    }
+
+    fun onRefreshButtonClicked() {
+        getAllSignals(latitude, longitude, radius, timeout, false)
+    }
+
+    fun onSignalStatusUpdated(signal: Signal) {
+        if (signal == null) return
+
+        for (i in signalsList!!.indices) {
+            val currentSignal = signalsList!![i]
+            if (currentSignal.id == signal.id) {
+                signalsList!!.removeAt(i)
+                signalsList!!.add(signal)
+                displaySignals(signalsList!!, true)
+                break
+            }
+        }
+    }
+
+    fun onAuthenticationAction() {
+        hideKeyboard()
+        val userToken = userManager.userToken
+
+        if (userToken != null && !userToken.isEmpty()) {
+            logoutUser()
+        } else {
+            openLoginScreen()
+        }
+    }
+
+    private fun logoutUser() {
+        if (utils.hasNetworkConnection()) {
+            userManager.logout(object : UserManager.LogoutCallback {
+                override fun onLogoutSuccess() {
+                    onLogoutSuccess()
+                }
+
+                override fun onLogoutFailure(message: String) {
+                    onLogoutFailure(message!!)
+                }
+            })
+        } else {
+            onLogoutFailure("No connection.")
+        }
+    }
+
+    fun onLoginAction() {}
+
+    fun clearSignalViewData() {
+        clearSignalViewData()
+        photoUri = null
+    }
+
+    private fun setSendSignalViewVisibility(visibility: Boolean) {
+        sendSignalViewVisibility = visibility
+        setAddSignalViewVisibility(visibility)
+    }
+
+    private fun isEmpty(value: String?): Boolean {
+        return !(value != null && value.length > 0)
+    }
+
+
+
+
     companion object {
+        //saction listener
+        private val DEFAULT_MAP_ZOOM = 14.5f
+        val DEFAULT_SEARCH_RADIUS = 10
+        val DEFAULT_SEARCH_TIMEOUT = 7
+        private val DATE_TIME_FORMAT = "MM/dd/yyyy hh:mm:ss"
+        ///
 
         val TAG = SignalsMapFragment::class.java.simpleName
         private val MAP_VIEW_STATE = "mapViewSaveState"
-        private val DATE_TIME_FORMAT = "yyyyMMdd_HHmmss"
+        private val DATE_TIME_FORMAT_VIEW = "yyyyMMdd_HHmmss"
         private val PHOTO_PREFIX = "JPEG_"
         private val PHOTO_EXTENSION = ".jpg"
 

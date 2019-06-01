@@ -36,7 +36,7 @@ interface SignalsMapContract {
 
         fun setThumbnailImage(photoUri: String)
 
-        fun clearSignalViewData()
+        fun clearSignalViewDataView()
 
         fun setSignalViewProgressVisibility(visibility: Boolean)
 
@@ -57,42 +57,4 @@ interface SignalsMapContract {
 
     }
 
-    interface UserActionsListener {
-
-        fun onInitSignalsMap()
-
-        fun onLocationChanged(latitude: Double, longitude: Double, radius: Int, timeout: Int)
-
-        fun onAddSignalClicked(visibility: Boolean)
-
-        fun onCancelAddSignal()
-
-        fun onSendSignalClicked(description: String)
-
-        fun onChoosePhotoIconClicked()
-
-        fun onCameraOptionSelected()
-
-        fun onGalleryOptionSelected()
-
-        fun onSignalPhotoSelected(photoUri: String)
-
-        fun onStoragePermissionForCameraGranted()
-
-        fun onStoragePermissionForGalleryGranted()
-
-        fun onSignalInfoWindowClicked(signal: Signal?)
-
-        fun onBackButtonPressed()
-
-        fun onRefreshButtonClicked()
-
-        fun onSignalStatusUpdated(signal: Signal)
-
-        fun onAuthenticationAction()
-
-        fun onLoginAction()
-
-
-    }
 }
