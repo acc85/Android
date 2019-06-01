@@ -12,16 +12,13 @@ import org.helpapaw.helpapaw.db.SignalsDatabase
 import org.helpapaw.helpapaw.images.ImageUtils
 import org.helpapaw.helpapaw.models.Signal
 import org.helpapaw.helpapaw.settings.SettingsFragment
-import org.helpapaw.helpapaw.viewmodels.SettingsViewModel
 import org.helpapaw.helpapaw.signaldetails.SignalDetailsContract
 import org.helpapaw.helpapaw.signaldetails.SignalDetailsPresenter
 import org.helpapaw.helpapaw.signalphoto.SignalPhotoFragment
 import org.helpapaw.helpapaw.signalsmap.SignalInfoWindowAdapter
 import org.helpapaw.helpapaw.signalsmap.SignalsMapContract
 import org.helpapaw.helpapaw.utils.Utils
-import org.helpapaw.helpapaw.viewmodels.LoginViewModel
-import org.helpapaw.helpapaw.viewmodels.RegisterViewModel
-import org.helpapaw.helpapaw.viewmodels.SignalPhotoViewModel
+import org.helpapaw.helpapaw.viewmodels.*
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
@@ -40,6 +37,8 @@ var testModule = module {
     }
 
     viewModel{ SignalPhotoViewModel(get(),get())}
+
+    viewModel{ SignalsMapViewModel() }
 
 
     single {CallbackManager.Factory.create()}

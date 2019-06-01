@@ -155,7 +155,13 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
         get() = OnMapReadyCallback { googleMap ->
             signalsGoogleMap = googleMap
             //actionsListener
-            onInitSignalsMap()
+            setAddSignalViewVisibility(sendSignalViewVisibility)
+            if (!isEmpty(photoUri)) {
+                setThumbnailImage(photoUri!!)
+            }
+            if (signalsList != null && signalsList!!.size > 0) {
+                displaySignals(signalsList!!, false)
+            }
             ///
             signalsGoogleMap!!.setPadding(0, PADDING_TOP, 0, PADDING_BOTTOM)
             signalsGoogleMap!!.setOnMapClickListener(mapClickListener)
@@ -189,7 +195,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
         get() = View.OnClickListener {
             val visibility = binding.viewSendSignal.visibility == View.VISIBLE
             //actionsListener
-            onAddSignalClicked(visibility)
+            setSendSignalViewVisibility(!visibility)
         }
 
 
@@ -197,12 +203,70 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
         get() = View.OnClickListener {
             val description = binding.viewSendSignal.signalDescription
             //actionsListener
-            onSendSignalClicked(description)
+            hideKeyboard()
+            setSignalViewProgressVisibility(true)
+
+            userManager.isLoggedIn(object : UserManager.LoginCallback {
+                override fun onLoginSuccess() {
+                    if (!isViewAvailable) return
+
+                    if (isEmpty(description)) {
+                        showDescriptionErrorMessage()
+                        setSignalViewProgressVisibility(false)
+                    } else {
+                        signalRepository.saveSignal(Signal(description,  Date(), 0, latitude, longitude), object : SignalRepository.SaveSignalCallback {
+                            override fun onSignalSaved(signal: Signal) {
+                                if (!isViewAvailable) return
+                                if (!isEmpty(photoUri)) {
+                                    photoRepository.savePhoto(photoUri, signal.id, object : PhotoRepository.SavePhotoCallback {
+                                        override fun onPhotoSaved() {
+                                            if (!isViewAvailable) return
+                                            signalsList!!.add(signal)
+                                            displaySignals(signalsList!!, true, signal.id)
+                                            setSendSignalViewVisibility(false)
+                                            clearSignalViewData()
+                                            showAddedSignalMessage()
+                                        }
+
+                                        override fun onPhotoFailure(message: String) {
+                                            if (!isViewAvailable) return
+                                            showMessage(message)
+                                        }
+                                    })
+
+
+                                } else {
+                                    signalsList!!.add(signal)
+
+                                    displaySignals(signalsList!!, true, signal.id)
+                                    setSendSignalViewVisibility(false)
+                                    clearSignalViewData()
+                                }
+                            }
+
+                            override fun onSignalFailure(message: String) {
+                                if (!isViewAvailable) return
+                                showMessage(message)
+                            }
+                        })
+
+                    }
+                }
+
+                override fun onLoginFailure(message: String?) {
+                    if (!isViewAvailable) return
+                    setSignalViewProgressVisibility(false)
+                    openLoginScreen()
+                }
+            })
         }
 
     val onSignalPhotoClickListener: View.OnClickListener
         //actionsListener
-        get() = View.OnClickListener { onChoosePhotoIconClicked() }
+        get() = View.OnClickListener {
+            hideKeyboard()
+            showSendPhotoBottomSheet()
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -306,8 +370,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         if (item!!.itemId == R.id.menu_item_refresh) {
-            //actionsListener
-            onRefreshButtonClicked()
+            getAllSignals(latitude, longitude, radius, timeout, false)
             return true
         }
         return super.onOptionsItemSelected(item)
@@ -394,7 +457,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
             signalsGoogleMap!!.setInfoWindowAdapter(infoWindowAdapter)
 
             //actionsListener
-            signalsGoogleMap!!.setOnInfoWindowClickListener { marker -> onSignalInfoWindowClicked(mSignalMarkers[marker.id]) }
+            signalsGoogleMap!!.setOnInfoWindowClickListener { marker -> openSignalDetailsScreen(mSignalMarkers[marker.id]!!) }
 
             if (showPopup && markerToFocus != null) {
                 markerToFocus.showInfoWindow()
@@ -562,10 +625,10 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
             override fun onPhotoTypeSelected(photoType: Long) {
                 if (photoType == SendPhotoBottomSheet.PhotoType.CAMERA) {
                     //actionsListener
-                    onCameraOptionSelected()
+                    openCamera()
                 } else if (photoType == SendPhotoBottomSheet.PhotoType.GALLERY) {
                     //actionsListener
-                    onGalleryOptionSelected()
+                    openGallery()
                 }
             }
         })
@@ -660,8 +723,17 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
             if (resultCode == Activity.RESULT_OK) {
                 val signal = data!!.getParcelableExtra<Signal>("signal")
                 if (signal != null) {
-                    //actionsListener
-                    onSignalStatusUpdated(signal)
+                    for (i in signalsList!!.indices) {
+                        val currentSignal = signalsList!![i]
+                        if (currentSignal.id == signal.id) {
+                            signalsList!!.removeAt(i)
+                            signalsList!!.add(signal)
+                            displaySignals(signalsList!!, true)
+                            break
+                        }
+                    }
+                }else{
+                    return
                 }
             }
         }
@@ -754,7 +826,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
             }
             READ_EXTERNAL_STORAGE_FOR_CAMERA -> if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 //actionsListener
-                onStoragePermissionForCameraGranted()
+                openCamera()
             } else {
                 // Permission Denied
                 Toast.makeText(context, R.string.txt_storage_permissions_for_camera, Toast.LENGTH_SHORT)
@@ -763,7 +835,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
 
             READ_WRITE_EXTERNAL_STORAGE_FOR_GALLERY -> if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 //actionsListener
-                onStoragePermissionForGalleryGranted()
+                openGallery()
             } else {
                 // Permission Denied
                 Toast.makeText(context, R.string.txt_storage_permissions_for_gallery, Toast.LENGTH_SHORT)
@@ -783,7 +855,11 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
 
     fun onBackPressed() {
         //actionsListener
-        onBackButtonPressed()
+        if (sendSignalViewVisibility) {
+            setSendSignalViewVisibility(false)
+        } else {
+            closeSignalsMapScreen()
+        }
     }
 
 
@@ -807,16 +883,6 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
     init {
         sendSignalViewVisibility = false
         signalsList = ArrayList()
-    }
-
-    fun onInitSignalsMap() {
-        setAddSignalViewVisibility(sendSignalViewVisibility)
-        if (!isEmpty(photoUri)) {
-            setThumbnailImage(photoUri!!)
-        }
-        if (signalsList != null && signalsList!!.size > 0) {
-            displaySignals(signalsList!!, false)
-        }
     }
 
     private fun getAllSignals(latitude: Double, longitude: Double, radius: Int, timeout: Int, showPopup: Boolean) {
@@ -858,165 +924,14 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
         }
     }
 
-    fun onAddSignalClicked(visibility: Boolean) {
-        setSendSignalViewVisibility(!visibility)
-    }
-
-    fun onCancelAddSignal() {
-        displaySignals(signalsList!!, false)
-    }
-
-    fun onSendSignalClicked(description: String) {
-        hideKeyboard()
-        setSignalViewProgressVisibility(true)
-
-        userManager.isLoggedIn(object : UserManager.LoginCallback {
-            override fun onLoginSuccess() {
-                if (!isViewAvailable) return
-
-                if (isEmpty(description)) {
-                    showDescriptionErrorMessage()
-                    setSignalViewProgressVisibility(false)
-                } else {
-                    saveSignal(description, Date(), 0, currentMapLatitude, currentMapLongitude)
-                }
-            }
-
-            override fun onLoginFailure(message: String?) {
-                if (!isViewAvailable) return
-                setSignalViewProgressVisibility(false)
-                openLoginScreen()
-            }
-        })
-    }
-
-    private fun saveSignal(description: String, dateSubmitted: Date, status: Int, latitude: Double, longitude: Double) {
-        signalRepository.saveSignal(Signal(description, dateSubmitted, status, latitude, longitude), object : SignalRepository.SaveSignalCallback {
-            override fun onSignalSaved(signal: Signal) {
-                if (!isViewAvailable) return
-                if (!isEmpty(photoUri)) {
-                    savePhoto(photoUri, signal)
-                } else {
-                    signalsList!!.add(signal)
-
-                    displaySignals(signalsList!!, true, signal.id)
-                    setSendSignalViewVisibility(false)
-                    clearSignalViewData()
-                }
-            }
-
-            override fun onSignalFailure(message: String) {
-                if (!isViewAvailable) return
-                showMessage(message)
-            }
-        })
-    }
-
-    private fun savePhoto(photoUri: String?, signal: Signal) {
-        photoRepository.savePhoto(photoUri, signal.id, object : PhotoRepository.SavePhotoCallback {
-            override fun onPhotoSaved() {
-                if (!isViewAvailable) return
-                signalsList!!.add(signal)
-                displaySignals(signalsList!!, true, signal.id)
-                setSendSignalViewVisibility(false)
-                clearSignalViewData()
-                showAddedSignalMessage()
-            }
-
-            override fun onPhotoFailure(message: String) {
-                if (!isViewAvailable) return
-                showMessage(message)
-            }
-        })
-    }
-
-    fun onChoosePhotoIconClicked() {
-        hideKeyboard()
-        showSendPhotoBottomSheet()
-    }
-
-    fun onCameraOptionSelected() {
-        openCamera()
-    }
-
-    fun onGalleryOptionSelected() {
-        openGallery()
-    }
 
     fun onSignalPhotoSelected(photoUri: String) {
         this.photoUri = photoUri
         setThumbnailImage(photoUri)
     }
 
-    fun onStoragePermissionForCameraGranted() {
-        openCamera()
-    }
-
-    fun onStoragePermissionForGalleryGranted() {
-        openGallery()
-    }
-
-    fun onSignalInfoWindowClicked(signal: Signal?) {
-        openSignalDetailsScreen(signal!!)
-    }
-
-    fun onBackButtonPressed() {
-        if (sendSignalViewVisibility) {
-            setSendSignalViewVisibility(false)
-        } else {
-            closeSignalsMapScreen()
-        }
-    }
-
-    fun onRefreshButtonClicked() {
-        getAllSignals(latitude, longitude, radius, timeout, false)
-    }
-
-    fun onSignalStatusUpdated(signal: Signal) {
-        if (signal == null) return
-
-        for (i in signalsList!!.indices) {
-            val currentSignal = signalsList!![i]
-            if (currentSignal.id == signal.id) {
-                signalsList!!.removeAt(i)
-                signalsList!!.add(signal)
-                displaySignals(signalsList!!, true)
-                break
-            }
-        }
-    }
-
-    fun onAuthenticationAction() {
-        hideKeyboard()
-        val userToken = userManager.userToken
-
-        if (userToken != null && !userToken.isEmpty()) {
-            logoutUser()
-        } else {
-            openLoginScreen()
-        }
-    }
-
-    private fun logoutUser() {
-        if (utils.hasNetworkConnection()) {
-            userManager.logout(object : UserManager.LogoutCallback {
-                override fun onLogoutSuccess() {
-                    onLogoutSuccess()
-                }
-
-                override fun onLogoutFailure(message: String) {
-                    onLogoutFailure(message!!)
-                }
-            })
-        } else {
-            onLogoutFailure("No connection.")
-        }
-    }
-
-    fun onLoginAction() {}
-
     fun clearSignalViewData() {
-        clearSignalViewData()
+        clearSignalViewDataView()
         photoUri = null
     }
 
@@ -1028,8 +943,6 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
     private fun isEmpty(value: String?): Boolean {
         return !(value != null && value.length > 0)
     }
-
-
 
 
     companion object {
