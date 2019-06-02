@@ -99,22 +99,6 @@ class SignalsMapViewModel(
             field = value
             notifyChange(BR.sendSignalBitmap)
         }
-
-//    @Bindable
-//    var addSignalPinVisible:Int = View.INVISIBLE
-//        set(value){
-//            field = value
-//            notifyChange(BR.addSignalPinVisible)
-//        }
-//
-//    @Bindable
-//    var addSignalViewVisible:Int = View.INVISIBLE
-//        set(value){
-//            field = value
-//            notifyChange(BR.addSignalViewVisible)
-//        }
-
-
 }
 
 @BindingAdapter("addSignalPinVisibility")
