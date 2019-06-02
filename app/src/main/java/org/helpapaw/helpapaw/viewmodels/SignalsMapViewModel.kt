@@ -14,7 +14,6 @@ import androidx.core.graphics.drawable.RoundedBitmapDrawable
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
 import androidx.databinding.Bindable
 import androidx.databinding.BindingAdapter
-import androidx.databinding.Observable
 import androidx.lifecycle.MutableLiveData
 import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.location.*
@@ -99,6 +98,37 @@ class SignalsMapViewModel(
             field = value
             notifyChange(BR.sendSignalBitmap)
         }
+
+    @Bindable
+    var sendSignalViewProgressVisibility:Boolean = false
+        set(_){
+            field = !field
+            notifyChange(BR.sendSignalViewProgressVisibility)
+        }
+
+    fun fabOnClick(view:View){
+        addSignalVisible  = if(addSignalVisible == View.VISIBLE){ View.INVISIBLE} else { View.VISIBLE }
+    }
+//    @Bindable
+//    var addSignalPinVisible:Int = View.INVISIBLE
+//        set(value){
+//            field = value
+//            notifyChange(BR.addSignalPinVisible)
+//        }
+//
+//    @Bindable
+//    var addSignalViewVisible:Int = View.INVISIBLE
+//        set(value){
+//            field = value
+//            notifyChange(BR.addSignalViewVisible)
+//        }
+
+
+}
+
+@BindingAdapter("sendSignalViewProgressVisibility")
+fun setSendSignalViewProgressVisibility(view:SendSignalView,visibility:Boolean){
+    view.setProgressVisibility(visibility)
 }
 
 @BindingAdapter("addSignalPinVisibility")

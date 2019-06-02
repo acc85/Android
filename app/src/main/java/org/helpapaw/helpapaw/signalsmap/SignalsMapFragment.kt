@@ -12,6 +12,7 @@ import android.location.Location
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Looper
 import android.provider.MediaStore
 import android.util.Log
 import android.view.*
@@ -23,11 +24,9 @@ import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
 import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.location.*
-import com.google.android.gms.location.places.Places
 import com.google.android.gms.maps.CameraUpdate
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
@@ -77,8 +76,11 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
 
     val settingsRepository: ISettingsRepository by inject()
 
+    val locationSettingsRequest:LocationSettingsRequest by inject()
+    val fusedLocationProviderClient:FusedLocationProviderClient by inject()
 
-    private var googleApiClient: GoogleApiClient? = null
+
+    private val googleApiClient: GoogleApiClient by inject()
     private var signalsGoogleMap: GoogleMap? = null
     private val mDisplayedSignals = ArrayList<Signal>()
     private val mSignalMarkers = HashMap<String, Signal>()
@@ -88,15 +90,22 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
     private var mCurrentLong: Double = 0.toDouble()
     private var mZoom: Float = 0.toFloat()
 
+    val locationListener:LocationListener = LocationListener { location -> handleNewLocation(location) }
+
     lateinit var binding: FragmentSignalsMapBinding
     private var optionsMenu: Menu? = null
 
     private var mFocusedSignalId: String? = null
     private var imageFileName: String = ""
 
+    val locationCallback:LocationCallback = object:LocationCallback(){
+        override fun onLocationResult(location: LocationResult?) {
+            location?.let{locResult->
+                handleNewLocation(locResult.lastLocation)
+            }
+        }
 
-    val locationListener:LocationListener = LocationListener { location -> handleNewLocation(location) }
-
+    }
     val connectionCallback:GoogleApiClient.ConnectionCallbacks = object : GoogleApiClient.ConnectionCallbacks {
         override fun onConnectionSuspended(i: Int) {
             Log.i(TAG, "Connection suspended")
@@ -104,9 +113,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
         }
 
         override fun onConnected(bundle: Bundle?) {
-            val builder = LocationSettingsRequest.Builder().addLocationRequest(LocationRequest())
-
-            val result = LocationServices.SettingsApi.checkLocationSettings(googleApiClient, builder.build())
+            val result = LocationServices.SettingsApi.checkLocationSettings(googleApiClient, locationSettingsRequest)
 
             result.setResultCallback { locationSettingsResult ->
                 val status = locationSettingsResult.status
@@ -151,10 +158,6 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
         }
     }
 
-    val connectionFailedListener = GoogleApiClient.OnConnectionFailedListener {
-        connectionResult -> Log.i(TAG, "Connection failed with error code: " + connectionResult.errorCode)
-    }
-
 
     private val mapClickListener = GoogleMap.OnMapClickListener {
         // Clicking on the map closes any open info window
@@ -178,19 +181,12 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
         onLocationChanged(cameraTarget.latitude, cameraTarget.longitude, radius, settingsRepository!!.getTimeout())
     }
 
-    val fabAddSignalClickListener: View.OnClickListener
-        get() = View.OnClickListener {
-            //actionsListener
-            viewModel.addSignalVisible  = if(viewModel.addSignalVisible == View.VISIBLE){ View.INVISIBLE}else{ View.VISIBLE }
-        }
-
-
     val onSignalSendClickListener: View.OnClickListener
         get() = View.OnClickListener {
             val description = binding.viewSendSignal.signalDescription
             //actionsListener
             hideKeyboard()
-            setSignalViewProgressVisibility(true)
+            viewModel.sendSignalViewProgressVisibility = true
 
             userManager.isLoggedIn(object : UserManager.LoginCallback {
                 override fun onLoginSuccess() {
@@ -198,7 +194,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
 
                     if (isEmpty(description)) {
                         showDescriptionErrorMessage()
-                        setSignalViewProgressVisibility(false)
+                        viewModel.sendSignalViewProgressVisibility = false
                     } else {
                         signalRepository.saveSignal(Signal(description,  Date(), 0, latitude, longitude), object : SignalRepository.SaveSignalCallback {
                             override fun onSignalSaved(signal: Signal) {
@@ -244,7 +240,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
 
                 override fun onLoginFailure(message: String?) {
                     if (!isViewAvailable) return
-                    setSignalViewProgressVisibility(false)
+                    viewModel.sendSignalViewProgressVisibility = false
                     openLoginScreen()
                 }
             })
@@ -253,19 +249,17 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         retainInstance = true
+        locationRequest.fastestInterval = (10 * 1000).toLong() // 10 seconds, in milliseconds
         val arguments = arguments
         if (arguments != null && arguments.containsKey(Signal.KEY_FOCUSED_SIGNAL_ID)) {
 
             mFocusedSignalId = arguments.getString(Signal.KEY_FOCUSED_SIGNAL_ID)
             arguments.remove(Signal.KEY_FOCUSED_SIGNAL_ID)
         }
-        googleApiClient = GoogleApiClient.Builder(context!!)
-                .addConnectionCallbacks(connectionCallback)
-                .addOnConnectionFailedListener(connectionFailedListener)
-                .addApi(LocationServices.API)
-                .addApi(Places.GEO_DATA_API)
-                .build()
-
+        googleApiClient.registerConnectionCallbacks(connectionCallback)
+        googleApiClient.registerConnectionFailedListener{
+            connectionResult -> Log.i(TAG, "Connection failed with error code: " + connectionResult.errorCode)
+        }
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -302,19 +296,17 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
 
         })
 
-        if (binding.mapSignals != null) {
-            binding.mapSignals.getMapAsync{ googleMap ->
-                signalsGoogleMap = googleMap
-                //actionsListener
-                if (signalsList != null && signalsList!!.size > 0) {
-                    displaySignals(signalsList!!, false)
-                }
-                ///
-                signalsGoogleMap!!.setPadding(0, PADDING_TOP, 0, PADDING_BOTTOM)
-                signalsGoogleMap!!.setOnMapClickListener(mapClickListener)
-                signalsGoogleMap!!.setOnMarkerClickListener(mapMarkerClickListener)
-                signalsGoogleMap!!.setOnCameraIdleListener(mapCameraIdleListener)
+        binding.mapSignals.getMapAsync{ googleMap ->
+            signalsGoogleMap = googleMap
+            //actionsListener
+            if (signalsList != null && signalsList!!.size > 0) {
+                displaySignals(signalsList!!, false)
             }
+            ///
+            signalsGoogleMap!!.setPadding(0, PADDING_TOP, 0, PADDING_BOTTOM)
+            signalsGoogleMap!!.setOnMapClickListener(mapClickListener)
+            signalsGoogleMap!!.setOnMarkerClickListener(mapMarkerClickListener)
+            signalsGoogleMap!!.setOnCameraIdleListener(mapCameraIdleListener)
         }
 
 //        if (savedInstanceState == null) {
@@ -326,7 +318,6 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
 
         setHasOptionsMenu(true)
 
-        binding.fabAddSignal.setOnClickListener(fabAddSignalClickListener)
         binding.viewSendSignal.setOnSignalSendClickListener(onSignalSendClickListener)
         binding.viewSendSignal.setOnSignalPhotoClickListener(object:View.OnClickListener{
             override fun onClick(v: View?) {
@@ -341,7 +332,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
     override fun onStart() {
         super.onStart()
         binding.mapSignals.onStart()
-        googleApiClient!!.connect()
+        googleApiClient.connect()
     }
 
     override fun onResume() {
@@ -357,10 +348,9 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
     override fun onStop() {
         super.onStop()
         binding.mapSignals.onStop()
-
-        if (googleApiClient!!.isConnected) {
-            LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, locationListener)
-            googleApiClient!!.disconnect()
+        if (googleApiClient.isConnected) {
+            fusedLocationProviderClient.removeLocationUpdates(locationCallback)
+            googleApiClient.disconnect()
         }
     }
 
@@ -492,9 +482,19 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
     @SuppressLint("MissingPermission")
     private fun setLastLocation() {
         if (viewModel.addSignalVisible == View.INVISIBLE) {
-            val location = LocationServices.FusedLocationApi.getLastLocation(googleApiClient)
-            location?.let { handleNewLocation(it) }
-                    ?: LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, locationRequest, locationListener)
+//            val location = LocationServices.FusedLocationApi.getLastLocation(googleApiClient)
+//            location?.let { handleNewLocation(it) }
+//                    ?: LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, locationRequest, locationListener)
+
+//            val location = LocationServices.FusedLocationApi.getLastLocation(googleApiClient)
+//            location?.let {
+//                handleNewLocation(it)
+//            }?:
+            fusedLocationProviderClient.lastLocation.addOnCompleteListener { task->
+                task.result?.let {location->
+                    handleNewLocation(location)
+                }?: fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper())
+            }
         }
     }
 
@@ -675,10 +675,6 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
                 }
             }
         }
-    }
-
-    override fun setSignalViewProgressVisibility(visibility: Boolean) {
-        binding.viewSendSignal.setProgressVisibility(visibility)
     }
 
     override fun closeSignalsMapScreen() {

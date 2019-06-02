@@ -38,6 +38,7 @@
                 app:addSignalViewVisibility="@{viewModel.addSignalVisible}"
                 app:bitmap="@{viewModel.sendSignalBitmap}"
                 app:clearData="@{viewModel.clearData}"
+                app:sendSignalViewProgressVisibility="@{viewModel.sendSignalViewProgressVisibility}"
                 app:layout_constraintBottom_toTopOf="@+id/map_signals"/>
 
             <androidx.appcompat.widget.AppCompatImageView
@@ -59,6 +60,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="8dp"
+            android:onClick="@{viewModel::fabOnClick}"
             android:src="@{viewModel.addSignalVisible == view.INVISIBLE ? @drawable/fab_add : @drawable/ic_close}"
             app:layout_anchor="@id/grp_signals_map_container"
             app:layout_anchorGravity="bottom|right|end" />

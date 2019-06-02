@@ -2,7 +2,11 @@ package org.helpapaw.helpapaw.koin
 
 import android.view.LayoutInflater
 import com.facebook.CallbackManager
+import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.LocationSettingsRequest
+import com.google.android.gms.location.places.Places
 import org.helpapaw.helpapaw.R
 import org.helpapaw.helpapaw.authentication.login.LoginFragment
 import org.helpapaw.helpapaw.authentication.register.RegisterFragment
@@ -45,8 +49,16 @@ var testModule = module {
     single { LocationRequest.create()
             .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
             .setInterval((30 * 1000).toLong())
-            .fastestInterval = (10 * 1000).toLong() // 10 seconds, in milliseconds
         }
+
+    single { GoogleApiClient.Builder(androidContext())
+            .addApi(LocationServices.API)
+            .addApi(Places.GEO_DATA_API)
+            .build() }
+
+    single { LocationServices.getFusedLocationProviderClient(androidContext()) }
+
+    single { LocationSettingsRequest.Builder().addLocationRequest(LocationRequest()).build() }
 
     single {CallbackManager.Factory.create()}
 

@@ -30,8 +30,6 @@ interface SignalsMapContract {
 
         fun openLoginScreen()
 
-        fun setSignalViewProgressVisibility(visibility: Boolean)
-
         fun closeSignalsMapScreen()
 
         fun showDescriptionErrorMessage()
