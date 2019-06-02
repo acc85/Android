@@ -92,6 +92,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
     private var optionsMenu: Menu? = null
 
     private var mFocusedSignalId: String? = null
+    private var imageFileName: String = ""
 
 
     val locationListener:LocationListener = LocationListener { location -> handleNewLocation(location) }
@@ -154,7 +155,6 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
         connectionResult -> Log.i(TAG, "Connection failed with error code: " + connectionResult.errorCode)
     }
 
-    lateinit var imageFileName: String
 
     private val mapClickListener = GoogleMap.OnMapClickListener {
         // Clicking on the map closes any open info window
