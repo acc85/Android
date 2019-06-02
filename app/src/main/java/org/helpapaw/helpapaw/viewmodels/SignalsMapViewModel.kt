@@ -14,6 +14,7 @@ import androidx.core.graphics.drawable.RoundedBitmapDrawable
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
 import androidx.databinding.Bindable
 import androidx.databinding.BindingAdapter
+import androidx.databinding.Observable
 import androidx.lifecycle.MutableLiveData
 import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.location.*
@@ -75,6 +76,14 @@ class SignalsMapViewModel(
         set(value){
             field = value
             notifyChange(BR.addSignalVisible)
+        }
+
+    @Bindable
+    var clearData:Boolean = false
+        set(_){
+            photoUri = ""
+            field = !field
+            notifyChange(BR.clearData)
         }
 
     @Bindable
@@ -156,8 +165,6 @@ fun setRoundedBitmap(view:SendSignalView, bitmap:Bitmap?) {
 }
 
 @BindingAdapter("clearData")
-fun clearSendSignalData(view:SendSignalView, data:String){
-    if(data.isEmpty()){
-        view.clearData()
-    }
+fun clearSendSignalData(view:SendSignalView,@Suppress("UNUSED_PARAMETER") clearData:Boolean){
+    view.clearData()
 }

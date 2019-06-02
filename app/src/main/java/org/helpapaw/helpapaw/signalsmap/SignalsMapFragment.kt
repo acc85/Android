@@ -211,7 +211,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
                                             mFocusedSignalId = signal.id
                                             displaySignals(signalsList!!, true)
                                             viewModel.addSignalVisible = View.INVISIBLE
-                                            viewModel.photoUri = ""
+                                            viewModel.clearData = true
 
                                             //UI
                                             showAddedSignalMessage()
@@ -226,12 +226,10 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
 
                                 } else {
                                     signalsList!!.add(signal)
-
                                     mFocusedSignalId = signal.id
                                     displaySignals(signalsList!!, true)
-
                                     viewModel.addSignalVisible = View.INVISIBLE
-                                    viewModel.photoUri = ""
+                                    viewModel.clearData = true
                                 }
                             }
 
