@@ -90,8 +90,6 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
     private var mCurrentLong: Double = 0.toDouble()
     private var mZoom: Float = 0.toFloat()
 
-    val locationListener:LocationListener = LocationListener { location -> handleNewLocation(location) }
-
     lateinit var binding: FragmentSignalsMapBinding
     private var optionsMenu: Menu? = null
 
