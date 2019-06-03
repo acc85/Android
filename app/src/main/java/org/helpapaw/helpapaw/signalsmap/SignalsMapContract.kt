@@ -14,9 +14,7 @@ interface SignalsMapContract {
 
         fun showMessage(message: String)
 
-        fun displaySignals(signals: List<Signal>?, showPopup: Boolean)
-
-        fun updateMapCameraPosition(latitude: Double, longitude: Double, zoom: Float?)
+//        fun updateMapCameraPosition(latitude: Double, longitude: Double, zoom: Float?)
 
         fun hideKeyboard()
 
@@ -31,12 +29,6 @@ interface SignalsMapContract {
         fun openLoginScreen()
 
         fun closeSignalsMapScreen()
-
-        fun showDescriptionErrorMessage()
-
-        fun showAddedSignalMessage()
-
-        fun showNoInternetMessage()
 
         fun setProgressVisibility(visibility: Boolean)
 

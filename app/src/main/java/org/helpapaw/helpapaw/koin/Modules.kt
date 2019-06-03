@@ -21,7 +21,6 @@ import org.helpapaw.helpapaw.signaldetails.SignalDetailsContract
 import org.helpapaw.helpapaw.signaldetails.SignalDetailsPresenter
 import org.helpapaw.helpapaw.signalphoto.SignalPhotoFragment
 import org.helpapaw.helpapaw.signalsmap.SignalInfoWindowAdapter
-import org.helpapaw.helpapaw.signalsmap.SignalsMapContract
 import org.helpapaw.helpapaw.utils.Utils
 import org.helpapaw.helpapaw.viewmodels.*
 import org.koin.android.ext.koin.androidContext
@@ -43,13 +42,13 @@ var testModule = module {
 
     viewModel{ SignalPhotoViewModel(get(),get())}
 
-    viewModel{ SignalsMapViewModel(get()) }
+    viewModel{ SignalsMapViewModel(get(), get(),get(), get(), get(), get(), get(),get(),get()) }
 
 
     single { LocationRequest.create()
             .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
             .setInterval((30 * 1000).toLong())
-        }
+            .setFastestInterval((10 * 1000).toLong()) }
 
     single { GoogleApiClient.Builder(androidContext())
             .addApi(LocationServices.API)
@@ -58,7 +57,7 @@ var testModule = module {
 
     single { LocationServices.getFusedLocationProviderClient(androidContext()) }
 
-    single { LocationSettingsRequest.Builder().addLocationRequest(LocationRequest()).build() }
+    single { LocationSettingsRequest.Builder().addLocationRequest(get()).build() }
 
     single {CallbackManager.Factory.create()}
 

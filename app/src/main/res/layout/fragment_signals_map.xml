@@ -26,7 +26,8 @@
                 android:id="@+id/map_signals"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_gravity="center_horizontal|top" />
+                android:layout_gravity="center_horizontal|top"
+                app:mapViewAsync="@{viewModel}"/>
 
             <org.helpapaw.helpapaw.sendsignal.SendSignalView
                 android:id="@+id/view_send_signal"
@@ -38,8 +39,10 @@
                 app:addSignalViewVisibility="@{viewModel.addSignalVisible}"
                 app:bitmap="@{viewModel.sendSignalBitmap}"
                 app:clearData="@{viewModel.clearData}"
+                app:description="@={viewModel.description}"
                 app:sendSignalViewProgressVisibility="@{viewModel.sendSignalViewProgressVisibility}"
-                app:layout_constraintBottom_toTopOf="@+id/map_signals"/>
+                app:layout_constraintBottom_toTopOf="@+id/map_signals"
+                app:setOnSignalSendClick="@{viewModel.sendClick}"/>
 
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/add_signal_pin"
@@ -53,7 +56,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:srcCompat="@drawable/ic_gps_fixed_black_24dp"
-                app:addSignalPinVisibility="@{viewModel.addSignalVisible}"/>
+                app:addSignalPinVisibility="@{viewModel.addSignalVisible}" />
         </androidx.constraintlayout.widget.ConstraintLayout>
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/fab_add_signal"

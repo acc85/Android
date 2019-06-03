@@ -10,8 +10,17 @@ import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.cardview.widget.CardView
+import androidx.databinding.BindingAdapter
 
 import org.helpapaw.helpapaw.R
+import androidx.databinding.InverseBindingAdapter
+import android.text.Editable
+import android.text.TextWatcher
+import androidx.databinding.InverseBindingListener
+
+
+
+
 
 /**
  * Created by iliyan on 0/29/16
@@ -53,6 +62,7 @@ class SendSignalView : CardView {
         progressSendSignal = this.findViewById(R.id.progress_send_signal) as ProgressBar
     }
 
+
     fun setOnSignalSendClickListener(clickListener: View.OnClickListener) {
         txtSignalSend.setOnClickListener(clickListener)
     }
@@ -82,4 +92,49 @@ class SendSignalView : CardView {
             progressSendSignal.visibility = View.GONE
         }
     }
+}
+
+
+@BindingAdapter("description")
+fun setDescription(view:SendSignalView, text:String){
+    view.editSignalDescription.setText(text)
+}
+
+@InverseBindingAdapter(attribute = "description")
+fun getDescription(view: SendSignalView): String {
+    return view.editSignalDescription.text.toString()
+}
+
+
+@BindingAdapter("descriptionAttrChanged")
+fun setListener(view: SendSignalView, listener: InverseBindingListener?) {
+    if (listener != null) {
+        view.editSignalDescription.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(charSequence: CharSequence, i: Int, i1: Int, i2: Int) {}
+
+            override fun onTextChanged(charSequence: CharSequence, i: Int, i1: Int, i2: Int) {}
+
+            override fun afterTextChanged(editable: Editable) {
+                listener.onChange()
+            }
+        })
+    }
+}
+
+//@BindingAdapter("setOnSignalSendClick")
+//fun setOnSignalSendClick(view:SendSignalView, function:View.OnClickListener){
+//    view.setOnSignalSendClickListener(function)
+//}
+
+
+@BindingAdapter("setOnSignalSendClick")
+fun setOnSignalSendClick(view:SendSignalView, function:()->Unit){
+    view.setOnSignalSendClickListener(View.OnClickListener {
+        function()
+    })
+}
+
+@BindingAdapter("setOnSignalPhotoClick")
+fun setOnSignalPhotoClick(view:SendSignalView, function:View.OnClickListener){
+    view.setOnSignalPhotoClickListener(function)
 }

@@ -8,29 +8,21 @@ import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.PorterDuff
-import android.location.Location
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.Looper
 import android.provider.MediaStore
 import android.util.Log
 import android.view.*
 import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.core.content.ContextCompat
-import androidx.core.view.MenuItemCompat
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
+import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.GoogleApiClient
+import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
-import com.google.android.gms.maps.CameraUpdate
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.Marker
-import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.material.snackbar.Snackbar
 import org.helpapaw.helpapaw.R
 import org.helpapaw.helpapaw.authentication.AuthenticationActivity
@@ -38,117 +30,84 @@ import org.helpapaw.helpapaw.base.BaseFragment
 import org.helpapaw.helpapaw.databinding.FragmentSignalsMapBinding
 import org.helpapaw.helpapaw.images.ImageUtils
 import org.helpapaw.helpapaw.models.Signal
-import org.helpapaw.helpapaw.repository.ISettingsRepository
-import org.helpapaw.helpapaw.repository.PhotoRepository
-import org.helpapaw.helpapaw.repository.PushNotificationsRepository
-import org.helpapaw.helpapaw.repository.SignalRepository
 import org.helpapaw.helpapaw.sendsignal.SendPhotoBottomSheet
 import org.helpapaw.helpapaw.signaldetails.SignalDetailsActivity
-import org.helpapaw.helpapaw.user.UserManager
-import org.helpapaw.helpapaw.utils.StatusUtils
-import org.helpapaw.helpapaw.utils.Utils
 import org.helpapaw.helpapaw.viewmodels.ERROR_TYPE
 import org.helpapaw.helpapaw.viewmodels.MESSAGE_TYPE
 import org.helpapaw.helpapaw.viewmodels.SignalsMapResult
 import org.helpapaw.helpapaw.viewmodels.SignalsMapViewModel
 import org.koin.android.ext.android.inject
-import org.koin.core.parameter.parametersOf
 import java.text.SimpleDateFormat
 import java.util.*
 
+
+const val MAP_VIEW_STATE = "mapViewSaveState"
+const val DATE_TIME_FORMAT_VIEW = "yyyyMMdd_HHmmss"
+const val PHOTO_PREFIX = "JPEG_"
+const val PHOTO_EXTENSION = ".jpg"
+const val LOCATION_PERMISSIONS_REQUEST = 1
+const val REQUEST_CAMERA = 2
+const val REQUEST_GALLERY = 3
+const val READ_EXTERNAL_STORAGE_FOR_CAMERA = 4
+const val READ_WRITE_EXTERNAL_STORAGE_FOR_GALLERY = 5
+const val REQUEST_SIGNAL_DETAILS = 6
+const val REQUEST_CHECK_SETTINGS = 214
+
 class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
 
-    val userManager: UserManager by inject()
-    val pushNotificationsRepository: PushNotificationsRepository by inject()
-    val imageUtils:ImageUtils by inject()
+    private val imageUtils: ImageUtils by inject()
 
-    val utils: Utils by inject()
-    val signalRepository:SignalRepository by inject()
-    val photoRepository:PhotoRepository by inject()
+    val viewModel: SignalsMapViewModel by inject()
 
-    val viewModel:SignalsMapViewModel by inject()
-
-    val infoWindowAdapter: SignalInfoWindowAdapter by inject {
-        parametersOf(mSignalMarkers, activity!!.layoutInflater)
-    }
-
-    private val locationRequest: LocationRequest by inject()
-
-    val settingsRepository: ISettingsRepository by inject()
-
-    val locationSettingsRequest:LocationSettingsRequest by inject()
-    val fusedLocationProviderClient:FusedLocationProviderClient by inject()
-
-
+    val locationSettingsRequest: LocationSettingsRequest by inject()
     private val googleApiClient: GoogleApiClient by inject()
-    private var signalsGoogleMap: GoogleMap? = null
-    private val mDisplayedSignals = ArrayList<Signal>()
-    private val mSignalMarkers = HashMap<String, Signal>()
-    private var mCurrentlyShownInfoWindowSignal: Signal? = null
-
-    private var mCurrentLat: Double = 0.toDouble()
-    private var mCurrentLong: Double = 0.toDouble()
-    private var mZoom: Float = 0.toFloat()
-
     lateinit var binding: FragmentSignalsMapBinding
     private var optionsMenu: Menu? = null
 
-    private var mFocusedSignalId: String? = null
+    //    private var mFocusedSignalId: String? = null
     private var imageFileName: String = ""
 
-    val locationCallback:LocationCallback = object:LocationCallback(){
-        override fun onLocationResult(location: LocationResult?) {
-            location?.let{locResult->
-                handleNewLocation(locResult.lastLocation)
-            }
-        }
-
-    }
-    val connectionCallback:GoogleApiClient.ConnectionCallbacks = object : GoogleApiClient.ConnectionCallbacks {
+    private val connectionCallback: GoogleApiClient.ConnectionCallbacks = object : GoogleApiClient.ConnectionCallbacks {
         override fun onConnectionSuspended(i: Int) {
             Log.i(TAG, "Connection suspended")
-            googleApiClient!!.connect()
+            googleApiClient.connect()
         }
 
         override fun onConnected(bundle: Bundle?) {
-            val result = LocationServices.SettingsApi.checkLocationSettings(googleApiClient, locationSettingsRequest)
-
-            result.setResultCallback { locationSettingsResult ->
-                val status = locationSettingsResult.status
-                val states = locationSettingsResult.locationSettingsStates
-                when (status.statusCode) {
-                    LocationSettingsStatusCodes.SUCCESS -> {
+            val result = LocationServices.getSettingsClient(context!!).checkLocationSettings(locationSettingsRequest)
+            result.addOnFailureListener { task ->
+                (task as? ApiException)?.let { status ->
+                    if (status.statusCode == LocationSettingsStatusCodes.RESOLUTION_REQUIRED) {
+                        (status as? ResolvableApiException)?.startResolutionForResult(activity, REQUEST_CHECK_SETTINGS)
                     }
-                    LocationSettingsStatusCodes.RESOLUTION_REQUIRED ->
-                        // Location settings are not satisfied, but this can be fixed
-                        // by showing the user a dialog.
-                        try {
-                            // Show the dialog by calling startResolutionForResult(),
-                            // and check the result in onActivityResult().
-                            status.startResolutionForResult(activity, REQUEST_CHECK_SETTINGS)
-                        } catch (e: Exception) {
-                            // Ignore the error.
-                        }
-
-                    LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE -> {
-                    }
-                }// All location settings are satisfied. The client can
-                // initialize location requests here.
-                // Location settings are not satisfied. However, we have no way
-                // to fix the settings so we won't show the dialog.
+                }
             }
+
+//            result.addOnCompleteListener {task->
+//                try{
+//                   task.getResult(ApiException::class.java)
+//                }catch (exception:ApiException){
+//                    when (exception.statusCode) {
+//                        LocationSettingsStatusCodes.RESOLUTION_REQUIRED ->
+//                            (exception as? ResolvableApiException)?.let{resolvableApiException ->
+//                            resolvableApiException.startResolutionForResult(activity, REQUEST_CHECK_SETTINGS)
+//                        }
+//                    }
+//                }
+//
+//            }
             //Protection for the case when activity is destroyed (e.g. when rotating)
             //Probably there is a better fix in the actual workflow but we need a quick fix as users experience a lot of crashes
-            context?.let{ctx->
+            context?.let { ctx ->
                 if (ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                     showPermissionDialog(activity, Manifest.permission.ACCESS_FINE_LOCATION, LOCATION_PERMISSIONS_REQUEST)
                 } else {
-                    if (signalsGoogleMap != null) {
-                        signalsGoogleMap!!.isMyLocationEnabled = true
+                    viewModel.signalsGoogleMap?.let { gm ->
+                        gm.isMyLocationEnabled = true
                     }
-                    setLastLocation()
+                    viewModel.setLastLocation()
                 }
-            }?:run{
+            } ?: run {
                 Log.e(TAG, "Context is null, exiting...")
                 return
             }
@@ -157,111 +116,18 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
     }
 
 
-    private val mapClickListener = GoogleMap.OnMapClickListener {
-        // Clicking on the map closes any open info window
-        mCurrentlyShownInfoWindowSignal = null
-    }
-
-    private val mapMarkerClickListener = GoogleMap.OnMarkerClickListener { marker ->
-        // Save the signal for the currently shown info window in case it should be reopen
-        mCurrentlyShownInfoWindowSignal = mSignalMarkers[marker.id]
-        false
-    }
-
-    private val mapCameraIdleListener = GoogleMap.OnCameraIdleListener {
-        val cameraPosition = signalsGoogleMap!!.cameraPosition
-        val cameraTarget = cameraPosition.target
-        mCurrentLong = cameraTarget.longitude
-        mCurrentLat = cameraTarget.latitude
-        mZoom = cameraPosition.zoom
-        val radius = calculateZoomToMeters()
-        //actionsListener
-        onLocationChanged(cameraTarget.latitude, cameraTarget.longitude, radius, settingsRepository!!.getTimeout())
-    }
-
-    val onSignalSendClickListener: View.OnClickListener
-        get() = View.OnClickListener {
-            val description = binding.viewSendSignal.signalDescription
-            //actionsListener
-            hideKeyboard()
-            viewModel.sendSignalViewProgressVisibility = true
-
-            userManager.isLoggedIn(object : UserManager.LoginCallback {
-                override fun onLoginSuccess() {
-                    if (!isViewAvailable) return
-
-                    if (isEmpty(description)) {
-                        showDescriptionErrorMessage()
-                        viewModel.sendSignalViewProgressVisibility = false
-                    } else {
-                        signalRepository.saveSignal(Signal(description,  Date(), 0, latitude, longitude), object : SignalRepository.SaveSignalCallback {
-                            override fun onSignalSaved(signal: Signal) {
-                                if (!isViewAvailable) return
-                                if (!isEmpty(viewModel.photoUri)) {
-                                    photoRepository.savePhoto(viewModel.photoUri, signal.id, object : PhotoRepository.SavePhotoCallback {
-                                        override fun onPhotoSaved() {
-                                            if (!isViewAvailable) return
-                                            signalsList!!.add(signal)
-                                            mFocusedSignalId = signal.id
-                                            displaySignals(signalsList!!, true)
-                                            viewModel.addSignalVisible = View.INVISIBLE
-                                            viewModel.clearData = true
-
-                                            //UI
-                                            showAddedSignalMessage()
-                                        }
-
-                                        override fun onPhotoFailure(message: String) {
-                                            if (!isViewAvailable) return
-                                            showMessage(message)
-                                        }
-                                    })
-
-
-                                } else {
-                                    signalsList!!.add(signal)
-                                    mFocusedSignalId = signal.id
-                                    displaySignals(signalsList!!, true)
-                                    viewModel.addSignalVisible = View.INVISIBLE
-                                    viewModel.clearData = true
-                                }
-                            }
-
-                            override fun onSignalFailure(message: String) {
-                                if (!isViewAvailable) return
-                                showMessage(message)
-                            }
-                        })
-
-                    }
-                }
-
-                override fun onLoginFailure(message: String?) {
-                    if (!isViewAvailable) return
-                    viewModel.sendSignalViewProgressVisibility = false
-                    openLoginScreen()
-                }
-            })
-        }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         retainInstance = true
-        locationRequest.fastestInterval = (10 * 1000).toLong() // 10 seconds, in milliseconds
         val arguments = arguments
         if (arguments != null && arguments.containsKey(Signal.KEY_FOCUSED_SIGNAL_ID)) {
-
-            mFocusedSignalId = arguments.getString(Signal.KEY_FOCUSED_SIGNAL_ID)
+            viewModel.mFocusedSignalId = arguments.getString(Signal.KEY_FOCUSED_SIGNAL_ID)
             arguments.remove(Signal.KEY_FOCUSED_SIGNAL_ID)
         }
         googleApiClient.registerConnectionCallbacks(connectionCallback)
-        googleApiClient.registerConnectionFailedListener{
-            connectionResult -> Log.i(TAG, "Connection failed with error code: " + connectionResult.errorCode)
+        googleApiClient.registerConnectionFailedListener { connectionResult ->
+            Log.i(TAG, "Connection failed with error code: " + connectionResult.errorCode)
         }
-    }
-
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -272,56 +138,59 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
         binding.viewModel = viewModel
         binding.mapSignals.onCreate(mapViewSavedInstanceState)
 
-        viewModel.liveData.observe(this, Observer{signalMapResult->
-            when(signalMapResult){
-                is SignalsMapResult.ShowMessageOfType->{
-                    when(signalMapResult.type){
-                        MESSAGE_TYPE.ADD_SIGNAL ->{
-                            showAddedSignalMessage()
+        viewModel.liveData.observe(this, Observer { signalMapResult ->
+            when (signalMapResult) {
+                is SignalsMapResult.ShowMessageOfType -> {
+                    when (signalMapResult.type) {
+                        MESSAGE_TYPE.ADD_SIGNAL -> {
+                            showMessage(getString(R.string.txt_signal_added_successfully))
                         }
                     }
                 }
 
-                is SignalsMapResult.ShowError->{
-                    when(signalMapResult.errorType){
-                        ERROR_TYPE.NO_INTERNET->{
-                            showNoInternetMessage()
+                is SignalsMapResult.ShowMessage -> {
+                    showMessage(signalMapResult.message)
+                }
+
+                is SignalsMapResult.ShowProgress -> {
+                    setProgressVisibility(signalMapResult.showProgress)
+                }
+
+                is SignalsMapResult.ShowError -> {
+                    when (signalMapResult.errorType) {
+                        ERROR_TYPE.NO_INTERNET -> {
+                            showMessage(getString(R.string.txt_no_internet))
+                        }
+                        ERROR_TYPE.DESCRIPTION -> {
+                            showMessage(getString(R.string.txt_description_required))
                         }
                     }
+                }
+
+                is SignalsMapResult.ShowSignalMarkerInfo -> {
+                    val intent = Intent(context, SignalDetailsActivity::class.java)
+                    intent.putExtra(SignalDetailsActivity.SIGNAL_KEY, viewModel.mSignalMarkers[signalMapResult.marker.id]!!)
+                    startActivityForResult(intent, REQUEST_SIGNAL_DETAILS)
+
+                }
+
+                is SignalsMapResult.OpenLoginScreen -> {
+                    openLoginScreen()
+                }
+
+                is SignalsMapResult.HideKeyboard -> {
+                    hideKeyboard()
                 }
 
             }
 
         })
 
-        binding.mapSignals.getMapAsync{ googleMap ->
-            signalsGoogleMap = googleMap
-            //actionsListener
-            if (signalsList != null && signalsList!!.size > 0) {
-                displaySignals(signalsList!!, false)
-            }
-            ///
-            signalsGoogleMap!!.setPadding(0, PADDING_TOP, 0, PADDING_BOTTOM)
-            signalsGoogleMap!!.setOnMapClickListener(mapClickListener)
-            signalsGoogleMap!!.setOnMarkerClickListener(mapMarkerClickListener)
-            signalsGoogleMap!!.setOnCameraIdleListener(mapCameraIdleListener)
-        }
-
-//        if (savedInstanceState == null) {
-//            signalsMapPresenter = SignalsMapPresenter(this)
-//        } else {
-//            signalsMapPresenter = PresenterManager.getInstance().getPresenter(getScreenId())
-//            signalsMapPresenter!!.view = this
-//        }
-
         setHasOptionsMenu(true)
 
-        binding.viewSendSignal.setOnSignalSendClickListener(onSignalSendClickListener)
-        binding.viewSendSignal.setOnSignalPhotoClickListener(object:View.OnClickListener{
-            override fun onClick(v: View?) {
-                hideKeyboard()
-                showSendPhotoBottomSheet()
-            }
+        binding.viewSendSignal.setOnSignalPhotoClickListener(View.OnClickListener {
+            hideKeyboard()
+            showSendPhotoBottomSheet()
         })
 
         return binding.root
@@ -347,7 +216,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
         super.onStop()
         binding.mapSignals.onStop()
         if (googleApiClient.isConnected) {
-            fusedLocationProviderClient.removeLocationUpdates(locationCallback)
+            viewModel.fusedLocationProviderClient.removeLocationUpdates(viewModel.locationCallback)
             googleApiClient.disconnect()
         }
     }
@@ -355,7 +224,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
     override fun onDestroy() {
         binding.mapSignals.onDestroy()
         super.onDestroy()
-        settingsRepository!!.clearLocationData()
+        viewModel.clearLocationData()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -381,172 +250,10 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         if (item!!.itemId == R.id.menu_item_refresh) {
-            getAllSignals(latitude, longitude, radius, timeout, false)
+            viewModel.getSignals(false)
             return true
         }
         return super.onOptionsItemSelected(item)
-    }
-
-    override fun updateMapCameraPosition(latitude: Double, longitude: Double, zoom: Float?) {
-        val latLng = LatLng(latitude, longitude)
-        val cameraUpdate: CameraUpdate
-
-        if (zoom != null) {
-            cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, zoom)
-        } else {
-            cameraUpdate = CameraUpdateFactory.newLatLng(latLng)
-        }
-        signalsGoogleMap!!.animateCamera(cameraUpdate)
-    }
-
-    override fun displaySignals(signals: List<Signal>?, showPopup: Boolean) {
-        var showPopup = showPopup
-
-        var signal: Signal
-        var markerToFocus: Marker? = null
-        var signalToFocus: Signal? = null
-        var markerToReShow: Marker? = null
-
-        signals?.let {
-            // Add new signals to the currently displayed ones
-            for (newSignal in signals) {
-                var alreadyPresent: Signal? = null
-                for (presentSignal in mDisplayedSignals) {
-                    if (newSignal.id == presentSignal.id) {
-                        alreadyPresent = presentSignal
-                        break
-                    }
-                }
-
-                if (alreadyPresent != null) {
-                    mDisplayedSignals.remove(alreadyPresent)
-                }
-                mDisplayedSignals.add(newSignal)
-            }
-        }
-
-        if (signalsGoogleMap != null) {
-            signalsGoogleMap!!.clear()
-            signalsGoogleMap!!.setPadding(0, PADDING_TOP, 0, PADDING_BOTTOM)
-            for (i in mDisplayedSignals.indices) {
-                signal = mDisplayedSignals[i]
-
-                val markerOptions = MarkerOptions()
-                        .position(LatLng(signal.latitude, signal.longitude))
-                        .title(signal.title)
-
-                markerOptions.icon(BitmapDescriptorFactory.fromResource(StatusUtils.getPinResourceForCode(signal.status)))
-
-                val marker = signalsGoogleMap!!.addMarker(markerOptions)
-                mSignalMarkers[marker.id] = signal
-
-                if (mFocusedSignalId != null) {
-                    if (signal.id.equals(mFocusedSignalId!!, ignoreCase = true)) {
-                        showPopup = true
-                        markerToFocus = marker
-                        signalToFocus = signal
-                        mFocusedSignalId = null
-                    }
-                }
-                // If an info window was open before signals refresh - reopen it
-                if (mCurrentlyShownInfoWindowSignal != null) {
-                    if (signal.id.equals(mCurrentlyShownInfoWindowSignal!!.id, ignoreCase = true)) {
-                        markerToReShow = marker
-                    }
-                }
-            }
-
-            signalsGoogleMap!!.setInfoWindowAdapter(infoWindowAdapter)
-
-            //actionsListener
-            signalsGoogleMap!!.setOnInfoWindowClickListener { marker ->
-                val intent = Intent(context, SignalDetailsActivity::class.java)
-                intent.putExtra(SignalDetailsActivity.SIGNAL_KEY, mSignalMarkers[marker.id]!!)
-                startActivityForResult(intent, REQUEST_SIGNAL_DETAILS)
-
-                settingsRepository!!.setLastShownLatitude(mCurrentLat)
-                settingsRepository!!.setLastShownLongitude(mCurrentLong)
-                settingsRepository!!.setLastShownZoom(mZoom)
-            }
-
-            if (showPopup && markerToFocus != null) {
-                markerToFocus.showInfoWindow()
-                updateMapCameraPosition(signalToFocus!!.latitude, signalToFocus.longitude, null)
-            } else markerToReShow?.showInfoWindow()
-        }
-    }
-
-
-    @SuppressLint("MissingPermission")
-    private fun setLastLocation() {
-        if (viewModel.addSignalVisible == View.INVISIBLE) {
-//            val location = LocationServices.FusedLocationApi.getLastLocation(googleApiClient)
-//            location?.let { handleNewLocation(it) }
-//                    ?: LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, locationRequest, locationListener)
-
-//            val location = LocationServices.FusedLocationApi.getLastLocation(googleApiClient)
-//            location?.let {
-//                handleNewLocation(it)
-//            }?:
-            fusedLocationProviderClient.lastLocation.addOnCompleteListener { task->
-                task.result?.let {location->
-                    handleNewLocation(location)
-                }?: fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper())
-            }
-        }
-    }
-
-    private fun handleNewLocation(location: Location) {
-        val longitude = settingsRepository!!.getLastShownLongitude()
-        val latitude = settingsRepository!!.getLastShownLatitude()
-        val newZoom = settingsRepository!!.getLastShownZoom()
-
-        mCurrentLat = if (latitude == 0.0) location.latitude else latitude
-        mCurrentLong = if (longitude == 0.0) location.longitude else longitude
-        val zoom = if (newZoom == 0f) calculateMetersToZoom() else newZoom
-        updateMapCameraPosition(mCurrentLat, mCurrentLong, zoom)
-        //actionsListener
-        onLocationChanged(mCurrentLat, mCurrentLong, settingsRepository!!.getRadius(), settingsRepository!!.getTimeout())
-        pushNotificationsRepository.saveNewDeviceLocation(location)
-    }
-
-
-    private fun calculateZoomToMeters(): Int {
-        val visibleRegion = signalsGoogleMap!!.projection.visibleRegion
-        val distanceWidth = FloatArray(1)
-        val distanceHeight = FloatArray(1)
-
-        val farRight = visibleRegion.farRight
-        val farLeft = visibleRegion.farLeft
-        val nearRight = visibleRegion.nearRight
-        val nearLeft = visibleRegion.nearLeft
-
-        //calculate the distance width (left <-> right of map on screen)
-        Location.distanceBetween(
-                (farLeft.latitude + nearLeft.latitude) / 2,
-                farLeft.longitude,
-                (farRight.latitude + nearRight.latitude) / 2,
-                farRight.longitude,
-                distanceWidth)
-
-        //calculate the distance height (top <-> bottom of map on screen)
-        Location.distanceBetween(
-                farRight.latitude,
-                (farRight.longitude + farLeft.longitude) / 2,
-                nearRight.latitude,
-                (nearRight.longitude + nearLeft.longitude) / 2,
-                distanceHeight)
-
-        //visible radius is (smaller distance) / 2:
-        val radius = if (distanceWidth[0] < distanceHeight[0]) distanceWidth[0] / 2 else distanceHeight[0] / 2
-        return radius.toInt()
-    }
-
-    private fun calculateMetersToZoom(): Float {
-        val radius = (settingsRepository!!.getRadius() * 1000).toDouble()
-        val scale = radius / 500
-        val zoomLevel = (16 - Math.log(scale) / Math.log(2.0)).toFloat()
-        return zoomLevel - 0.5f
     }
 
     override fun showMessage(message: String) {
@@ -570,6 +277,20 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
                 }
             }
         })
+
+
+
+//        sendPhotoBottomSheet.setListener(object : SendPhotoBottomSheet.PhotoTypeSelectListener {
+//            override fun onPhotoTypeSelected(photoType: Long) {
+//                if (photoType == SendPhotoBottomSheet.PhotoType.CAMERA) {
+//                    //actionsListener
+//                    openCamera()
+//                } else if (photoType == SendPhotoBottomSheet.PhotoType.GALLERY) {
+//                    //actionsListener
+//                    openGallery()
+//                }
+//            }
+//        })
         sendPhotoBottomSheet.show(fragmentManager!!, SendPhotoBottomSheet.TAG)
     }
 
@@ -612,7 +333,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
 
             if (photoFile != null) {
                 //actionsListener
-                viewModel.photoUri = Uri.fromFile(photoFile).path
+                viewModel.photoUri = Uri.fromFile(photoFile).path!!
             }
 
             parcelFileDesc.close()
@@ -628,16 +349,12 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
         startActivity(intent)
     }
 
-//    override fun getPresenter(): Presenter<*>? {
-//        return signalsMapPresenter
-//    }
-
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_CAMERA) {
             if (resultCode == Activity.RESULT_OK) {
                 val takenPhotoUri = imageUtils.getPhotoFileUri(context, imageFileName)
-                viewModel.photoUri = takenPhotoUri!!.path
+                viewModel.photoUri = takenPhotoUri!!.path!!
             }
         }
 
@@ -649,7 +366,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
                 // DRY!!
                 val photoFile = imageUtils.getFromMediaUri(context, context!!.contentResolver, data.data)
                 if (photoFile != null) {
-                    viewModel.photoUri = Uri.fromFile(photoFile).path
+                    viewModel.photoUri = Uri.fromFile(photoFile).path!!
                 }
             }
 
@@ -659,16 +376,16 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
             if (resultCode == Activity.RESULT_OK) {
                 val signal = data!!.getParcelableExtra<Signal>("signal")
                 if (signal != null) {
-                    for (i in signalsList!!.indices) {
-                        val currentSignal = signalsList!![i]
+                    for (i in viewModel.signalsList!!.indices) {
+                        val currentSignal = viewModel.signalsList!![i]
                         if (currentSignal.id == signal.id) {
-                            signalsList!!.removeAt(i)
-                            signalsList!!.add(signal)
-                            displaySignals(signalsList!!, true)
+                            viewModel.signalsList!!.removeAt(i)
+                            viewModel.signalsList!!.add(signal)
+                            viewModel.displaySignals(true)
                             break
                         }
                     }
-                }else{
+                } else {
                     return
                 }
             }
@@ -681,32 +398,18 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
         }
     }
 
-    override fun showDescriptionErrorMessage() {
-        showMessage(getString(R.string.txt_description_required))
-    }
-
-    override fun showAddedSignalMessage() {
-        showMessage(getString(R.string.txt_signal_added_successfully))
-    }
-
-    override fun showNoInternetMessage() {
-        showMessage(getString(R.string.txt_no_internet))
-    }
-
     override fun setProgressVisibility(visibility: Boolean) {
         if (optionsMenu != null) {
             val refreshItem = optionsMenu!!.findItem(R.id.menu_item_refresh)
-
             if (refreshItem != null) {
                 if (visibility) {
-                    MenuItemCompat.setActionView(refreshItem, R.layout.toolbar_progress)
+                    refreshItem.setActionView(R.layout.toolbar_progress)
                     if (refreshItem.actionView != null) {
                         val progressBar = refreshItem.actionView.findViewById(R.id.toolbar_progress_bar) as ProgressBar
-                        progressBar?.indeterminateDrawable?.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN)
+                        progressBar.indeterminateDrawable?.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN)
                     }
                 } else {
-
-                    MenuItemCompat.setActionView(refreshItem, null)
+                    refreshItem.actionView = null
                 }
             }
         }
@@ -721,8 +424,8 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         when (requestCode) {
             LOCATION_PERMISSIONS_REQUEST -> if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                signalsGoogleMap!!.isMyLocationEnabled = true
-                setLastLocation()
+                viewModel.signalsGoogleMap!!.isMyLocationEnabled = true
+                viewModel.setLastLocation()
             } else {
                 // Permission Denied
                 Toast.makeText(context, R.string.txt_location_permissions_for_map, Toast.LENGTH_SHORT)
@@ -767,95 +470,11 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
     }
 
 
-
     //Action listener
-    private var latitude: Double = 0.toDouble()
-    private var longitude: Double = 0.toDouble()
-    private var radius: Int = 0
-    private var timeout: Int = 0
-
-    private var currentMapLatitude: Double = 0.toDouble()
-    private var currentMapLongitude: Double = 0.toDouble()
-
-    private var signalsList: MutableList<Signal>? = null
-
-    private val isViewAvailable: Boolean
-        get() = view != null && isActive()
-
-    init {
-        viewModel.addSignalVisible = View.INVISIBLE
-        signalsList = ArrayList()
-    }
-
-    private fun getAllSignals(latitude: Double, longitude: Double, radius: Int, timeout: Int, showPopup: Boolean) {
-        if (utils.hasNetworkConnection()) {
-            setProgressVisibility(true)
-
-            signalRepository.getAllSignals(latitude, longitude, radius.toDouble(), timeout,
-                    object : SignalRepository.LoadSignalsCallback {
-                        override fun onSignalsLoaded(signals: MutableList<Signal>?) {
-                            if (!isViewAvailable) return
-                            signalsList = signals
-                            signalRepository.markSignalsAsSeen(signals)
-                            displaySignals(signals, showPopup)
-                            setProgressVisibility(false)
-                        }
-
-                        override fun onSignalsFailure(message: String) {
-                            if (!isViewAvailable) return
-                            showMessage(message)
-                            setProgressVisibility(false)
-                        }
-                    })
-        } else {
-            showNoInternetMessage()
-        }
-    }
-
-    fun onLocationChanged(latitude: Double, longitude: Double, radius: Int, timeout: Int) {
-        currentMapLatitude = latitude
-        currentMapLongitude = longitude
-
-        if (utils.getDistanceBetween(latitude, longitude, this.latitude, this.longitude) > 300 || this.radius != radius) {
-            getAllSignals(latitude, longitude, radius, timeout, false)
-
-            this.latitude = latitude
-            this.longitude = longitude
-            this.radius = radius
-            this.timeout = timeout
-        }
-    }
-
-    private fun isEmpty(value: String?): Boolean {
-        return !(value != null && value.length > 0)
-    }
 
     companion object {
         //saction listener
-        private val DEFAULT_MAP_ZOOM = 14.5f
-        val DEFAULT_SEARCH_RADIUS = 10
-        val DEFAULT_SEARCH_TIMEOUT = 7
-        private val DATE_TIME_FORMAT = "MM/dd/yyyy hh:mm:ss"
-        ///
-
         val TAG = SignalsMapFragment::class.java.simpleName
-        private val MAP_VIEW_STATE = "mapViewSaveState"
-        private val DATE_TIME_FORMAT_VIEW = "yyyyMMdd_HHmmss"
-        private val PHOTO_PREFIX = "JPEG_"
-        private val PHOTO_EXTENSION = ".jpg"
-
-        private val LOCATION_PERMISSIONS_REQUEST = 1
-        private val REQUEST_CAMERA = 2
-        private val REQUEST_GALLERY = 3
-        private val READ_EXTERNAL_STORAGE_FOR_CAMERA = 4
-        private val READ_WRITE_EXTERNAL_STORAGE_FOR_GALLERY = 5
-        private val REQUEST_SIGNAL_DETAILS = 6
-        private val REQUEST_CHECK_SETTINGS = 214
-        private val VIEW_ADD_SIGNAL = "view_add_signal"
-        private val PADDING_TOP = 190
-        private val PADDING_BOTTOM = 160
-        private val MARKER_LATITUDE = "marker_latitude"
-        private val MARKER_LONGITUDE = "marker_longitude"
 
         fun newInstance(): SignalsMapFragment {
             return SignalsMapFragment()
