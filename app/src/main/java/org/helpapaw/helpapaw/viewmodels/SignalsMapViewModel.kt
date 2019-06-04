@@ -1,43 +1,38 @@
 package org.helpapaw.helpapaw.viewmodels
 
 import android.annotation.SuppressLint
-import android.app.Activity
-import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.drawable.Drawable
 import android.location.Location
-import android.os.Bundle
 import android.os.Looper
-import android.text.Editable
-import android.text.TextWatcher
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
 import androidx.appcompat.widget.AppCompatImageView
-import androidx.core.graphics.drawable.RoundedBitmapDrawable
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
 import androidx.databinding.Bindable
 import androidx.databinding.BindingAdapter
-import androidx.databinding.InverseBindingAdapter
-import androidx.databinding.InverseBindingListener
 import androidx.lifecycle.MutableLiveData
-import com.google.android.gms.common.api.GoogleApiClient
-import com.google.android.gms.location.*
-import com.google.android.gms.maps.*
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.maps.CameraUpdate
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.MapView
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import org.helpapaw.helpapaw.BR
-import org.helpapaw.helpapaw.R
 import org.helpapaw.helpapaw.images.ImageUtils
 import org.helpapaw.helpapaw.models.Signal
-import org.helpapaw.helpapaw.repository.*
+import org.helpapaw.helpapaw.repository.ISettingsRepository
+import org.helpapaw.helpapaw.repository.PhotoRepository
+import org.helpapaw.helpapaw.repository.PushNotificationsRepository
+import org.helpapaw.helpapaw.repository.SignalRepository
 import org.helpapaw.helpapaw.sendsignal.SendSignalView
-import org.helpapaw.helpapaw.signaldetails.SignalDetailsActivity
 import org.helpapaw.helpapaw.signalsmap.SignalInfoWindowAdapter
-import org.helpapaw.helpapaw.signalsmap.SignalsMapFragment
 import org.helpapaw.helpapaw.user.UserManager
 import org.helpapaw.helpapaw.utils.StatusUtils
 import org.helpapaw.helpapaw.utils.Utils
@@ -49,50 +44,42 @@ const val PADDING_TOP = 190
 const val PADDING_BOTTOM = 160
 const val REQUEST_CHECK_SETTINGS = 214
 
-enum class ERROR_TYPE{
+enum class ERROR_TYPE {
     NO_INTERNET, DESCRIPTION
 }
 
-enum class MESSAGE_TYPE{
+enum class MESSAGE_TYPE {
     ADD_SIGNAL
-}
-
-abstract class Test(){
-
-}
-
-class Test2:Test(){
-
 }
 
 sealed class SignalsMapResult {
     data class SetProgressVisibility(val visibility: Boolean) : SignalsMapResult()
     data class ShowMessage(val message: String) : SignalsMapResult()
-    data class ShowMessageOfType(val type:MESSAGE_TYPE):SignalsMapResult()
-    data class ShowError(val errorType:ERROR_TYPE):SignalsMapResult()
-    data class ShowSignalMarkerInfo(val marker: Marker):SignalsMapResult()
-    data class OpenSignalDetailsScreen(val signals:Signal?):SignalsMapResult()
-    data class StartResolutionForResult(val requestL:Int):SignalsMapResult()
-    data class ShowProgress(val showProgress:Boolean):SignalsMapResult()
-    object CheckPermission:SignalsMapResult()
+    data class ShowMessageOfType(val type: MESSAGE_TYPE) : SignalsMapResult()
+    data class ShowError(val errorType: ERROR_TYPE) : SignalsMapResult()
+    data class ShowSignalMarkerInfo(val marker: Marker) : SignalsMapResult()
+    data class OpenSignalDetailsScreen(val signals: Signal?) : SignalsMapResult()
+    data class StartResolutionForResult(val requestL: Int) : SignalsMapResult()
+    data class ShowProgress(val showProgress: Boolean) : SignalsMapResult()
+    object CheckPermission : SignalsMapResult()
     object OpenLoginScreen : SignalsMapResult()
     object HideKeyboard : SignalsMapResult()
 
 }
 
 class SignalsMapViewModel(
-        val photoRepository:PhotoRepository,
+        val photoRepository: PhotoRepository,
         val pushNotificationsRepository: PushNotificationsRepository,
         val settingsRepository: ISettingsRepository,
-        val signalRepository:SignalRepository,
+        val signalRepository: SignalRepository,
         val userManager: UserManager,
-        val imageUtils:ImageUtils,
+        val imageUtils: ImageUtils,
         val utils: Utils,
-        val fusedLocationProviderClient:FusedLocationProviderClient,
+        val fusedLocationProviderClient: FusedLocationProviderClient,
         val locationRequest: LocationRequest,
-        val signal:Signal
+        val signal: Signal
 
-):BaseViewModel() {
+) : BaseViewModel() {
 
     var signalsGoogleMap: GoogleMap? = null
 
@@ -101,7 +88,7 @@ class SignalsMapViewModel(
     var mFocusedSignalId: String? = null
 
 
-    val mMarkers : MutableList<Marker> = mutableListOf()
+    val mMarkers: MutableList<Marker> = mutableListOf()
     val mDisplayedSignals = ArrayList<Signal>()
     val mSignalMarkers = HashMap<String, Signal>()
     var signalsList: MutableList<Signal>? = ArrayList()
@@ -118,9 +105,9 @@ class SignalsMapViewModel(
     var radius: Int = 0
     var timeout: Int = 0
 
-    val locationCallback:LocationCallback = object:LocationCallback(){
+    val locationCallback: LocationCallback = object : LocationCallback() {
         override fun onLocationResult(location: LocationResult?) {
-            location?.let{locResult->
+            location?.let { locResult ->
                 handleNewLocation(locResult.lastLocation)
             }
         }
@@ -131,66 +118,71 @@ class SignalsMapViewModel(
 
 
     @Bindable
-    var description:String = ""
+    var description: String = ""
 
     @Bindable
-    var addSignalVisible:Int = View.INVISIBLE
-        set(value){
+    var addSignalVisible: Int = View.INVISIBLE
+        set(value) {
             field = value
             notifyChange(BR.addSignalVisible)
         }
 
     @Bindable
-    var clearData:Boolean = false
-        set(_){
+    var clearData: Boolean = false
+        set(_) {
             photoUri = ""
             field = !field
             notifyChange(BR.clearData)
         }
 
     @Bindable
-    var photoUri:String = ""
-        set(value){
+    var photoUri: String = ""
+        set(value) {
             field = value
             sendSignalBitmap = imageUtils.getRotatedBitmap(File(photoUri))
         }
 
     @Bindable
     var sendSignalBitmap: Bitmap? = null
-        set(value){
+        set(value) {
             field = value
             notifyChange(BR.sendSignalBitmap)
         }
 
     @Bindable
-    var sendSignalViewProgressVisibility:Boolean = false
-        set(_){
+    var sendSignalViewProgressVisibility: Boolean = false
+        set(_) {
             field = !field
             notifyChange(BR.sendSignalViewProgressVisibility)
         }
 
-    fun fabOnClick(view:View){
-        addSignalVisible  = if(addSignalVisible == View.VISIBLE){ View.INVISIBLE} else { View.VISIBLE }
+    fun fabOnClick(view: View) {
+        addSignalVisible = if (addSignalVisible == View.VISIBLE) {
+            View.INVISIBLE
+        } else {
+            View.VISIBLE
+        }
     }
 
     @SuppressLint("MissingPermission")
     fun setLastLocation() {
         if (addSignalVisible == View.INVISIBLE) {
-            fusedLocationProviderClient.lastLocation.addOnCompleteListener { task->
-                task.result?.let {location->
+            fusedLocationProviderClient.lastLocation.addOnCompleteListener { task ->
+                task.result?.let { location ->
                     handleNewLocation(location)
-                }?: fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper())
+                }
+                        ?: fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper())
             }
         }
     }
 
 
-    fun sendClick(){
+    fun sendClick() {
         liveData.value = SignalsMapResult.HideKeyboard
         isLoggedIn()
     }
 
-    fun isLoggedIn(){
+    fun isLoggedIn() {
         sendSignalViewProgressVisibility = true
         userManager.isLoggedIn(object : UserManager.LoginCallback {
             override fun onLoginSuccess() {
@@ -198,7 +190,7 @@ class SignalsMapViewModel(
                     liveData.value = SignalsMapResult.ShowError(ERROR_TYPE.DESCRIPTION)
                     sendSignalViewProgressVisibility = false
                 } else {
-                    signalRepository.saveSignal(Signal(title = description,  dateSubmitted = Date(), status = 0, latitude = latitude, longitude = longitude), object : SignalRepository.SaveSignalCallback {
+                    signalRepository.saveSignal(Signal(title = description, dateSubmitted = Date(), status = 0, latitude = latitude, longitude = longitude), object : SignalRepository.SaveSignalCallback {
                         override fun onSignalSaved(signal: Signal) {
                             if (photoUri.isNotEmpty()) {
                                 photoRepository.savePhoto(photoUri, signal.id, object : PhotoRepository.SavePhotoCallback {
@@ -242,7 +234,7 @@ class SignalsMapViewModel(
 
     }
 
-    fun clearLocationData(){
+    fun clearLocationData() {
         settingsRepository.clearLocationData()
     }
 
@@ -282,7 +274,7 @@ class SignalsMapViewModel(
         }
     }
 
-    fun getSignals(showPopUp:Boolean){
+    fun getSignals(showPopUp: Boolean) {
         getAllSignals(latitude, longitude, radius, timeout, showPopUp)
     }
 
@@ -318,7 +310,7 @@ class SignalsMapViewModel(
         var signalToFocus: Signal? = null
         var markerToReShow: Marker? = null
 
-        signalsList?.let {signals->
+        signalsList?.let { signals ->
             // Add new signals to the currently displayed ones
             for (newSignal in signals) {
                 var alreadyPresent: Signal? = null
@@ -336,10 +328,10 @@ class SignalsMapViewModel(
             }
         }
 
-        signalsGoogleMap?.let { gm->
+        signalsGoogleMap?.let { gm ->
 
-            for(marker in mMarkers){
-                if(mCurrentlyShownInfoWindowSignal?.id?: false != mSignalMarkers[marker.id]?.id?:false) {
+            for (marker in mMarkers) {
+                if (mCurrentlyShownInfoWindowSignal?.id ?: false != mSignalMarkers[marker.id]?.id ?: false) {
                     marker.remove()
                 }
             }
@@ -416,7 +408,6 @@ class SignalsMapViewModel(
     }
 
 
-
     fun updateMapCameraPosition(latitude: Double, longitude: Double, zoom: Float?) {
         val latLng = LatLng(latitude, longitude)
         val cameraUpdate: CameraUpdate
@@ -429,7 +420,7 @@ class SignalsMapViewModel(
         signalsGoogleMap!!.animateCamera(cameraUpdate)
     }
 
-    fun setGoogleMapAsync(googleMap: GoogleMap,layoutInflator:LayoutInflater){
+    fun setGoogleMapAsync(googleMap: GoogleMap, layoutInflator: LayoutInflater) {
         signalsGoogleMap = googleMap
         //actionsListener
         if (signalsList != null && signalsList!!.size > 0) {
@@ -437,14 +428,14 @@ class SignalsMapViewModel(
         }
 
         signalsGoogleMap!!.setPadding(0, PADDING_TOP, 0, PADDING_BOTTOM)
-        signalsGoogleMap!!.setOnMapClickListener{
+        signalsGoogleMap!!.setOnMapClickListener {
             mCurrentlyShownInfoWindowSignal = null
         }
-        signalsGoogleMap!!.setOnMarkerClickListener{marker->
+        signalsGoogleMap!!.setOnMarkerClickListener { marker ->
             mCurrentlyShownInfoWindowSignal = mSignalMarkers[marker.id]
             false
         }
-        signalsGoogleMap!!.setOnCameraIdleListener{
+        signalsGoogleMap!!.setOnCameraIdleListener {
             val cameraPosition = signalsGoogleMap!!.cameraPosition
             val cameraTarget = cameraPosition.target
             mCurrentLong = cameraTarget.longitude
@@ -455,7 +446,7 @@ class SignalsMapViewModel(
             onLocationChanged(cameraTarget.latitude, cameraTarget.longitude, radius, settingsRepository.getTimeout())
         }
 
-        signalsGoogleMap!!.setInfoWindowAdapter(SignalInfoWindowAdapter(mSignalMarkers, layoutInflator, photoRepository,signal))
+        signalsGoogleMap!!.setInfoWindowAdapter(SignalInfoWindowAdapter(mSignalMarkers, layoutInflator, photoRepository, signal))
         //actionsListener
         signalsGoogleMap!!.setOnInfoWindowClickListener { marker ->
             liveData.value = SignalsMapResult.ShowSignalMarkerInfo(marker)
@@ -484,13 +475,13 @@ class SignalsMapViewModel(
 }
 
 @BindingAdapter("sendSignalViewProgressVisibility")
-fun setSendSignalViewProgressVisibility(view:SendSignalView,visibility:Boolean){
+fun setSendSignalViewProgressVisibility(view: SendSignalView, visibility: Boolean) {
     view.setProgressVisibility(visibility)
 }
 
 @BindingAdapter("addSignalPinVisibility")
-fun setAddSignalPinVisibility(view:AppCompatImageView, visibility:Int){
-    if(visibility == View.VISIBLE){
+fun setAddSignalPinVisibility(view: AppCompatImageView, visibility: Int) {
+    if (visibility == View.VISIBLE) {
         view.visibility = View.VISIBLE
         view.alpha = 0.0f
         view.animate()
@@ -498,7 +489,7 @@ fun setAddSignalPinVisibility(view:AppCompatImageView, visibility:Int){
                 .setDuration(200)
                 .translationY(0f)
                 .alpha(1.0f)
-    }else{
+    } else {
         view.animate()
                 .setInterpolator(AccelerateDecelerateInterpolator())
                 .setDuration(200)
@@ -508,8 +499,8 @@ fun setAddSignalPinVisibility(view:AppCompatImageView, visibility:Int){
 }
 
 @BindingAdapter("addSignalViewVisibility")
-fun setAddSignalViewVisibility(view:SendSignalView, visibility:Int){
-    if(visibility == View.VISIBLE){
+fun setAddSignalViewVisibility(view: SendSignalView, visibility: Int) {
+    if (visibility == View.VISIBLE) {
         view.visibility = View.VISIBLE
         view.alpha = 0.0f
         view.animate()
@@ -517,7 +508,7 @@ fun setAddSignalViewVisibility(view:SendSignalView, visibility:Int){
                 .setDuration(300)
                 .translationY(view.height.toFloat())
                 .alpha(1.0f)
-    }else{
+    } else {
         view.animate()
                 .setInterpolator(AccelerateDecelerateInterpolator())
                 .setDuration(300)
@@ -527,8 +518,8 @@ fun setAddSignalViewVisibility(view:SendSignalView, visibility:Int){
 }
 
 @BindingAdapter("bitmap")
-fun setRoundedBitmap(view:SendSignalView, bitmap:Bitmap?) {
-    bitmap?.let{
+fun setRoundedBitmap(view: SendSignalView, bitmap: Bitmap?) {
+    bitmap?.let {
         val drawable = RoundedBitmapDrawableFactory.create(view.resources, bitmap)
         drawable.cornerRadius = 10f
         view.setSignalPhoto(drawable)
@@ -536,14 +527,14 @@ fun setRoundedBitmap(view:SendSignalView, bitmap:Bitmap?) {
 }
 
 @BindingAdapter("clearData")
-fun clearSendSignalData(view:SendSignalView,@Suppress("UNUSED_PARAMETER") clearData:Boolean){
+fun clearSendSignalData(view: SendSignalView, @Suppress("UNUSED_PARAMETER") clearData: Boolean) {
     view.clearData()
 }
 
 @BindingAdapter("mapViewAsync")
-fun setMapViewAsync(view:MapView, viewModel:SignalsMapViewModel){
-    view.getMapAsync{ googleMap ->
-        viewModel.setGoogleMapAsync(googleMap,LayoutInflater.from(view.context))
+fun setMapViewAsync(view: MapView, viewModel: SignalsMapViewModel) {
+    view.getMapAsync { googleMap ->
+        viewModel.setGoogleMapAsync(googleMap, LayoutInflater.from(view.context))
     }
 
 }
