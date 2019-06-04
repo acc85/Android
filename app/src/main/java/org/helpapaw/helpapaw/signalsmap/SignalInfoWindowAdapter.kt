@@ -23,8 +23,8 @@ import java.lang.Exception
 class SignalInfoWindowAdapter(
         private val signalMarkers: Map<String, Signal> = emptyMap(),
         private val inflater: LayoutInflater,
-        val photoRepository: PhotoRepository
-
+        private val photoRepository: PhotoRepository,
+        private val selectedSignal: Signal
 ) : GoogleMap.InfoWindowAdapter {
     private var lastShownMarker: Marker? = null
 
@@ -41,6 +41,7 @@ class SignalInfoWindowAdapter(
     override fun getInfoContents(marker: Marker): View {
 
         val signal = signalMarkers[marker.id]
+        selectedSignal.id = signal!!.id
         if (signal != null) {
             val photoUrl = photoRepository.getPhotoUrl(signal.id)
 

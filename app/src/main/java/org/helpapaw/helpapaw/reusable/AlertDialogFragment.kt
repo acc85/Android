@@ -29,7 +29,7 @@ class AlertDialogFragment : DialogFragment() {
                 .setMessage(message)
                 .setPositiveButton(android.R.string.ok, null)
         if (showSupportButton) {
-            alertBuilder.setNeutralButton("Contact support") { dialogInterface, i -> SharingUtils.contactSupport(activity) }
+            alertBuilder.setNeutralButton("Contact support") { _, _ -> SharingUtils.contactSupport(activity) }
         }
 
         return alertBuilder.create()

@@ -2,7 +2,6 @@ package org.helpapaw.helpapaw.repository
 
 import android.content.Context
 import android.util.Log
-
 import com.backendless.Backendless
 import com.backendless.BackendlessUser
 import com.backendless.async.callback.AsyncCallback
@@ -14,11 +13,7 @@ import com.helpapaw.helpapaw.repository.BuildConfig
 import com.helpapaw.helpapaw.repository.R
 import org.helpapaw.helpapaw.db.SignalsDatabase
 import org.helpapaw.helpapaw.models.Signal
-
-import java.util.ArrayList
-import java.util.Calendar
-import java.util.Date
-import java.util.HashMap
+import java.util.*
 
 
 /**
@@ -70,9 +65,9 @@ class BackendlessSignalRepository(
                     val dateSubmittedString = getToStringOrNull(geoPoint.getMetadata(SIGNAL_DATE_SUBMITTED))
                     val signalStatus = getToStringOrNull(geoPoint.getMetadata(SIGNAL_STATUS))
 
-                    var dateSubmitted: Date? = null
+                    var submittedDate: Date? = null
                     try {
-                        dateSubmitted = Date(java.lang.Long.valueOf(dateSubmittedString!!))
+                        submittedDate = Date(dateSubmittedString?.toLong()?:0L)
                     } catch (ex: Exception) {
                         Log.d(BackendlessSignalRepository::class.java.name, "Failed to parse signal date.")
                     }
@@ -88,8 +83,8 @@ class BackendlessSignalRepository(
                         signalAuthorPhone = getToStringOrNull((geoPoint.getMetadata(SIGNAL_AUTHOR) as BackendlessUser).getProperty(PHONE_FIELD))
                     }
 
-                    val newSignal = Signal(geoPoint.objectId, signalTitle, dateSubmitted, Integer.parseInt(signalStatus!!),
-                            signalAuthorName, signalAuthorPhone, geoPoint.latitude!!, geoPoint.longitude!!, false)
+                    val newSignal = Signal(id = geoPoint.objectId, title = signalTitle, dateSubmitted = submittedDate, status = Integer.parseInt(signalStatus!!),
+                            authorName = signalAuthorName, authorPhone = signalAuthorPhone, latitude = geoPoint.latitude!!, longitude = geoPoint.longitude!!, seen = false)
 
                     // If signal is already in DB - keep seen status
                     val signalsFromDB = signalsDatabase.signalDao().getSignal(geoPoint.objectId)
@@ -112,9 +107,9 @@ class BackendlessSignalRepository(
 
     override fun saveSignal(signal: Signal, callback: SignalRepository.SaveSignalCallback) {
 
-        val meta = HashMap<String, Any>()
+        val meta = HashMap<String, Any?>()
         meta[SIGNAL_TITLE] = signal.title
-        meta[SIGNAL_DATE_SUBMITTED] = signal.dateSubmitted.time
+        meta[SIGNAL_DATE_SUBMITTED] = signal.dateSubmitted?.time
         meta[SIGNAL_STATUS] = signal.status
         meta[SIGNAL_AUTHOR] = Backendless.UserService.CurrentUser()
 
@@ -143,8 +138,8 @@ class BackendlessSignalRepository(
                     signalAuthorPhone = getToStringOrNull((geoPoint.getMetadata(SIGNAL_AUTHOR) as BackendlessUser).getProperty(PHONE_FIELD))
                 }
 
-                val savedSignal = Signal(geoPoint.objectId, signalTitle, dateSubmitted, Integer.parseInt(signalStatus!!),
-                        signalAuthorName, signalAuthorPhone, geoPoint.latitude!!, geoPoint.longitude!!, true)
+                val savedSignal = Signal(id = geoPoint.objectId, title = signalTitle, dateSubmitted = dateSubmitted, status = Integer.parseInt(signalStatus!!),
+                        authorName = signalAuthorName, authorPhone = signalAuthorPhone, latitude = geoPoint.latitude!!, longitude = geoPoint.longitude!!, seen = true)
                 signalsDatabase.signalDao().saveSignal(savedSignal)
                 callback.onSignalSaved(savedSignal)
 
@@ -178,32 +173,30 @@ class BackendlessSignalRepository(
                 }
 
                 val signalPoint = response[0]
-                if (signalPoint != null) {
-                    val meta = signalPoint.metadata
-                    meta[SIGNAL_STATUS] = status
+                val meta = signalPoint.metadata
+                meta[SIGNAL_STATUS] = status
 
-                    signalPoint.metadata = meta
-                    Backendless.Geo.savePoint(signalPoint, object : AsyncCallback<GeoPoint> {
-                        override fun handleResponse(geoPoint: GeoPoint) {
-                            val newSignalStatusString = getToStringOrNull(geoPoint.getMetadata(SIGNAL_STATUS))
-                            val newSignalStatusInt = Integer.parseInt(newSignalStatusString!!)
+                signalPoint.metadata = meta
+                Backendless.Geo.savePoint(signalPoint, object : AsyncCallback<GeoPoint> {
+                    override fun handleResponse(geoPoint: GeoPoint) {
+                        val newSignalStatusString = getToStringOrNull(geoPoint.getMetadata(SIGNAL_STATUS))
+                        val newSignalStatusInt = Integer.parseInt(newSignalStatusString!!)
 
-                            // Update signal in database
-                            val signalsFromDB = signalsDatabase.signalDao().getSignal(signalId)
-                            if (signalsFromDB.size > 0) {
-                                val signal = signalsFromDB[0]
-                                signal.status = newSignalStatusInt
-                                signalsDatabase.signalDao().saveSignal(signal)
-                            }
-
-                            callback.onStatusUpdated(newSignalStatusInt)
+                        // Update signal in database
+                        val signalsFromDB = signalsDatabase.signalDao().getSignal(signalId)
+                        if (signalsFromDB.size > 0) {
+                            val signal = signalsFromDB[0]
+                            signal.status = newSignalStatusInt
+                            signalsDatabase.signalDao().saveSignal(signal)
                         }
 
-                        override fun handleFault(fault: BackendlessFault) {
-                            callback.onStatusFailure(fault.message)
-                        }
-                    })
-                }
+                        callback.onStatusUpdated(newSignalStatusInt)
+                    }
+
+                    override fun handleFault(fault: BackendlessFault) {
+                        callback.onStatusFailure(fault.message)
+                    }
+                })
             }
 
             override fun handleFault(fault: BackendlessFault) {
@@ -221,7 +214,7 @@ class BackendlessSignalRepository(
             }
             val signalsFromDB = signalsDatabase.signalDao().getSignals(signalIds)
             for (signal in signalsFromDB) {
-                signal.seen = true
+                signal?.seen = true
                 signalsDatabase.signalDao().saveSignal(signal)
             }
         }

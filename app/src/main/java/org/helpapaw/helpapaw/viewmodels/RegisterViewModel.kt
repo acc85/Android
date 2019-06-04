@@ -2,9 +2,7 @@ package org.helpapaw.helpapaw.viewmodels
 
 import android.view.View
 import androidx.databinding.Bindable
-import androidx.databinding.BindingAdapter
 import androidx.lifecycle.MutableLiveData
-import com.google.android.material.textfield.TextInputEditText
 import kotlinx.coroutines.*
 import org.helpapaw.helpapaw.BR
 import org.helpapaw.helpapaw.R
@@ -108,7 +106,7 @@ class RegisterViewModel(
         if (verify(view)) {
             showProgress(true)
             GlobalScope.launch (Dispatchers.IO) {
-                val result: String? = Utils.getHtmlByCouroutines(view.context.getString(R.string.url_privacy_policy)).await()
+                val result: String? = Utils.getHtmlByAsync(view.context.getString(R.string.url_privacy_policy)).await()
                 showProgress(false)
                 if (result != null) {
                     withContext(Dispatchers.Main) {

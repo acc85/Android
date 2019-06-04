@@ -150,7 +150,7 @@ class SignalDetailsPresenter(
 
     override fun onCallButtonClicked() {
         val phoneNumber = signal!!.authorPhone
-        view?.openNumberDialer(phoneNumber)
+        view?.openNumberDialer(phoneNumber?:"")
     }
 
     override fun onSignalPhotoClicked() {

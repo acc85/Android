@@ -29,6 +29,7 @@ import org.helpapaw.helpapaw.authentication.AuthenticationActivity
 import org.helpapaw.helpapaw.base.BaseFragment
 import org.helpapaw.helpapaw.databinding.FragmentSignalsMapBinding
 import org.helpapaw.helpapaw.images.ImageUtils
+import org.helpapaw.helpapaw.models.KEY_FOCUSED_SIGNAL_ID
 import org.helpapaw.helpapaw.models.Signal
 import org.helpapaw.helpapaw.sendsignal.SendPhotoBottomSheet
 import org.helpapaw.helpapaw.signaldetails.SignalDetailsActivity
@@ -120,9 +121,9 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
         super.onCreate(savedInstanceState)
         retainInstance = true
         val arguments = arguments
-        if (arguments != null && arguments.containsKey(Signal.KEY_FOCUSED_SIGNAL_ID)) {
-            viewModel.mFocusedSignalId = arguments.getString(Signal.KEY_FOCUSED_SIGNAL_ID)
-            arguments.remove(Signal.KEY_FOCUSED_SIGNAL_ID)
+        if (arguments != null && arguments.containsKey(KEY_FOCUSED_SIGNAL_ID)) {
+            viewModel.mFocusedSignalId = arguments.getString(KEY_FOCUSED_SIGNAL_ID)
+            arguments.remove(KEY_FOCUSED_SIGNAL_ID)
         }
         googleApiClient.registerConnectionCallbacks(connectionCallback)
         googleApiClient.registerConnectionFailedListener { connectionResult ->
@@ -483,7 +484,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
         fun newInstance(focusedSignalId: String): SignalsMapFragment {
             val signalsMapFragment = SignalsMapFragment()
             val args = Bundle()
-            args.putString(Signal.KEY_FOCUSED_SIGNAL_ID, focusedSignalId)
+            args.putString(KEY_FOCUSED_SIGNAL_ID, focusedSignalId)
             signalsMapFragment.arguments = args
             return signalsMapFragment
         }

@@ -6,8 +6,8 @@ import com.backendless.BackendlessUser
 import com.backendless.async.callback.AsyncCallback
 import com.backendless.exceptions.BackendlessFault
 import com.backendless.persistence.DataQueryBuilder
+import org.helpapaw.helpapaw.models.COMMENT_TYPE_USER_COMMENT
 import org.helpapaw.helpapaw.models.Comment
-import org.helpapaw.helpapaw.models.Comment.COMMENT_TYPE_USER_COMMENT
 import org.helpapaw.helpapaw.models.backendless.FINComment
 import java.text.SimpleDateFormat
 import java.util.*
@@ -32,7 +32,7 @@ class BackendlessCommentRepository : CommentRepository {
                     val currentComment = foundComments[i]
                     var authorName: String? = null
                     if (currentComment.author != null) {
-                        authorName = getToStringOrNull(currentComment.author.getProperty(NAME_FIELD))
+                        authorName = getToStringOrNull(currentComment.author?.getProperty(NAME_FIELD))
                     }
 
                     var dateCreated: Date? = null
@@ -44,7 +44,7 @@ class BackendlessCommentRepository : CommentRepository {
                         Log.d(BackendlessCommentRepository::class.java.name, "Failed to parse comment date.")
                     }
 
-                    val comment = Comment(currentComment.objectId, authorName, dateCreated, currentComment.text, currentComment.type)
+                    val comment = Comment(objectId = currentComment.objectId, ownerName = authorName, dateCreated = dateCreated, text = currentComment.text, type = currentComment.type)
                     comments.add(comment)
                 }
 
@@ -61,7 +61,7 @@ class BackendlessCommentRepository : CommentRepository {
         val dateFormat = SimpleDateFormat(DATE_TIME_FORMAT, Locale.getDefault())
         val currentDate = dateFormat.format(Date())
 
-        val backendlessComment = FINComment(commentText, currentDate, signalId, COMMENT_TYPE_USER_COMMENT, Backendless.UserService.CurrentUser())
+        val backendlessComment = FINComment(text = commentText, created = currentDate, signalID = signalId, type = COMMENT_TYPE_USER_COMMENT, author = Backendless.UserService.CurrentUser())
 
         val commentsStore = Backendless.Data.of(FINComment::class.java)
         commentsStore.save(backendlessComment, object : AsyncCallback<FINComment> {
@@ -75,7 +75,7 @@ class BackendlessCommentRepository : CommentRepository {
                                 newComment.author = Backendless.UserService.CurrentUser()
                                 var authorName: String? = null
                                 if (newComment.author != null) {
-                                    authorName = getToStringOrNull(newComment.author.getProperty(NAME_FIELD))
+                                    authorName = getToStringOrNull(newComment.author?.getProperty(NAME_FIELD))
                                 }
 
                                 var dateCreated: Date? = null

@@ -20,18 +20,18 @@ import com.google.android.material.snackbar.Snackbar
 import org.helpapaw.helpapaw.R
 import org.helpapaw.helpapaw.authentication.AuthenticationActivity
 import org.helpapaw.helpapaw.base.BaseFragment
-import org.helpapaw.helpapaw.base.Presenter
 import org.helpapaw.helpapaw.models.Comment
 import org.helpapaw.helpapaw.models.Signal
 import org.helpapaw.helpapaw.databinding.FragmentSignalDetailsBinding
 import org.helpapaw.helpapaw.images.ImageLoader
+import org.helpapaw.helpapaw.models.COMMENT_TYPE_STATUS_CHANGE
 import org.helpapaw.helpapaw.signalphoto.SignalPhotoActivity
 
-import org.helpapaw.helpapaw.models.Comment.COMMENT_TYPE_STATUS_CHANGE
 import org.helpapaw.helpapaw.utils.StatusUtils
 import org.helpapaw.helpapaw.utils.Utils
 import org.koin.android.ext.android.inject
 import org.koin.core.parameter.parametersOf
+import java.util.*
 
 
 class SignalDetailsFragment : BaseFragment(), SignalDetailsContract.View {
@@ -127,7 +127,7 @@ class SignalDetailsFragment : BaseFragment(), SignalDetailsContract.View {
         binding.txtSignalTitle.text = signal.title
         binding.txtSignalAuthor.text = signal.authorName
 
-        val formattedDate = utils.getFormattedDate(signal.dateSubmitted)
+        val formattedDate = utils.getFormattedDate(signal.dateSubmitted?: Date())
         binding.txtSubmittedDate.text = formattedDate
         binding.viewSignalStatus.updateStatus(signal.status)
 
@@ -174,7 +174,7 @@ class SignalDetailsFragment : BaseFragment(), SignalDetailsContract.View {
                 val txtCommentAuthor = inflatedCommentView.findViewById(R.id.txt_comment_author) as TextView
                 txtCommentAuthor.text = comment.ownerName
 
-                commentText = comment.text
+                commentText = comment.text?:""
             }
 
             // text and date elements are common for both type of comments so they are set in common code
@@ -183,7 +183,7 @@ class SignalDetailsFragment : BaseFragment(), SignalDetailsContract.View {
 
             txtCommentText.text = commentText
 
-            val formattedDate = utils.getFormattedDate(comment.dateCreated)
+            val formattedDate = utils.getFormattedDate(comment.dateCreated?:Date())
             txtCommentDate.text = formattedDate
 
             binding.grpComments.addView(inflatedCommentView)

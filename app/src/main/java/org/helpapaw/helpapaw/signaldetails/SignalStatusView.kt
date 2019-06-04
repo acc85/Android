@@ -101,8 +101,8 @@ class SignalStatusView : FrameLayout, SignalStatusViewContract {
                 statusList[i].animate().translationYBy(getPixels(TypedValue.COMPLEX_UNIT_DIP, (i * 80).toFloat()).toFloat()).alpha(1f)
             } else {
                 statusList[i].animate().translationYBy(getPixels(TypedValue.COMPLEX_UNIT_DIP, (i * 80).toFloat()).toFloat()).alpha(1f).withEndAction {
-                    for (i in statusList.indices) {
-                        statusList[i].isClickable = true
+                    for (index in statusList.indices) {
+                        statusList[index].isClickable = true
                     }
                 }
             }

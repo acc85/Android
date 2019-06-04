@@ -4,13 +4,11 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.core.view.GravityCompat
 import androidx.appcompat.widget.Toolbar
-import android.view.View
 import android.widget.Toast
 
 import com.firebase.jobdispatcher.Constraint
 import com.firebase.jobdispatcher.FirebaseJobDispatcher
 import com.firebase.jobdispatcher.GooglePlayDriver
-import com.firebase.jobdispatcher.Job
 import com.firebase.jobdispatcher.RetryStrategy
 import com.firebase.jobdispatcher.Trigger
 import kotlinx.coroutines.runBlocking
@@ -19,7 +17,7 @@ import org.helpapaw.helpapaw.BuildConfig
 import org.helpapaw.helpapaw.R
 import org.helpapaw.helpapaw.base.BaseActivity
 import org.helpapaw.helpapaw.base.PawApplication
-import org.helpapaw.helpapaw.models.Signal
+import org.helpapaw.helpapaw.models.KEY_FOCUSED_SIGNAL_ID
 import org.helpapaw.helpapaw.user.UserManager
 import org.helpapaw.helpapaw.utils.services.BackgroundCheckJobService
 
@@ -97,8 +95,8 @@ class SignalsMapActivity : BaseActivity() {
 
     private fun initFragment() {
         if (mSignalsMapFragment == null) {
-            if (intent.hasExtra(Signal.KEY_FOCUSED_SIGNAL_ID)) {
-                mSignalsMapFragment = SignalsMapFragment.newInstance(intent.getStringExtra(Signal.KEY_FOCUSED_SIGNAL_ID))
+            if (intent.hasExtra(KEY_FOCUSED_SIGNAL_ID)) {
+                mSignalsMapFragment = SignalsMapFragment.newInstance(intent.getStringExtra(KEY_FOCUSED_SIGNAL_ID))
             } else {
                 mSignalsMapFragment = SignalsMapFragment.newInstance()
             }

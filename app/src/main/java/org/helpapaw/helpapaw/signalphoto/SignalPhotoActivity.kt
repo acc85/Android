@@ -1,16 +1,14 @@
 package org.helpapaw.helpapaw.signalphoto
 
-import android.app.ActionBar
-import androidx.databinding.DataBindingUtil
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
-
 import org.helpapaw.helpapaw.R
-import org.helpapaw.helpapaw.models.Signal
 import org.helpapaw.helpapaw.databinding.ActivitySignalPhotoBinding
+import org.helpapaw.helpapaw.models.Signal
 import org.koin.android.ext.android.inject
 
 /**
@@ -20,7 +18,7 @@ import org.koin.android.ext.android.inject
 
 class SignalPhotoActivity : AppCompatActivity() {
     internal lateinit var binding: ActivitySignalPhotoBinding
-    val signalPhotoFragment:SignalPhotoFragment by inject()
+    val signalPhotoFragment: SignalPhotoFragment by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -70,11 +68,9 @@ class SignalPhotoActivity : AppCompatActivity() {
 
     override fun onBackPressed() {
         val fragmentList = supportFragmentManager.fragments
-        if (fragmentList != null) {
-            for (fragment in fragmentList) {
-                if (fragment is SignalPhotoFragment) {
-                    fragment.onBackPressed()
-                }
+        for (fragment in fragmentList) {
+            if (fragment is SignalPhotoFragment) {
+                fragment.onBackPressed()
             }
         }
     }

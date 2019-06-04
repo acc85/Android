@@ -6,7 +6,6 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
@@ -16,6 +15,8 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.TaskStackBuilder
 
 import org.helpapaw.helpapaw.R
+import org.helpapaw.helpapaw.models.KEY_FOCUSED_SIGNAL_ID
+import org.helpapaw.helpapaw.models.SOMEBODY_ON_THE_WAY
 import org.helpapaw.helpapaw.models.Signal
 import org.helpapaw.helpapaw.signalsmap.SignalsMapActivity
 
@@ -25,38 +26,39 @@ import org.helpapaw.helpapaw.signalsmap.SignalsMapActivity
  * Centralized place to deal with notifications management
  */
 
+const val CHANNEL_ID_HELP_NEEDED = "CHANNEL_ID_HELP_NEEDED"
+const val CHANNEL_ID_SOMEBODY_ON_THE_WAY = "CHANNEL_ID_SOMEBODY_ON_THE_WAY"
+
 object NotificationUtils {
 
-    private val channel_id_help_needed = "channel_id_help_needed"
-    private val channel_id_somebody_on_the_way = "channel_id_somebody_on_the_way"
+
 
     fun registerNotificationChannels(context: Context) {
 
         // Notification channels are supported from Android 8.0 on
-        if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
 
-        val mNotificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                ?: return
+        val mNotificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
 
         // Channel 'Help needed'
         var name: CharSequence = context.getString(R.string.txt_help_needed)
         var description = context.getString(R.string.txt_channel_description_help_needed)
         var importance = NotificationManager.IMPORTANCE_HIGH
-        var mChannel = NotificationChannel(channel_id_help_needed, name, importance)
+        var mChannel = NotificationChannel(CHANNEL_ID_HELP_NEEDED, name, importance)
         mChannel.description = description
         mChannel.enableLights(true)
         mChannel.enableVibration(true)
-        mNotificationManager.createNotificationChannel(mChannel)
+        mNotificationManager?.createNotificationChannel(mChannel)
 
         // Channel 'Somebody on the way'
         name = context.getString(R.string.txt_somebody_on_the_way)
         description = context.getString(R.string.txt_channel_description_somebody_on_the_way)
         importance = NotificationManager.IMPORTANCE_DEFAULT
-        mChannel = NotificationChannel(channel_id_somebody_on_the_way, name, importance)
+        mChannel = NotificationChannel(CHANNEL_ID_SOMEBODY_ON_THE_WAY, name, importance)
         mChannel.description = description
         mChannel.enableLights(true)
         mChannel.enableVibration(false)
-        mNotificationManager.createNotificationChannel(mChannel)
+        mNotificationManager?.createNotificationChannel(mChannel)
     }
 
     fun showNotificationForSignal(signal: Signal, context: Context) {
@@ -64,21 +66,21 @@ object NotificationUtils {
         val signalCode = signal.id.hashCode()
 
         var status = "Status: "
-        val channel_id: String
-        if (signal.status == Signal.SOMEBODY_ON_THE_WAY) {
+        val channelId: String
+        if (signal.status == SOMEBODY_ON_THE_WAY) {
             status += context.getString(R.string.txt_somebody_is_on_the_way)
-            channel_id = channel_id_somebody_on_the_way
+            channelId = CHANNEL_ID_SOMEBODY_ON_THE_WAY
         } else {
             status += context.getString(R.string.txt_you_help_is_needed)
-            channel_id = channel_id_help_needed
+            channelId = CHANNEL_ID_HELP_NEEDED
         }
 
-        val mBuilder = NotificationCompat.Builder(context, channel_id)
+        val mBuilder = NotificationCompat.Builder(context, channelId)
         mBuilder.setSmallIcon(R.drawable.ic_paw_notif)
         mBuilder.setTicker(context.getString(R.string.txt_new_signal))
         mBuilder.setContentTitle(signal.title)
         mBuilder.setDefaults(Notification.DEFAULT_ALL)
-        mBuilder.setWhen(signal.dateSubmitted.time)
+        mBuilder.setWhen(signal.dateSubmitted?.time?:0L)
         mBuilder.setAutoCancel(true)
         mBuilder.setOnlyAlertOnce(true)
 
@@ -89,7 +91,7 @@ object NotificationUtils {
         mBuilder.setLargeIcon(largeIcon)
 
         val resultIntent = Intent(context, SignalsMapActivity::class.java)
-        resultIntent.putExtra(Signal.KEY_FOCUSED_SIGNAL_ID, signal.id)
+        resultIntent.putExtra(KEY_FOCUSED_SIGNAL_ID, signal.id)
 
         val stackBuilder = TaskStackBuilder.create(context)
         stackBuilder.addNextIntent(resultIntent)
@@ -98,8 +100,8 @@ object NotificationUtils {
 
         mBuilder.setContentIntent(resultPendingIntent)
 
-        val mNotificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
-        mNotificationManager?.notify(signalCode, mBuilder.build())
+        val mNotificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        mNotificationManager.notify(signalCode, mBuilder.build())
     }
 
     private fun scaleBitmapForLargeIcon(bmp: Bitmap, context: Context): Bitmap {

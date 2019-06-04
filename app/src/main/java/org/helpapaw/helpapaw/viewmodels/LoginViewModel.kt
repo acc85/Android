@@ -10,7 +10,6 @@ import com.facebook.FacebookCallback
 import com.facebook.FacebookException
 import com.facebook.login.LoginResult
 import com.facebook.login.widget.LoginButton
-import com.google.android.material.textfield.TextInputEditText
 import kotlinx.coroutines.runBlocking
 import org.helpapaw.helpapaw.BR
 import org.helpapaw.helpapaw.R
@@ -161,7 +160,7 @@ class LoginViewModel(
                             val accepted = userPropertyResult.value as Boolean
                             if (!accepted) {
                                 runBlocking {
-                                    val result: String? = Utils.getHtmlByCouroutines(view.context.getString(R.string.url_privacy_policy)).await()
+                                    val result: String? = Utils.getHtmlByAsync(view.context.getString(R.string.url_privacy_policy)).await()
                                     showProgress = View.GONE
                                     showGroupLogin = View.VISIBLE
                                     if (result != null) {

@@ -51,8 +51,8 @@ class LoginFragment : BaseFragment() {
                 is HelpAPawLoginResult.ShowPrivacyDialog->{
                     val builder = AlertDialog.Builder(activity)
                     builder.setMessage(Html.fromHtml(result.privacyData))
-                            .setPositiveButton(R.string.accept) { dialogInterface, i -> viewModel.onUserAcceptedPrivacyPolicy() }
-                            .setNegativeButton(R.string.decline) { dialogInterface, i -> viewModel.onUserDeclinedPrivacyPolicy() }
+                            .setPositiveButton(R.string.accept) { _, _ -> viewModel.onUserAcceptedPrivacyPolicy() }
+                            .setNegativeButton(R.string.decline) { _, _ -> viewModel.onUserDeclinedPrivacyPolicy() }
                             .setCancelable(false)
                             .show()
                 }

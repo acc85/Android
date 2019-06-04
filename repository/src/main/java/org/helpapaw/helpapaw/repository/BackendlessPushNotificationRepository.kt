@@ -92,7 +92,7 @@ class BackendlessPushNotificationsRepository(
     /*
      * Sends a notification to all devices within a certain distance
      */
-    override fun pushNewSignalNotification(tickerText: String, message: String, signalId: String, latitude: Double, longitude: Double) {
+    override fun pushNewSignalNotification(tickerText: String, message: String?, signalId: String, latitude: Double, longitude: Double) {
 
         // Get local device-token, latitude & longitude (from settings)
         val localToken = settingsRepository.getTokenFromPreferences()

@@ -11,10 +11,9 @@ import com.firebase.jobdispatcher.JobParameters
 import com.firebase.jobdispatcher.JobService
 import com.google.android.gms.location.LocationServices
 import org.helpapaw.helpapaw.models.Signal
-import org.helpapaw.helpapaw.models.Signal.SOLVED
-import org.helpapaw.helpapaw.repository.SettingsRepository
 import org.helpapaw.helpapaw.repository.SignalRepository
 import org.helpapaw.helpapaw.db.SignalsDatabase
+import org.helpapaw.helpapaw.models.SOLVED
 import org.helpapaw.helpapaw.repository.ISettingsRepository
 import org.helpapaw.helpapaw.repository.PushNotificationsRepository
 import org.helpapaw.helpapaw.utils.NotificationUtils

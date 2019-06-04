@@ -66,8 +66,6 @@ class Test2:Test(){
 }
 
 sealed class SignalsMapResult {
-    data class AnimateAddSignalView(val visibility: Boolean) : SignalsMapResult()
-    data class SetThumbnailImage(val uri: String?) : SignalsMapResult()
     data class SetProgressVisibility(val visibility: Boolean) : SignalsMapResult()
     data class ShowMessage(val message: String) : SignalsMapResult()
     data class ShowMessageOfType(val type:MESSAGE_TYPE):SignalsMapResult()
@@ -75,8 +73,8 @@ sealed class SignalsMapResult {
     data class ShowSignalMarkerInfo(val marker: Marker):SignalsMapResult()
     data class OpenSignalDetailsScreen(val signals:Signal?):SignalsMapResult()
     data class StartResolutionForResult(val requestL:Int):SignalsMapResult()
-    abstract class CheckPermission:SignalsMapResult()
     data class ShowProgress(val showProgress:Boolean):SignalsMapResult()
+    object CheckPermission:SignalsMapResult()
     object OpenLoginScreen : SignalsMapResult()
     object HideKeyboard : SignalsMapResult()
 
@@ -91,7 +89,8 @@ class SignalsMapViewModel(
         val imageUtils:ImageUtils,
         val utils: Utils,
         val fusedLocationProviderClient:FusedLocationProviderClient,
-        val locationRequest: LocationRequest
+        val locationRequest: LocationRequest,
+        val signal:Signal
 
 ):BaseViewModel() {
 
@@ -101,6 +100,8 @@ class SignalsMapViewModel(
 
     var mFocusedSignalId: String? = null
 
+
+    val mMarkers : MutableList<Marker> = mutableListOf()
     val mDisplayedSignals = ArrayList<Signal>()
     val mSignalMarkers = HashMap<String, Signal>()
     var signalsList: MutableList<Signal>? = ArrayList()
@@ -197,7 +198,7 @@ class SignalsMapViewModel(
                     liveData.value = SignalsMapResult.ShowError(ERROR_TYPE.DESCRIPTION)
                     sendSignalViewProgressVisibility = false
                 } else {
-                    signalRepository.saveSignal(Signal(description,  Date(), 0, latitude,longitude), object : SignalRepository.SaveSignalCallback {
+                    signalRepository.saveSignal(Signal(title = description,  dateSubmitted = Date(), status = 0, latitude = latitude, longitude = longitude), object : SignalRepository.SaveSignalCallback {
                         override fun onSignalSaved(signal: Signal) {
                             if (photoUri.isNotEmpty()) {
                                 photoRepository.savePhoto(photoUri, signal.id, object : PhotoRepository.SavePhotoCallback {
@@ -242,14 +243,14 @@ class SignalsMapViewModel(
     }
 
     fun clearLocationData(){
-        settingsRepository!!.clearLocationData()
+        settingsRepository.clearLocationData()
     }
 
 
     fun handleNewLocation(location: Location) {
-        val longitude = settingsRepository!!.getLastShownLongitude()
-        val latitude = settingsRepository!!.getLastShownLatitude()
-        val newZoom = settingsRepository!!.getLastShownZoom()
+        val longitude = settingsRepository.getLastShownLongitude()
+        val latitude = settingsRepository.getLastShownLatitude()
+        val newZoom = settingsRepository.getLastShownZoom()
 
         mCurrentLat = if (latitude == 0.0) location.latitude else latitude
         mCurrentLong = if (longitude == 0.0) location.longitude else longitude
@@ -261,7 +262,7 @@ class SignalsMapViewModel(
     }
 
     private fun calculateMetersToZoom(): Float {
-        val radius = (settingsRepository!!.getRadius() * 1000).toDouble()
+        val radius = (settingsRepository.getRadius() * 1000).toDouble()
         val scale = radius / 500
         val zoomLevel = (16 - Math.log(scale) / Math.log(2.0)).toFloat()
         return zoomLevel - 0.5f
@@ -336,11 +337,15 @@ class SignalsMapViewModel(
         }
 
         signalsGoogleMap?.let { gm->
-            gm.clear()
+
+            for(marker in mMarkers){
+                if(mCurrentlyShownInfoWindowSignal?.id?: false != mSignalMarkers[marker.id]?.id?:false) {
+                    marker.remove()
+                }
+            }
             gm.setPadding(0, PADDING_TOP, 0, PADDING_BOTTOM)
             for (i in mDisplayedSignals.indices) {
                 signal = mDisplayedSignals[i]
-
                 val markerOptions = MarkerOptions()
                         .position(LatLng(signal.latitude, signal.longitude))
                         .title(signal.title)
@@ -349,7 +354,7 @@ class SignalsMapViewModel(
 
                 val marker = gm.addMarker(markerOptions)
                 mSignalMarkers[marker.id] = signal
-
+                mMarkers.add(marker)
                 if (mFocusedSignalId != null) {
                     if (signal.id.equals(mFocusedSignalId!!, ignoreCase = true)) {
                         showPopup = true
@@ -366,10 +371,15 @@ class SignalsMapViewModel(
                 }
             }
 
+
+
             if (showPopup && markerToFocus != null) {
                 markerToFocus?.showInfoWindow()
                 updateMapCameraPosition(signalToFocus!!.latitude, signalToFocus!!.longitude, null)
-            } else markerToReShow?.showInfoWindow()
+            } else {
+                markerToReShow?.showInfoWindow()
+
+            }
         }
     }
 
@@ -445,7 +455,7 @@ class SignalsMapViewModel(
             onLocationChanged(cameraTarget.latitude, cameraTarget.longitude, radius, settingsRepository.getTimeout())
         }
 
-        signalsGoogleMap!!.setInfoWindowAdapter(SignalInfoWindowAdapter(mSignalMarkers, layoutInflator, photoRepository))
+        signalsGoogleMap!!.setInfoWindowAdapter(SignalInfoWindowAdapter(mSignalMarkers, layoutInflator, photoRepository,signal))
         //actionsListener
         signalsGoogleMap!!.setOnInfoWindowClickListener { marker ->
             liveData.value = SignalsMapResult.ShowSignalMarkerInfo(marker)

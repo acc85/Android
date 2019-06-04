@@ -42,8 +42,9 @@ var testModule = module {
 
     viewModel{ SignalPhotoViewModel(get(),get())}
 
-    viewModel{ SignalsMapViewModel(get(), get(),get(), get(), get(), get(), get(),get(),get()) }
+    viewModel{ SignalsMapViewModel(get(), get(),get(), get(), get(), get(), get(),get(),get(),get()) }
 
+    single { Signal() }
 
     single { LocationRequest.create()
             .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
@@ -69,7 +70,7 @@ var testModule = module {
     single { ImageUtils() }
 
     factory { (view: SignalDetailsContract.View) -> SignalDetailsPresenter(view, get(), get(), get(), get(), get()) }
-    factory { (signalMarkers: Map<String, Signal>, inflater: LayoutInflater) -> SignalInfoWindowAdapter(signalMarkers, inflater, get()) }
+    factory { (signalMarkers: Map<String, Signal>, inflater: LayoutInflater) -> SignalInfoWindowAdapter(signalMarkers, inflater, get(),get()) }
 
 
     factory{ LoginFragment()}
