@@ -139,7 +139,7 @@ class SignalDetailsFragment : BaseFragment(), SignalDetailsContract.View {
             binding.btnCall.visibility = View.VISIBLE
         }
 
-        imageLoader.loadWithRoundedCorners(context, signal.photoUrl, binding.imgSignalPhoto, R.drawable.ic_paw)
+        imageLoader.loadWithRoundedCorners(signal.photoUrl, binding.imgSignalPhoto, R.drawable.ic_paw)
     }
 
     override fun displayComments(comments: List<Comment>) {

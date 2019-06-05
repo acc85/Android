@@ -1,6 +1,5 @@
 package org.helpapaw.helpapaw.images;
 
-import android.content.Context;
 import androidx.annotation.DrawableRes;
 import android.widget.ImageView;
 
@@ -9,8 +8,8 @@ import android.widget.ImageView;
  */
 public interface ImageLoader {
 
-    void load(Context context, String url, ImageView imageView, @DrawableRes int placeholder);
+    void load(String url, ImageView imageView, @DrawableRes int placeholder);
 
-    void loadWithRoundedCorners(Context context, String url, ImageView imageView, @DrawableRes int placeholder);
+    void loadWithRoundedCorners(String url, ImageView imageView, @DrawableRes int placeholder);
 
 }

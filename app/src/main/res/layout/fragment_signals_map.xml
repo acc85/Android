@@ -42,7 +42,7 @@
                 app:description="@={viewModel.description}"
                 app:sendSignalViewProgressVisibility="@{viewModel.sendSignalViewProgressVisibility}"
                 app:layout_constraintBottom_toTopOf="@+id/map_signals"
-                app:setOnSignalSendClick="@{viewModel.sendClick}"/>
+                app:setOnSignalSendClick="@{viewModel::sendClick}"/>
 
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/add_signal_pin"

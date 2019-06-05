@@ -29,5 +29,5 @@ class SignalPhotoViewModel(
 
 @BindingAdapter("setImageWithUri")
 fun setImageWithUrl(view: PhotoView, viewModel: SignalPhotoViewModel) {
-    viewModel.imageLoader.load(view.context, viewModel.imageUri, view, R.drawable.no_image)
+    viewModel.imageLoader.load(viewModel.imageUri, view, R.drawable.no_image)
 }
