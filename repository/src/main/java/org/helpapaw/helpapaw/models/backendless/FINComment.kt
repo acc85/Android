@@ -11,6 +11,6 @@ data class FINComment(
     var signalID: String? = null,
     var text: String? = null,
     var created: String? = null,
-    val type: String? = null,
+    var type: String? = null,
     var author: BackendlessUser? = null
 )
