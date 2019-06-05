@@ -50,14 +50,12 @@ class SignalDetailsFragment : BaseFragment(), SignalDetailsContract.View {
     private var mSignal: Signal? = null
 
     /* OnClick Listeners */
-    val onAddCommentClickListener: View.OnClickListener
-        get() = View.OnClickListener {
+    val onAddCommentClickListener: View.OnClickListener = View.OnClickListener {
             val commentText = binding.editComment.text.toString()
             actionsListener.onAddCommentButtonClicked(commentText)
         }
 
-    val onCallButtonClickListener: View.OnClickListener
-        get() = View.OnClickListener { actionsListener.onCallButtonClicked() }
+    val onCallButtonClickListener: View.OnClickListener = View.OnClickListener { actionsListener.onCallButtonClicked() }
 
     val onBottomReachedListener: InteractiveScrollView.OnBottomReachedListener
         get() = object: InteractiveScrollView.OnBottomReachedListener{
