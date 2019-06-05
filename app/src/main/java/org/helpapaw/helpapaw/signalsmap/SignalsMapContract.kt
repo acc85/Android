@@ -10,11 +10,7 @@ interface SignalsMapContract {
 
     interface View {
 
-        fun isActive(): Boolean
-
         fun showMessage(message: String)
-
-//        fun updateMapCameraPosition(latitude: Double, longitude: Double, zoom: Float?)
 
         fun hideKeyboard()
 
@@ -23,8 +19,6 @@ interface SignalsMapContract {
         fun openCamera()
 
         fun openGallery()
-
-        fun saveImageFromURI(photoUri: Uri?)
 
         fun openLoginScreen()
 

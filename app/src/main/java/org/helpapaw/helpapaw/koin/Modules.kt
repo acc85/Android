@@ -1,5 +1,6 @@
 package org.helpapaw.helpapaw.koin
 
+import android.os.Environment
 import android.view.LayoutInflater
 import com.facebook.CallbackManager
 import com.google.android.gms.common.api.GoogleApiClient
@@ -26,6 +27,7 @@ import org.helpapaw.helpapaw.viewmodels.*
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
+import java.io.File
 
 var testModule = module {
 
@@ -42,7 +44,7 @@ var testModule = module {
 
     viewModel{ SignalPhotoViewModel(get(),get())}
 
-    viewModel{ SignalsMapViewModel(get(), get(),get(), get(), get(), get(), get(),get(),get(),get()) }
+    viewModel{ SignalsMapViewModel(get(), get(),get(), get(), get(), get(), get(),get(),get(),get(),get()) }
 
     single { Signal() }
 
@@ -67,7 +69,12 @@ var testModule = module {
     single<UserManager> { BackendlessUserManager() }
 
     single { Utils(androidContext()) }
-    single { ImageUtils() }
+
+    single { androidContext().contentResolver }
+
+    single { ImageUtils(androidContext().cacheDir,get(),
+            File(androidContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES), "HelpAPaw"))
+    }
 
     factory { (view: SignalDetailsContract.View) -> SignalDetailsPresenter(view, get(), get(), get(), get(), get()) }
     factory { (signalMarkers: Map<String, Signal>, inflater: LayoutInflater) -> SignalInfoWindowAdapter(signalMarkers, inflater, get(),get()) }

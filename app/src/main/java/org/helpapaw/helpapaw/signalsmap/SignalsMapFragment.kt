@@ -3,6 +3,7 @@ package org.helpapaw.helpapaw.signalsmap
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.ContentResolver
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
@@ -58,6 +59,8 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
 
     private val imageUtils: ImageUtils by inject()
 
+    val contentResolver: ContentResolver by inject()
+
     val viewModel: SignalsMapViewModel by inject()
 
     val locationSettingsRequest: LocationSettingsRequest by inject()
@@ -84,19 +87,6 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
                 }
             }
 
-//            result.addOnCompleteListener {task->
-//                try{
-//                   task.getResult(ApiException::class.java)
-//                }catch (exception:ApiException){
-//                    when (exception.statusCode) {
-//                        LocationSettingsStatusCodes.RESOLUTION_REQUIRED ->
-//                            (exception as? ResolvableApiException)?.let{resolvableApiException ->
-//                            resolvableApiException.startResolutionForResult(activity, REQUEST_CHECK_SETTINGS)
-//                        }
-//                    }
-//                }
-//
-//            }
             //Protection for the case when activity is destroyed (e.g. when rotating)
             //Probably there is a better fix in the actual workflow but we need a quick fix as users experience a lot of crashes
             context?.let { ctx ->
@@ -279,19 +269,6 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
             }
         })
 
-
-
-//        sendPhotoBottomSheet.setListener(object : SendPhotoBottomSheet.PhotoTypeSelectListener {
-//            override fun onPhotoTypeSelected(photoType: Long) {
-//                if (photoType == SendPhotoBottomSheet.PhotoType.CAMERA) {
-//                    //actionsListener
-//                    openCamera()
-//                } else if (photoType == SendPhotoBottomSheet.PhotoType.GALLERY) {
-//                    //actionsListener
-//                    openGallery()
-//                }
-//            }
-//        })
         sendPhotoBottomSheet.show(fragmentManager!!, SendPhotoBottomSheet.TAG)
     }
 
@@ -303,7 +280,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
             if (intent.resolveActivity(context!!.packageManager) != null) {
                 val timeStamp = SimpleDateFormat(DATE_TIME_FORMAT_VIEW, Locale.getDefault()).format(Date())
                 imageFileName = PHOTO_PREFIX + timeStamp + PHOTO_EXTENSION
-                intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUtils.getPhotoFileUri(context, imageFileName))
+                intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUtils.getPhotoFileUri(imageFileName))
                 startActivityForResult(intent, REQUEST_CAMERA)
             }
         }
@@ -311,7 +288,8 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
 
     override fun openGallery() {
         val permissions = arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-        if (ContextCompat.checkSelfPermission(context!!, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(context!!, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(context!!, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(context!!, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(permissions, READ_WRITE_EXTERNAL_STORAGE_FOR_GALLERY)
         } else {
             val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
@@ -321,29 +299,7 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
         }
     }
 
-    override fun saveImageFromURI(photoUri: Uri?) {
 
-        // This segment works once the permission is handled
-        try {
-            val path: String
-            val parcelFileDesc = activity!!.contentResolver.openFileDescriptor(photoUri!!, "r")
-            val fileDesc = parcelFileDesc!!.fileDescriptor
-            val photo = BitmapFactory.decodeFileDescriptor(fileDesc)
-            path = MediaStore.Images.Media.insertImage(context!!.contentResolver, photo, "temp", null)
-            val photoFile = imageUtils.getFromMediaUri(context, context!!.contentResolver, Uri.parse(path))
-
-            if (photoFile != null) {
-                //actionsListener
-                viewModel.photoUri = Uri.fromFile(photoFile).path!!
-            }
-
-            parcelFileDesc.close()
-
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-
-    }
 
     override fun openLoginScreen() {
         val intent = Intent(context, AuthenticationActivity::class.java)
@@ -354,18 +310,16 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_CAMERA) {
             if (resultCode == Activity.RESULT_OK) {
-                val takenPhotoUri = imageUtils.getPhotoFileUri(context, imageFileName)
+                val takenPhotoUri = imageUtils.getPhotoFileUri(imageFileName)
                 viewModel.photoUri = takenPhotoUri!!.path!!
             }
         }
-
         if (requestCode == REQUEST_GALLERY && resultCode == Activity.RESULT_OK && data != null && data.data != null) {
-
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                saveImageFromURI(data.data)
+                viewModel.saveImageFromURI(data.data)
             } else {
                 // DRY!!
-                val photoFile = imageUtils.getFromMediaUri(context, context!!.contentResolver, data.data)
+                val photoFile = imageUtils.getFromMediaUri(data.data)
                 if (photoFile != null) {
                     viewModel.photoUri = Uri.fromFile(photoFile).path!!
                 }
@@ -394,8 +348,8 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
     }
 
     override fun closeSignalsMapScreen() {
-        if (activity != null) {
-            activity!!.finish()
+        activity?.let{act->
+            act.finish()
         }
     }
 
@@ -415,11 +369,6 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
             }
         }
     }
-
-    override fun isActive(): Boolean {
-        return isAdded
-    }
-
 
     @SuppressLint("MissingPermission")
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {

@@ -1,9 +1,13 @@
 package org.helpapaw.helpapaw.viewmodels
 
 import android.annotation.SuppressLint
+import android.content.ContentResolver
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.location.Location
+import android.net.Uri
 import android.os.Looper
+import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
@@ -77,6 +81,7 @@ class SignalsMapViewModel(
         val utils: Utils,
         val fusedLocationProviderClient: FusedLocationProviderClient,
         val locationRequest: LocationRequest,
+        val contentResolver: ContentResolver,
         val signal: Signal
 
 ) : BaseViewModel() {
@@ -91,7 +96,7 @@ class SignalsMapViewModel(
     val mMarkers: MutableList<Marker> = mutableListOf()
     val mDisplayedSignals = ArrayList<Signal>()
     val mSignalMarkers = HashMap<String, Signal>()
-    var signalsList: MutableList<Signal>? = ArrayList()
+    var signalsList: MutableList<Signal>? = mutableListOf()
 
     var mCurrentLat: Double = 0.toDouble()
     var mCurrentLong: Double = 0.toDouble()
@@ -175,7 +180,6 @@ class SignalsMapViewModel(
             }
         }
     }
-
 
     fun sendClick() {
         liveData.value = SignalsMapResult.HideKeyboard
@@ -408,6 +412,25 @@ class SignalsMapViewModel(
     }
 
 
+    fun saveImageFromURI(uri: Uri?) {
+        // This segment works once the permission is handled
+        try {
+            val path: String
+            val parcelFileDesc = contentResolver.openFileDescriptor(uri!!, "r")
+            val fileDesc = parcelFileDesc!!.fileDescriptor
+            val photo = BitmapFactory.decodeFileDescriptor(fileDesc)
+            path = MediaStore.Images.Media.insertImage(contentResolver, photo, "temp", null)
+            val photoFile = imageUtils.getFromMediaUri(Uri.parse(path))
+            if (photoFile != null) {
+                //actionsListener
+                photoUri = Uri.fromFile(photoFile).path!!
+            }
+            parcelFileDesc.close()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
     fun updateMapCameraPosition(latitude: Double, longitude: Double, zoom: Float?) {
         val latLng = LatLng(latitude, longitude)
         val cameraUpdate: CameraUpdate
@@ -456,21 +479,6 @@ class SignalsMapViewModel(
             settingsRepository.setLastShownZoom(mZoom)
         }
     }
-
-//    @Bindable
-//    var addSignalPinVisible:Int = View.INVISIBLE
-//        set(value){
-//            field = value
-//            notifyChange(BR.addSignalPinVisible)
-//        }
-//
-//    @Bindable
-//    var addSignalViewVisible:Int = View.INVISIBLE
-//        set(value){
-//            field = value
-//            notifyChange(BR.addSignalViewVisible)
-//        }
-
 
 }
 
@@ -536,5 +544,10 @@ fun setMapViewAsync(view: MapView, viewModel: SignalsMapViewModel) {
     view.getMapAsync { googleMap ->
         viewModel.setGoogleMapAsync(googleMap, LayoutInflater.from(view.context))
     }
+
+}
+
+@BindingAdapter("setupSendSignal")
+fun setupSendSignal(view:SendSignalView, viewModel:SignalsMapViewModel){
 
 }
