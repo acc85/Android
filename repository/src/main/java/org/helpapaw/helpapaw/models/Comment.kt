@@ -14,11 +14,12 @@ const val COMMENT_TYPE_USER_COMMENT = "user_comment"
 const val COMMENT_TYPE_STATUS_CHANGE = "status_change"
 
 data class Comment(
-        val objectId: String? = "",
-        val ownerName: String? = "",
-        val dateCreated: Date? = Date(),
-        val text: String? = "",
-        val type: String? = "") {
+        var objectId: String? = "",
+        var ownerName: String? = "",
+        var dateCreated: Date? = Date(),
+        var text: String? = "",
+        var type: String? = ""
+) {
 
 
 //    fun Comment(objectId: String, ownerName: String, dateCreated: Date, text: String, type: String): ??? {
