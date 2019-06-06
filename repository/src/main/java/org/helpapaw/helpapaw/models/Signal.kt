@@ -5,6 +5,9 @@ import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import android.os.Parcelable
+import androidx.databinding.BaseObservable
+import androidx.databinding.Bindable
+import com.helpapaw.helpapaw.repository.BR
 import kotlinx.android.parcel.Parcelize
 
 import java.util.Date
@@ -46,4 +49,30 @@ data class Signal(
         var longitude: Double = 0.toDouble(),
         @ColumnInfo(name = "seen")
         var seen: Boolean = false
-) :Parcelable
+) : Parcelable, BaseObservable() {
+
+    var _title: String?
+        @Bindable get() = title
+        set(_) {
+            title = _title
+            notifyPropertyChanged(BR._title)
+        }
+
+    var _status : Int
+        @Bindable get() = status
+        set(value){
+            status = _status
+            notifyPropertyChanged(BR._status)
+        }
+
+    var _photoUri: String?
+        @Bindable get() = photoUrl
+        set(_){
+            photoUrl = _photoUri
+            notifyPropertyChanged(BR._photoUri)
+        }
+
+}
+
+
+

@@ -22,7 +22,7 @@ class SendPhotoBottomSheet : BottomSheetDialogFragment() {
 
     internal var listener: PhotoTypeSelectListener? = null
 
-    @LongDef(PhotoType.CAMERA.toLong(), PhotoType.GALLERY.toLong())
+    @LongDef(PhotoType.CAMERA, PhotoType.GALLERY)
     @kotlin.annotation.Retention(AnnotationRetention.SOURCE)
     annotation class PhotoType {
         companion object {

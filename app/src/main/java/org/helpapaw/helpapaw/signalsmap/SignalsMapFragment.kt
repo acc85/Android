@@ -3,10 +3,8 @@ package org.helpapaw.helpapaw.signalsmap
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.content.ContentResolver
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.PorterDuff
 import android.net.Uri
@@ -59,8 +57,6 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
 
     private val imageUtils: ImageUtils by inject()
 
-    val contentResolver: ContentResolver by inject()
-
     val viewModel: SignalsMapViewModel by inject()
 
     val locationSettingsRequest: LocationSettingsRequest by inject()
@@ -71,41 +67,6 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
     //    private var mFocusedSignalId: String? = null
     private var imageFileName: String = ""
 
-    private val connectionCallback: GoogleApiClient.ConnectionCallbacks = object : GoogleApiClient.ConnectionCallbacks {
-        override fun onConnectionSuspended(i: Int) {
-            Log.i(TAG, "Connection suspended")
-            googleApiClient.connect()
-        }
-
-        override fun onConnected(bundle: Bundle?) {
-            val result = LocationServices.getSettingsClient(context!!).checkLocationSettings(locationSettingsRequest)
-            result.addOnFailureListener { task ->
-                (task as? ApiException)?.let { status ->
-                    if (status.statusCode == LocationSettingsStatusCodes.RESOLUTION_REQUIRED) {
-                        (status as? ResolvableApiException)?.startResolutionForResult(activity, REQUEST_CHECK_SETTINGS)
-                    }
-                }
-            }
-
-            //Protection for the case when activity is destroyed (e.g. when rotating)
-            //Probably there is a better fix in the actual workflow but we need a quick fix as users experience a lot of crashes
-            context?.let { ctx ->
-                if (ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    showPermissionDialog(activity, Manifest.permission.ACCESS_FINE_LOCATION, LOCATION_PERMISSIONS_REQUEST)
-                } else {
-                    viewModel.signalsGoogleMap?.let { gm ->
-                        gm.isMyLocationEnabled = true
-                    }
-                    viewModel.setLastLocation()
-                }
-            } ?: run {
-                Log.e(TAG, "Context is null, exiting...")
-                return
-            }
-
-        }
-    }
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -115,7 +76,41 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
             viewModel.mFocusedSignalId = arguments.getString(KEY_FOCUSED_SIGNAL_ID)
             arguments.remove(KEY_FOCUSED_SIGNAL_ID)
         }
-        googleApiClient.registerConnectionCallbacks(connectionCallback)
+        googleApiClient.registerConnectionCallbacks(object : GoogleApiClient.ConnectionCallbacks {
+            override fun onConnectionSuspended(i: Int) {
+                Log.i(TAG, "Connection suspended")
+                googleApiClient.connect()
+            }
+
+            override fun onConnected(bundle: Bundle?) {
+                val result = LocationServices.getSettingsClient(context!!).checkLocationSettings(locationSettingsRequest)
+                result.addOnFailureListener { task ->
+                    (task as? ApiException)?.let { status ->
+                        if (status.statusCode == LocationSettingsStatusCodes.RESOLUTION_REQUIRED) {
+                            (status as? ResolvableApiException)?.startResolutionForResult(activity, REQUEST_CHECK_SETTINGS)
+                        }
+                    }
+                }
+
+                //Protection for the case when activity is destroyed (e.g. when rotating)
+                //Probably there is a better fix in the actual workflow but we need a quick fix as users experience a lot of crashes
+                context?.let { ctx ->
+                    if (ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                        showPermissionDialog(activity, Manifest.permission.ACCESS_FINE_LOCATION, LOCATION_PERMISSIONS_REQUEST)
+                    } else {
+                        viewModel.signalsGoogleMap?.let { gm ->
+                            gm.isMyLocationEnabled = true
+                        }
+                        viewModel.setLastLocation()
+                    }
+                } ?: run {
+                    Log.e(TAG, "Context is null, exiting...")
+                    return
+                }
+
+            }
+        })
+
         googleApiClient.registerConnectionFailedListener { connectionResult ->
             Log.i(TAG, "Connection failed with error code: " + connectionResult.errorCode)
         }
@@ -320,8 +315,8 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
             } else {
                 // DRY!!
                 val photoFile = imageUtils.getFromMediaUri(data.data)
-                if (photoFile != null) {
-                    viewModel.photoUri = Uri.fromFile(photoFile).path!!
+                photoFile?.let{pf->
+                    viewModel.photoUri = Uri.fromFile(pf).path!!
                 }
             }
 
@@ -330,19 +325,9 @@ class SignalsMapFragment : BaseFragment(), SignalsMapContract.View {
         if (requestCode == REQUEST_SIGNAL_DETAILS) {
             if (resultCode == Activity.RESULT_OK) {
                 val signal = data!!.getParcelableExtra<Signal>("signal")
-                if (signal != null) {
-                    for (i in viewModel.signalsList!!.indices) {
-                        val currentSignal = viewModel.signalsList!![i]
-                        if (currentSignal.id == signal.id) {
-                            viewModel.signalsList!!.removeAt(i)
-                            viewModel.signalsList!!.add(signal)
-                            viewModel.displaySignals(true)
-                            break
-                        }
-                    }
-                } else {
-                    return
-                }
+                signal?.let { sig ->
+                    viewModel.setSignals(sig)
+                } ?: return
             }
         }
     }

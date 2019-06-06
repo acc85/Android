@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    
+    <data>
+        <variable
+            name="signalModel"
+            type="org.helpapaw.helpapaw.models.Signal" />
+    </data>
 
     <RelativeLayout
         android:layout_width="wrap_content"
@@ -15,6 +22,7 @@
             android:layout_height="50dp"
             android:layout_marginRight="8dp"
             android:contentDescription="@string/txt_signal_photo_description"
+            app:setSignalPhoto="@{signalModel.photoUrl}"
             android:scaleType="centerCrop" />
 
         <TextView
@@ -27,6 +35,7 @@
             android:singleLine="true"
             android:textColor="@android:color/black"
             android:textSize="20sp"
+            android:text="@{signalModel._title}"
             tools:text="Signal title" />
 
         <TextView
@@ -38,6 +47,7 @@
             android:singleLine="true"
             android:textColor="@android:color/black"
             android:textSize="14sp"
+            app:setStatus="@{signalModel.status}"
             tools:text="Status:" />
 
         <androidx.appcompat.widget.AppCompatImageView

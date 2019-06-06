@@ -121,11 +121,6 @@ fun setListener(view: SendSignalView, listener: InverseBindingListener?) {
     }
 }
 
-//@BindingAdapter("setOnSignalSendClick")
-//fun setOnSignalSendClick(view:SendSignalView, function:View.OnClickListener){
-//    view.setOnSignalSendClickListener(function)
-//}
-
 
 @BindingAdapter("setOnSignalSendClick")
 fun setOnSignalSendClick(view:SendSignalView, function:()->Unit){

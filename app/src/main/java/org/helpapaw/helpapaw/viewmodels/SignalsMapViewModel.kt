@@ -57,15 +57,11 @@ enum class MESSAGE_TYPE {
 }
 
 sealed class SignalsMapResult {
-    data class SetProgressVisibility(val visibility: Boolean) : SignalsMapResult()
     data class ShowMessage(val message: String) : SignalsMapResult()
     data class ShowMessageOfType(val type: MESSAGE_TYPE) : SignalsMapResult()
     data class ShowError(val errorType: ERROR_TYPE) : SignalsMapResult()
     data class ShowSignalMarkerInfo(val marker: Marker) : SignalsMapResult()
-    data class OpenSignalDetailsScreen(val signals: Signal?) : SignalsMapResult()
-    data class StartResolutionForResult(val requestL: Int) : SignalsMapResult()
     data class ShowProgress(val showProgress: Boolean) : SignalsMapResult()
-    object CheckPermission : SignalsMapResult()
     object OpenLoginScreen : SignalsMapResult()
     object HideKeyboard : SignalsMapResult()
 
@@ -177,6 +173,18 @@ class SignalsMapViewModel(
                     handleNewLocation(location)
                 }
                         ?: fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper())
+            }
+        }
+    }
+
+    fun setSignals(sig:Signal){
+        for (i in signalsList!!.indices) {
+            val currentSignal = signalsList!![i]
+            if (currentSignal.id == signal.id) {
+                signalsList!!.removeAt(i)
+                signalsList!!.add(sig)
+                displaySignals(true)
+                break
             }
         }
     }
