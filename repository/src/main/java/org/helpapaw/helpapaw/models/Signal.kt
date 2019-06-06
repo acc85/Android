@@ -60,7 +60,7 @@ data class Signal(
 
     var _status : Int
         @Bindable get() = status
-        set(value){
+        set(_){
             status = _status
             notifyPropertyChanged(BR._status)
         }
